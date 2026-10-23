@@ -1,0 +1,513 @@
+{
+  "source": "TARIF TER PPH 21.xlsx",
+  "sha256": "3b3557dfa1a0da3f5dff91ef9fd090bbdb3c6a686d8233de010ecec36a356691",
+  "lowerBoundExclusive": true,
+  "categories": {
+    "A": [
+      {
+        "threshold": 0,
+        "rateBps": 0
+      },
+      {
+        "threshold": 5400000,
+        "rateBps": 25
+      },
+      {
+        "threshold": 5650000,
+        "rateBps": 50
+      },
+      {
+        "threshold": 5950000,
+        "rateBps": 75
+      },
+      {
+        "threshold": 6300000,
+        "rateBps": 100
+      },
+      {
+        "threshold": 6750000,
+        "rateBps": 125
+      },
+      {
+        "threshold": 7500000,
+        "rateBps": 150
+      },
+      {
+        "threshold": 8550000,
+        "rateBps": 175
+      },
+      {
+        "threshold": 9650000,
+        "rateBps": 200
+      },
+      {
+        "threshold": 10050000,
+        "rateBps": 225
+      },
+      {
+        "threshold": 10350000,
+        "rateBps": 250
+      },
+      {
+        "threshold": 10700000,
+        "rateBps": 300
+      },
+      {
+        "threshold": 11050000,
+        "rateBps": 350
+      },
+      {
+        "threshold": 11600000,
+        "rateBps": 400
+      },
+      {
+        "threshold": 12500000,
+        "rateBps": 500
+      },
+      {
+        "threshold": 13750000,
+        "rateBps": 600
+      },
+      {
+        "threshold": 15100000,
+        "rateBps": 700
+      },
+      {
+        "threshold": 16950000,
+        "rateBps": 800
+      },
+      {
+        "threshold": 19750000,
+        "rateBps": 900
+      },
+      {
+        "threshold": 24150000,
+        "rateBps": 1000
+      },
+      {
+        "threshold": 26450000,
+        "rateBps": 1100
+      },
+      {
+        "threshold": 28000000,
+        "rateBps": 1200
+      },
+      {
+        "threshold": 30050000,
+        "rateBps": 1300
+      },
+      {
+        "threshold": 32400000,
+        "rateBps": 1400
+      },
+      {
+        "threshold": 35400000,
+        "rateBps": 1500
+      },
+      {
+        "threshold": 39100000,
+        "rateBps": 1600
+      },
+      {
+        "threshold": 43850000,
+        "rateBps": 1700
+      },
+      {
+        "threshold": 47800000,
+        "rateBps": 1800
+      },
+      {
+        "threshold": 51400000,
+        "rateBps": 1900
+      },
+      {
+        "threshold": 56300000,
+        "rateBps": 2000
+      },
+      {
+        "threshold": 62200000,
+        "rateBps": 2100
+      },
+      {
+        "threshold": 68600000,
+        "rateBps": 2200
+      },
+      {
+        "threshold": 77500000,
+        "rateBps": 2300
+      },
+      {
+        "threshold": 89000000,
+        "rateBps": 2400
+      },
+      {
+        "threshold": 103000000,
+        "rateBps": 2500
+      },
+      {
+        "threshold": 125000000,
+        "rateBps": 2600
+      },
+      {
+        "threshold": 157000000,
+        "rateBps": 2700
+      },
+      {
+        "threshold": 206000000,
+        "rateBps": 2800
+      },
+      {
+        "threshold": 337000000,
+        "rateBps": 2900
+      },
+      {
+        "threshold": 454000000,
+        "rateBps": 3000
+      },
+      {
+        "threshold": 550000000,
+        "rateBps": 3100
+      },
+      {
+        "threshold": 695000000,
+        "rateBps": 3200
+      },
+      {
+        "threshold": 910000000,
+        "rateBps": 3300
+      },
+      {
+        "threshold": 1400000000,
+        "rateBps": 3400
+      }
+    ],
+    "B": [
+      {
+        "threshold": 0,
+        "rateBps": 0
+      },
+      {
+        "threshold": 6200000,
+        "rateBps": 25
+      },
+      {
+        "threshold": 6500000,
+        "rateBps": 50
+      },
+      {
+        "threshold": 6850000,
+        "rateBps": 75
+      },
+      {
+        "threshold": 7300000,
+        "rateBps": 100
+      },
+      {
+        "threshold": 9200000,
+        "rateBps": 150
+      },
+      {
+        "threshold": 10750000,
+        "rateBps": 200
+      },
+      {
+        "threshold": 11250000,
+        "rateBps": 250
+      },
+      {
+        "threshold": 11600000,
+        "rateBps": 300
+      },
+      {
+        "threshold": 12600000,
+        "rateBps": 400
+      },
+      {
+        "threshold": 13600000,
+        "rateBps": 500
+      },
+      {
+        "threshold": 14950000,
+        "rateBps": 600
+      },
+      {
+        "threshold": 16400000,
+        "rateBps": 700
+      },
+      {
+        "threshold": 18450000,
+        "rateBps": 800
+      },
+      {
+        "threshold": 21850000,
+        "rateBps": 900
+      },
+      {
+        "threshold": 26000000,
+        "rateBps": 1000
+      },
+      {
+        "threshold": 27700000,
+        "rateBps": 1100
+      },
+      {
+        "threshold": 29350000,
+        "rateBps": 1200
+      },
+      {
+        "threshold": 31450000,
+        "rateBps": 1300
+      },
+      {
+        "threshold": 33950000,
+        "rateBps": 1400
+      },
+      {
+        "threshold": 37100000,
+        "rateBps": 1500
+      },
+      {
+        "threshold": 41100000,
+        "rateBps": 1600
+      },
+      {
+        "threshold": 45800000,
+        "rateBps": 1700
+      },
+      {
+        "threshold": 49500000,
+        "rateBps": 1800
+      },
+      {
+        "threshold": 53800000,
+        "rateBps": 1900
+      },
+      {
+        "threshold": 58500000,
+        "rateBps": 2000
+      },
+      {
+        "threshold": 64000000,
+        "rateBps": 2100
+      },
+      {
+        "threshold": 71000000,
+        "rateBps": 2200
+      },
+      {
+        "threshold": 80000000,
+        "rateBps": 2300
+      },
+      {
+        "threshold": 93000000,
+        "rateBps": 2400
+      },
+      {
+        "threshold": 109000000,
+        "rateBps": 2500
+      },
+      {
+        "threshold": 129000000,
+        "rateBps": 2600
+      },
+      {
+        "threshold": 163000000,
+        "rateBps": 2700
+      },
+      {
+        "threshold": 211000000,
+        "rateBps": 2800
+      },
+      {
+        "threshold": 374000000,
+        "rateBps": 2900
+      },
+      {
+        "threshold": 459000000,
+        "rateBps": 3000
+      },
+      {
+        "threshold": 555000000,
+        "rateBps": 3100
+      },
+      {
+        "threshold": 704000000,
+        "rateBps": 3200
+      },
+      {
+        "threshold": 957000000,
+        "rateBps": 3300
+      },
+      {
+        "threshold": 1405000000,
+        "rateBps": 3400
+      }
+    ],
+    "C": [
+      {
+        "threshold": 0,
+        "rateBps": 0
+      },
+      {
+        "threshold": 6600000,
+        "rateBps": 25
+      },
+      {
+        "threshold": 6950000,
+        "rateBps": 50
+      },
+      {
+        "threshold": 7350000,
+        "rateBps": 75
+      },
+      {
+        "threshold": 7800000,
+        "rateBps": 100
+      },
+      {
+        "threshold": 8850000,
+        "rateBps": 125
+      },
+      {
+        "threshold": 9800000,
+        "rateBps": 150
+      },
+      {
+        "threshold": 10950000,
+        "rateBps": 175
+      },
+      {
+        "threshold": 11200000,
+        "rateBps": 200
+      },
+      {
+        "threshold": 12050000,
+        "rateBps": 300
+      },
+      {
+        "threshold": 12950000,
+        "rateBps": 400
+      },
+      {
+        "threshold": 14150000,
+        "rateBps": 500
+      },
+      {
+        "threshold": 15550000,
+        "rateBps": 600
+      },
+      {
+        "threshold": 17050000,
+        "rateBps": 700
+      },
+      {
+        "threshold": 19500000,
+        "rateBps": 800
+      },
+      {
+        "threshold": 22700000,
+        "rateBps": 900
+      },
+      {
+        "threshold": 26600000,
+        "rateBps": 1000
+      },
+      {
+        "threshold": 28100000,
+        "rateBps": 1100
+      },
+      {
+        "threshold": 30100000,
+        "rateBps": 1200
+      },
+      {
+        "threshold": 32600000,
+        "rateBps": 1300
+      },
+      {
+        "threshold": 35400000,
+        "rateBps": 1400
+      },
+      {
+        "threshold": 38900000,
+        "rateBps": 1500
+      },
+      {
+        "threshold": 43000000,
+        "rateBps": 1600
+      },
+      {
+        "threshold": 47400000,
+        "rateBps": 1700
+      },
+      {
+        "threshold": 51200000,
+        "rateBps": 1800
+      },
+      {
+        "threshold": 55800000,
+        "rateBps": 1900
+      },
+      {
+        "threshold": 60400000,
+        "rateBps": 2000
+      },
+      {
+        "threshold": 66700000,
+        "rateBps": 2100
+      },
+      {
+        "threshold": 74500000,
+        "rateBps": 2200
+      },
+      {
+        "threshold": 83200000,
+        "rateBps": 2300
+      },
+      {
+        "threshold": 95600000,
+        "rateBps": 2400
+      },
+      {
+        "threshold": 110000000,
+        "rateBps": 2500
+      },
+      {
+        "threshold": 134000000,
+        "rateBps": 2600
+      },
+      {
+        "threshold": 169000000,
+        "rateBps": 2700
+      },
+      {
+        "threshold": 221000000,
+        "rateBps": 2800
+      },
+      {
+        "threshold": 390000000,
+        "rateBps": 2900
+      },
+      {
+        "threshold": 463000000,
+        "rateBps": 3000
+      },
+      {
+        "threshold": 561000000,
+        "rateBps": 3100
+      },
+      {
+        "threshold": 709000000,
+        "rateBps": 3200
+      },
+      {
+        "threshold": 965000000,
+        "rateBps": 3300
+      },
+      {
+        "threshold": 1419000000,
+        "rateBps": 3400
+      }
+    ]
+  }
+}

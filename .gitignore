@@ -1,0 +1,12 @@
+node_modules/
+.next/
+backend/data/
+*.db*
+.env
+.env.local
+*.exe
+frontend/tsconfig.tsbuildinfo
+frontend/.next-e2e/
+frontend/test-results/
+frontend/playwright-report/
+tmp/
