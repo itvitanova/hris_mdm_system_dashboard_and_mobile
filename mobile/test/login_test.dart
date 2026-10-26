@@ -16,7 +16,10 @@ void main() {
         home: LoginScreen(api: ApiClient(), onLogin: () {}),
       ),
     );
-    await tester.tap(find.text('Masuk'));
+    final buttonFinder = find.text('Sign In').evaluate().isNotEmpty
+        ? find.text('Sign In')
+        : find.text('Masuk');
+    await tester.tap(buttonFinder);
     await tester.pumpAndSettle();
     expect(find.text('Masukkan email yang valid'), findsOneWidget);
     expect(find.text('Masukkan kata sandi'), findsOneWidget);
