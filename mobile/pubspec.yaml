@@ -45,6 +45,9 @@ dependencies:
   camera_android: ^0.10.12
   google_mlkit_face_detection: ^0.15.1
   url_launcher: ^6.3.3
+  flutter_bloc: ^9.1.1
+  equatable: ^3.0.0
+  get_it: ^9.3.0
 
 dev_dependencies:
   flutter_test:

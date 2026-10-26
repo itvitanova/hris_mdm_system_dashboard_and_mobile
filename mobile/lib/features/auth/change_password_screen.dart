@@ -1,11 +1,22 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/api_client.dart';
 import '../../shared/widgets.dart';
+import 'presentation/bloc/auth_bloc.dart';
+import 'presentation/bloc/auth_event.dart';
+import 'presentation/bloc/auth_state.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
-  const ChangePasswordScreen({super.key, required this.api});
+  const ChangePasswordScreen({
+    super.key,
+    required this.api,
+    this.authBloc,
+  });
+
   final ApiClient api;
+  final AuthBloc? authBloc;
+
   @override
   State<ChangePasswordScreen> createState() => _ChangePasswordScreenState();
 }
@@ -17,6 +28,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       confirm = TextEditingController();
   bool busy = false;
   String? error;
+
   @override
   void dispose() {
     current.dispose();
@@ -25,12 +37,34 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     super.dispose();
   }
 
+  AuthBloc? _getBloc() {
+    if (widget.authBloc != null) return widget.authBloc;
+    try {
+      return context.read<AuthBloc>();
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> save() async {
     if (busy || !form.currentState!.validate()) return;
     setState(() {
       busy = true;
       error = null;
     });
+
+    final bloc = _getBloc();
+    if (bloc != null) {
+      bloc.add(
+        AuthPasswordChangeRequested(
+          currentPassword: current.text,
+          newPassword: next.text,
+        ),
+      );
+      return;
+    }
+
+    // Direct fallback for isolated test harnesses without BLoC provider
     try {
       await widget.api.post('/auth/password', {
         'currentPassword': current.text,
@@ -47,8 +81,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget _buildBody(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Ganti password')),
     body: Form(
       key: form,
@@ -110,4 +143,33 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       ),
     ),
   );
+
+  @override
+  Widget build(BuildContext context) {
+    final bloc = _getBloc();
+    if (bloc == null) {
+      return _buildBody(context);
+    }
+
+    return BlocConsumer<AuthBloc, AuthState>(
+      bloc: bloc,
+      listener: (context, state) {
+        if (state is AuthPasswordChangeSuccess) {
+          notify(context, 'Password berhasil diganti. Silakan login kembali.');
+          Navigator.pop(context, true);
+        } else if (state is AuthActionFailure) {
+          setState(() {
+            busy = false;
+            error = state.message;
+          });
+        } else if (state is AuthLoading) {
+          setState(() {
+            busy = true;
+            error = null;
+          });
+        }
+      },
+      builder: (context, state) => _buildBody(context),
+    );
+  }
 }

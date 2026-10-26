@@ -1,11 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/api_client.dart';
 import '../../shared/widgets.dart';
+import 'presentation/bloc/auth_bloc.dart';
+import 'presentation/bloc/auth_event.dart';
+import 'presentation/bloc/auth_state.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key, required this.api, required this.onLogin});
+  const LoginScreen({
+    super.key,
+    required this.api,
+    required this.onLogin,
+    this.authBloc,
+  });
+
   final ApiClient api;
   final VoidCallback onLogin;
+  final AuthBloc? authBloc;
+
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
@@ -15,6 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final email = TextEditingController(), password = TextEditingController();
   bool busy = false, hidden = true;
   String? error;
+
   @override
   void dispose() {
     email.dispose();
@@ -22,9 +35,31 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  AuthBloc? _getBloc() {
+    if (widget.authBloc != null) return widget.authBloc;
+    try {
+      return context.read<AuthBloc>();
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> submit() async {
     if (busy || !form.currentState!.validate()) return;
     FocusScope.of(context).unfocus();
+
+    final bloc = _getBloc();
+    if (bloc != null) {
+      bloc.add(
+        AuthLoginRequested(
+          email: email.text.trim(),
+          password: password.text,
+        ),
+      );
+      return;
+    }
+
+    // Direct fallback for isolated test harnesses without BLoC provider
     setState(() {
       busy = true;
       error = null;
@@ -42,8 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget _buildForm(BuildContext context) => Scaffold(
     body: SafeArea(
       child: Center(
         child: SingleChildScrollView(
@@ -153,4 +187,33 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     ),
   );
+
+  @override
+  Widget build(BuildContext context) {
+    final bloc = _getBloc();
+    if (bloc == null) {
+      return _buildForm(context);
+    }
+
+    return BlocConsumer<AuthBloc, AuthState>(
+      bloc: bloc,
+      listener: (context, state) {
+        if (state is Authenticated) {
+          password.clear();
+          widget.onLogin();
+        } else if (state is AuthActionFailure) {
+          setState(() {
+            busy = false;
+            error = state.message;
+          });
+        } else if (state is AuthLoading) {
+          setState(() {
+            busy = true;
+            error = null;
+          });
+        }
+      },
+      builder: (context, state) => _buildForm(context),
+    );
+  }
 }

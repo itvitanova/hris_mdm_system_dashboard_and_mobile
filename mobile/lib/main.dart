@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'app.dart';
 import 'core/api_client.dart';
+import 'core/di/injection_container.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(HrisApp(api: ApiClient()));
+  await initDependencies();
+  runApp(HrisApp(api: sl<ApiClient>()));
 }
