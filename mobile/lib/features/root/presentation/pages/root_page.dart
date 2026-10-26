@@ -9,10 +9,10 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../attendance/attendance_screen.dart';
 import '../../../requests/request_detail.dart';
 import '../../../requests/request_notifications.dart';
-import '../tabs/dashboard_tab.dart';
-import '../tabs/requests_tab.dart';
-import '../tabs/payroll_tab.dart';
-import '../tabs/profile_tab.dart';
+import '../widgets/dashboard_tab.dart';
+import '../widgets/requests_tab.dart';
+import '../widgets/payroll_tab.dart';
+import '../widgets/profile_tab.dart';
 
 class RootPage extends StatefulWidget {
   const RootPage({
