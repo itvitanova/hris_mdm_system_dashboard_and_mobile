@@ -1,3 +1,5 @@
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'features/root/presentation/pages/root_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/api_client.dart';
@@ -7,7 +9,6 @@ import 'features/auth/login_screen.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/bloc/auth_event.dart';
 import 'features/auth/presentation/bloc/auth_state.dart';
-import 'features/home/home_screen.dart';
 import 'features/home/presentation/bloc/workspace_bloc.dart';
 import 'features/attendance/face_enrollment_screen.dart';
 import 'features/attendance/presentation/bloc/attendance_bloc.dart';
@@ -68,7 +69,10 @@ class _HrisAppState extends State<HrisApp> {
       BlocProvider<RequestBloc>.value(value: _requestBloc),
       BlocProvider<PayrollBloc>.value(value: _payrollBloc),
     ],
-    child: MaterialApp(
+    child: ScreenUtilInit(
+      designSize: const Size(375, 812),
+      minTextAdapt: true,
+      builder: (context, child) => MaterialApp(
       title: 'MDM HR',
       navigatorKey: navigator,
       debugShowCheckedModeBanner: false,
@@ -114,6 +118,7 @@ class _HrisAppState extends State<HrisApp> {
           );
         },
       ),
+    ),
     ),
   );
 }
@@ -168,7 +173,7 @@ class _WorkspaceLoaderState extends State<WorkspaceLoader> {
               onRefresh: refresh,
               onLogout: widget.onLogout,
             )
-          : HomeScreen(
+          : RootPage(
               api: widget.api,
               workspace: data!,
               onRefresh: refresh,

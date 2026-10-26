@@ -11,7 +11,7 @@ ThemeData hrisTheme() {
         error: const Color(0xFFB42318),
       ).copyWith(
         secondary: brand,
-        secondaryContainer: const Color(0xFFE8EFFE),
+        secondaryContainer: const Color(0xFFE1F2F5),
         onSecondaryContainer: ink,
       );
   final border = OutlineInputBorder(
@@ -20,7 +20,7 @@ ThemeData hrisTheme() {
   );
   return ThemeData(
     useMaterial3: true,
-    fontFamily: 'Roboto',
+    fontFamily: 'Inter',
     colorScheme: scheme,
     scaffoldBackgroundColor: canvas,
     textTheme: const TextTheme(
@@ -50,7 +50,7 @@ ThemeData hrisTheme() {
       surfaceTintColor: Colors.transparent,
       centerTitle: false,
       titleTextStyle: TextStyle(
-        fontFamily: 'Roboto',
+        fontFamily: 'Inter',
         fontSize: 20,
         fontWeight: FontWeight.w700,
         color: ink,
@@ -83,7 +83,7 @@ ThemeData hrisTheme() {
         minimumSize: const Size(48, 52),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         textStyle: const TextStyle(
-          fontFamily: 'Roboto',
+          fontFamily: 'Inter',
           fontSize: 16,
           fontWeight: FontWeight.w600,
         ),
@@ -101,7 +101,7 @@ ThemeData hrisTheme() {
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: Colors.white,
       surfaceTintColor: Colors.transparent,
-      indicatorColor: const Color(0xFFE8EFFE),
+      indicatorColor: const Color(0xFFE1F2F5),
       labelTextStyle: WidgetStateProperty.resolveWith(
         (states) => TextStyle(
           fontSize: 12,

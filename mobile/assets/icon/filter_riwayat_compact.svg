@@ -1,0 +1,93 @@
+<svg width="460" height="120" viewBox="0 0 460 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Teal Gradient (sama dengan attendance_card_today_teal.svg) -->
+    <linearGradient id="reset-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F766E" />
+      <stop offset="100%" stop-color="#14B8A6" />
+    </linearGradient>
+  </defs>
+
+  <!-- Card Background Surface (Plain Clean White, Zero Glow, Plain Solid Border) -->
+  <rect x="8" y="4" width="444" height="112" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+
+  <!-- ================= BARIS 1: PERIODE (BULAN & TAHUN TERPISAH) ================= -->
+
+  <!-- 1.1 DROPDOWN BULAN (x=24..292, w=268, h=40, rx=10) -->
+  <g id="filter-month" cursor="pointer">
+    <!-- Container -->
+    <rect x="24" y="16" width="268" height="40" rx="10" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+    
+    <!-- Lucide Calendar Icon (viewBox 0 0 24 24, scaled 0.583x ≈ 14px, translate to x=36 cy=36) -->
+    <g transform="translate(36, 29) scale(0.583)" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <path d="M8 2v4"/>
+      <path d="M16 2v4"/>
+      <rect width="18" height="18" x="3" y="4" rx="2"/>
+      <path d="M3 10h18"/>
+    </g>
+    
+    <!-- Value Text (Baseline y=40.5) -->
+    <text x="60" y="40.5" font-family="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" fill="#0F172A">Semua Bulan</text>
+    
+    <!-- Down Chevron (Center cy=36, Ends at x=280, right padding=12px) -->
+    <path d="M274 34L277 37L280 34" stroke="#64748B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- 1.2 DROPDOWN TAHUN - AKSEN FROSTED TEAL (x=304..436, w=132, h=40, rx=10) -->
+  <g id="filter-year" cursor="pointer">
+    <!-- Container: Frosted Teal Lembut -->
+    <rect x="304" y="16" width="132" height="40" rx="10" fill="#F0FDFA" stroke="#99F6E4" stroke-width="1.2"/>
+    
+    <!-- Lucide Calendar Icon Teal (viewBox 0 0 24 24, scaled 0.583x ≈ 14px, translate to x=318 cy=29) -->
+    <g transform="translate(318, 29) scale(0.583)" stroke="#0D9488" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <path d="M8 2v4"/>
+      <path d="M16 2v4"/>
+      <rect width="18" height="18" x="3" y="4" rx="2"/>
+      <path d="M3 10h18"/>
+    </g>
+    
+    <!-- Value Text: Tahun Bold Teal (Baseline y=40.5) -->
+    <text x="340" y="40.5" font-family="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="800" fill="#0D9488">2026</text>
+    
+    <!-- Down Chevron Teal (Center cy=36, Ends at x=424, right padding=12px) -->
+    <path d="M418 34L421 37L424 34" stroke="#0D9488" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- ================= BARIS 2: STATUS KEHADIRAN & TOMBOL RESET ================= -->
+
+  <!-- 2.1 DROPDOWN STATUS KEHADIRAN (x=24..292, w=268, h=40, rx=10) -->
+  <g id="filter-status" cursor="pointer">
+    <!-- Container -->
+    <rect x="24" y="64" width="268" height="40" rx="10" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+    
+    <!-- Status Dot Glyph (Solid Gojek Green, Center cx=43, cy=84) -->
+    <circle cx="43" cy="84" r="5" fill="#00AA13"/>
+    <circle cx="43" cy="84" r="2" fill="white"/>
+    
+    <!-- Value Text (Aligned to x=60, Baseline y=88.5) -->
+    <text x="60" y="88.5" font-family="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" fill="#0F172A">Semua Kehadiran</text>
+    
+    <!-- Down Chevron (Center cy=84, Ends at x=280, right padding=12px) -->
+    <path d="M274 82L277 85L280 82" stroke="#64748B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- 2.2 TOMBOL RESET - GRADASI TEAL PREMIUM (x=304..436, w=132, h=40, rx=10) -->
+  <g id="button-reset" cursor="pointer">
+    <!-- Gradient Teal Pill + Frosted White Border (Sama seperti Hero Card) -->
+    <rect x="304" y="64" width="132" height="40" rx="10" fill="url(#reset-gradient)" stroke="#FFFFFF" stroke-opacity="0.45" stroke-width="1.5"/>
+    
+    <!-- Centered Content Group (Lucide Refresh Icon Putih + Teks Reset Putih) -->
+    <!-- Visual center x=370, cy=84. Icon 16px + gap 6px + text ~34px = ~56px total, start x=342 -->
+    <g transform="translate(340, 76)">
+      <!-- Lucide refresh-ccw (viewBox 0 0 24 24, scaled 0.667x ≈ 16px) -->
+      <g transform="scale(0.667)" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none">
+        <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+        <path d="M3 3v5h5"/>
+        <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+        <path d="M21 21v-5h-5"/>
+      </g>
+      
+      <!-- Text Reset Putih Bold -->
+      <text x="20" y="12" font-family="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12.5" font-weight="700" fill="#FFFFFF" letter-spacing="0.3">Reset</text>
+    </g>
+  </g>
+</svg>

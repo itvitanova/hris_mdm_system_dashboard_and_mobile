@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
-const brand = Color(0xFF2563EB);
-const ink = Color(0xFF182B49);
-const muted = Color(0xFF52637A);
-const canvas = Color(0xFFF5F7FB);
-const line = Color(0xFFE3E9F2);
+import '../core/theme/app_colors.dart';
+
+const brand = AppColors.deepTeal;
+const ink = AppColors.textPrimary;
+const muted = AppColors.textSecondary;
+const canvas = AppColors.bg;
+const line = Color(0xFFE2E8F0);
 
 IconData requestIcon(String kind) => switch (kind) {
   'Cuti' => Icons.event_available_outlined,
