@@ -23,7 +23,7 @@ func ensureServicePoints(ctx context.Context, s domain.Store) error {
 		if err := s.Get(ctx, "settings", "company", &settings); err != nil {
 			return err
 		}
-		hq := domain.ServicePoint{ID: "HQ", Code: "HQ", Name: settings.LocationName, Kind: "HQ", Address: settings.CompanyAddress, Latitude: settings.Latitude, Longitude: settings.Longitude, Radius: settings.Radius, Timezone: settings.Timezone, WorkStart: settings.WorkStart, Active: true}
+		hq := domain.ServicePoint{ID: "HQ", Code: "HQ", Name: settings.LocationName, Kind: "HQ", Address: settings.CompanyAddress, Latitude: settings.Latitude, Longitude: settings.Longitude, Radius: settings.Radius, Timezone: settings.Timezone, WorkStart: settings.WorkStart, WorkEnd: settings.WorkEnd, Active: true}
 		if err := s.Put(ctx, "service_points", hq.ID, hq); err != nil {
 			return err
 		}
@@ -93,6 +93,11 @@ func (a *App) SaveServicePoint(ctx context.Context, actor domain.Actor, p domain
 	if _, err := time.Parse("15:04", p.WorkStart); err != nil {
 		return errors.New("jam masuk tidak valid")
 	}
+	if p.WorkEnd != "" {
+		if _, err := time.Parse("15:04", p.WorkEnd); err != nil || p.WorkEnd <= p.WorkStart {
+			return errors.New("jam pulang harus setelah jam masuk pada hari yang sama")
+		}
+	}
 	return a.write(ctx, func(s domain.Store) error {
 		var all []domain.ServicePoint
 		if err := s.List(ctx, "service_points", &all); err != nil {
@@ -126,6 +131,7 @@ func (a *App) SaveServicePoint(ctx context.Context, actor domain.Actor, p domain
 			settings.Radius = p.Radius
 			settings.Timezone = p.Timezone
 			settings.WorkStart = p.WorkStart
+			settings.WorkEnd = p.WorkEnd
 			if err := s.Put(ctx, "settings", "company", settings); err != nil {
 				return err
 			}

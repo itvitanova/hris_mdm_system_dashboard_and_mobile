@@ -9,8 +9,10 @@ import 'package:mdm_hris/core/api_client.dart';
 
 class DemoApi extends ApiClient {
   List<Map<String, dynamic>> attendanceRows = [];
+  bool signedIn = true;
+  List<Map<String, dynamic>> payrollRows = [];
   @override
-  Future<bool> restore() async => true;
+  Future<bool> restore() async => signedIn;
   @override
   Future<Map<String, dynamic>> workspace() async => {
     'actor': {
@@ -39,7 +41,7 @@ class DemoApi extends ApiClient {
         'endDate': '2026-10-27',
       },
     ],
-    'payroll': [],
+    'payroll': payrollRows,
     'attendanceDate': '2026-10-23',
     'attendance': attendanceRows,
     'settings': {},
@@ -47,7 +49,104 @@ class DemoApi extends ApiClient {
   };
 }
 
+Future<void> savePreview(
+  WidgetTester tester,
+  GlobalKey boundary,
+  String name,
+) async {
+  if (!const bool.fromEnvironment('WRITE_PREVIEW')) return;
+  await tester.runAsync(() async {
+    final image =
+        await (boundary.currentContext!.findRenderObject()
+                as RenderRepaintBoundary)
+            .toImage(pixelRatio: 2);
+    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+    final output = File('../tmp/mobile-$name.png');
+    await output.parent.create(recursive: true);
+    await output.writeAsBytes(bytes!.buffer.asUint8List());
+    image.dispose();
+  });
+}
+
 void main() {
+  for (final scale in [1.0, 2.0, 3.2]) {
+    testWidgets('all tabs reflow at 360dp with font scale $scale', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1;
+      tester.platformDispatcher.textScaleFactorTestValue = scale;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      final api = DemoApi();
+      api.attendanceRows = [
+        {
+          'employeeId': 'EMP-002',
+          'date': '2026-10-23',
+          'status': 'Hadir',
+          'checkIn': '2026-10-23T09:00:00+07:00',
+          'checkOut': '',
+        },
+      ];
+      api.payrollRows = [
+        {
+          'employeeId': 'EMP-002',
+          'id': 'PAY-001',
+          'period': '2026-10',
+          'status': 'Final',
+          'netSalary': 1250000000,
+          'baseSalary': 1250000000,
+          'deductions': 0,
+          'employeeName': 'Nadia Putri',
+          'department': 'Product & Design',
+          'companyName': 'Perusahaan contoh',
+        },
+      ];
+      await tester.pumpWidget(HrisApp(api: api));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      // Traverse the complete scroll extent, including content built lazily.
+      for (final destination in [
+        'Beranda',
+        'Pengajuan',
+        'Slip gaji',
+        'Profil',
+      ]) {
+        await tester.tap(find.text(destination).last);
+        await tester.pumpAndSettle();
+        final scrollable = tester.state<ScrollableState>(
+          find.byType(Scrollable).first,
+        );
+        while (scrollable.position.pixels <
+            scrollable.position.maxScrollExtent) {
+          await tester.drag(
+            find.byType(Scrollable).first,
+            const Offset(0, -400),
+          );
+          await tester.pumpAndSettle();
+          expect(
+            tester.takeException(),
+            isNull,
+            reason: '$destination / $scale',
+          );
+        }
+        expect(tester.takeException(), isNull, reason: '$destination / $scale');
+        if (destination == 'Slip gaji') {
+          await tester.ensureVisible(find.text('2026-10'));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('2026-10'));
+          await tester.pumpAndSettle();
+          expect(find.text('Gaji bersih'), findsOneWidget);
+          expect(tester.takeException(), isNull);
+          await tester.pageBack();
+          await tester.pumpAndSettle();
+        }
+      }
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  }
+
   testWidgets(
     'home refreshes the attendance action after returning from the scanner page',
     (tester) async {
@@ -150,25 +249,18 @@ void main() {
       expect(find.text('Nadia Putri'), findsOneWidget);
       expect(find.text('12 hari'), findsOneWidget);
       expect(tester.takeException(), isNull);
-      if (const bool.fromEnvironment('WRITE_PREVIEW')) {
-        await tester.runAsync(() async {
-          final image =
-              await (boundary.currentContext!.findRenderObject()
-                      as RenderRepaintBoundary)
-                  .toImage(pixelRatio: 2);
-          final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-          await File(
-            '../tmp/mobile-preview.png',
-          ).writeAsBytes(bytes!.buffer.asUint8List());
-          image.dispose();
-        });
-      }
+      await savePreview(tester, boundary, 'preview');
       await tester.tap(find.text('Pengajuan').last);
       await tester.pumpAndSettle();
       expect(find.text('Cuti tahunan'), findsOneWidget);
+      await savePreview(tester, boundary, 'requests');
       await tester.tap(find.text('Slip gaji').last);
       await tester.pumpAndSettle();
       expect(find.text('Slip gaji belum tersedia.'), findsOneWidget);
+      await savePreview(tester, boundary, 'payroll-empty');
+      await tester.tap(find.text('Profil').last);
+      await tester.pumpAndSettle();
+      await savePreview(tester, boundary, 'profile');
       await tester.tap(find.text('Beranda'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Absensi Masuk'));
@@ -189,6 +281,14 @@ void main() {
         isNull,
       );
       expect(tester.takeException(), isNull);
+      await tester.pumpWidget(
+        RepaintBoundary(
+          key: boundary,
+          child: HrisApp(key: UniqueKey(), api: DemoApi()..signedIn = false),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await savePreview(tester, boundary, 'login');
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );

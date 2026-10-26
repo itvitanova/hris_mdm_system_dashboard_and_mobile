@@ -2,7 +2,11 @@
 
 Aplikasi Flutter Android/iOS untuk employee self-service. Folder ini terpisah dari `frontend` Next.js. Memakai backend Go dan PostgreSQL yang sama, tanpa database atau akun terpisah. Tampilan Material 3 berwarna biru, dengan menu Beranda, Pengajuan, Slip gaji, dan Profil.
 
-[Pratinjau beranda Flutter](../docs/images/flutter-mobile.png) menggunakan data contoh.
+[Pratinjau beranda Flutter](../docs/images/flutter-mobile-ryux.png) dan
+[layar login](../docs/images/flutter-login-ryux.png) menggunakan data contoh.
+Redesign mengikuti [arah desain RYUX](DESIGN.md): status absensi dan tindakan
+utama menjadi fokus beranda, komponen mengikuti tema bersama, serta ringkasan
+dan pintasan menyesuaikan pembesaran teks.
 
 ## Fitur yang tersedia
 
@@ -16,7 +20,7 @@ Aplikasi Flutter Android/iOS untuk employee self-service. Folder ini terpisah da
 - Setelah kandidat diambil, kamera berhenti memindai selama verifikasi. Penolakan/kegagalan tidak memicu pengiriman berulang otomatis; pengguna dapat memilih **Pindai ulang**. Lokasi diambil ulang sebelum permintaan dikirim, dan backend tetap memeriksa lokasi serta wajah. Kandidat foto sementara dihapus sesudah proses selesai.
 - Menolak lokasi yang ditandai `isMocked`, usia lokasi lebih dari 30 detik, akurasi lebih dari 50 m, atau jarak + akurasi melebihi radius lokasi penugasan (default 100 m). Pengecekan radius dilewati hanya jika admin mengaktifkan izin absensi dari lokasi mana saja; pengambilan GPS, pemeriksaan akurasi, dan verifikasi wajah tetap wajib. Lokasi diambil ulang setelah foto dan sebelum pengiriman. Radius dihitung ulang oleh backend.
 - Jika pembacaan pertama kurang akurat, GPS dilanjutkan dengan pembaruan setiap 2 detik hingga pembacaan memenuhi akurasi atau batas waktu total 25 detik tercapai. Layar menampilkan perkembangan akurasi. Pemantauan dihentikan sesudah berhasil, gagal, atau batas waktu; jika akurasi tetap buruk, absensi tetap ditolak.
-- Pengajuan cuti, reimbursement, petty cash, General Affair, lembur; riwayat status dan catatan HR. Persetujuan admin tetap di web.
+- Pengajuan cuti, reimbursement, petty cash, General Affair, lembur; riwayat status, rincian, dan catatan persetujuan. Menu Persetujuan tersedia untuk atasan dan finance yang ditugaskan, melalui aplikasi maupun dashboard.
 - Rincian payroll pribadi dan simpan/bagikan PDF resmi dari backend. Reimbursement tidak dimasukkan payroll baru. PDF hanya dibagikan setelah pengguna memilih tindakan pada share sheet.
 - Profil pribadi dan riwayat kehadiran. Semua data diperbarui secara online; tarik layar ke bawah untuk menyegarkan. Tidak ada antrean absensi offline.
 
@@ -66,6 +70,20 @@ APK debug berada di `build/app/outputs/flutter-apk/app-debug.apk`. Ini untuk pen
 
 ## iOS dan rilis
 
+Pilot produksi memakai `https://hris.mdmcorp.co.id` sebagai alamat default.
+APK release versi 1.2.0 (2013) tidak memerlukan komputer, kabel USB, atau
+`adb reverse`. Override `API_BASE_URL` tetap tersedia untuk pengembangan.
+Konfigurasi database dan akun produksi terpisah dari data demo lokal.
+
+```powershell
+flutter build apk --release --split-per-abi --dart-define=API_BASE_URL=https://hris.mdmcorp.co.id
+```
+
+Gunakan kembali signing key yang sama untuk semua pembaruan pilot. File
+`android/key.properties` dan keystore disimpan privat, tidak masuk Git. APK
+release dengan signing key produksi tidak dapat menimpa APK debug lama;
+hapus APK debug terlebih dahulu jika Android melaporkan signature berbeda.
+
 Project iOS, keterangan izin kamera/lokasi, entitlements Keychain, dan Podfile tersedia. Pemindai menggunakan ML Kit, sehingga minimum iOS 15.5; jalankan `pod install` dari folder `ios` pada Mac setelah `flutter pub get`. Build dan pengujian iOS memerlukan macOS, Xcode, Apple signing/provisioning. Gunakan endpoint HTTPS. Build iOS belum divalidasi pada Windows.
 
 Sebelum distribusi Android, tetapkan application ID final dan signing key perusahaan melalui `android/key.properties` (lihat `key.properties.example`). File key dan password diabaikan version control. Build release menolak HTTP dan tidak menggunakan debug signing key.
@@ -83,5 +101,7 @@ Play Integrity belum diintegrasikan atau diberi hasil simulasi. Integrasi produk
 Endpoint absensi web/PWA masih aktif. Selama endpoint tersebut belum mewajibkan bukti integritas server, pengguna dapat mencoba jalur web di luar pemeriksaan Flutter. Jika kebijakannya absensi hanya dari mobile, wajibkan bukti integritas untuk seluruh jalur absensi sebelum menonaktifkan fitur web. Pengajuan web dapat tetap tersedia. Jangan mengandalkan header `platform`, boolean `isMocked`, atau nama aplikasi yang dikirim klien sebagai pengganti attestation.
 
 Provider wajah/liveness dikonfigurasi melalui `FACE_PROVIDER_URL` dan `FACE_PROVIDER_KEY` pada server. Default Compose menggunakan layanan internal `face`; isi secret acak `FACE_PROVIDER_KEY` sebelum build. User mendaftarkan wajah pertama melalui HP setelah akunnya dibuat admin. Aplikasi memblokir absensi jika layanan/pendaftaran belum tersedia. Pengambilan kandidat otomatis menggunakan kamera embedded dan ML Kit face detection; pencocokan identitas ditentukan server. Provider yang membutuhkan challenge/video aktif perlu integrasi SDK khusus. Passive anti-spoofing belum mencegah replay payload; pengujian perangkat nyata tetap diperlukan.
+
+Lihat [panduan konfigurasi approval dan reimbursement](../docs/approval-reimbursement.md) untuk menetapkan atasan, rekening, petugas finance, dan alur persetujuan.
 
 Struktur kode: `lib/core` (API dan data workspace), `lib/features` (auth, home, attendance, requests, payroll), `lib/shared` (komponen UI).

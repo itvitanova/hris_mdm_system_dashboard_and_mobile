@@ -7,7 +7,10 @@ import '../attendance/attendance_screen.dart';
 import '../attendance/daily_attendance.dart';
 import '../auth/change_password_screen.dart';
 import '../requests/request_form.dart';
+import '../requests/request_detail.dart';
 import '../payroll/payslip_screen.dart';
+import 'leave_calendar_screen.dart';
+import '../requests/request_notifications.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -36,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     // Refresh the server's company date even if the app stays open overnight.
-    refreshTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+    refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       if (WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
         unawaited(refreshVisible());
       }
@@ -75,7 +78,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       context,
       MaterialPageRoute(builder: (_) => screen),
     );
-    if (mounted && (changed == true || screen is AttendanceScreen)) {
+    if (mounted &&
+        (changed == true ||
+            screen is AttendanceScreen ||
+            screen is ApprovalsScreen ||
+            screen is RequestDetailScreen ||
+            screen is RequestNotificationsScreen)) {
       await widget.onRefresh();
     }
   }
@@ -101,43 +109,77 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       ),
       actions: [
         IconButton(
+          tooltip: 'Kalender cuti',
+          onPressed: () =>
+              open(LeaveCalendarScreen(api: widget.api, workspace: w)),
+          icon: const Icon(Icons.calendar_month_outlined),
+        ),
+        IconButton(
+          tooltip: 'Notifikasi pengajuan',
+          onPressed: () =>
+              open(RequestNotificationsScreen(api: widget.api, workspace: w)),
+          icon: Badge.count(
+            count: w.mine('requests').where((r) => r['unread'] == true).length,
+            isLabelVisible: w.mine('requests').any((r) => r['unread'] == true),
+            child: const Icon(Icons.notifications_outlined),
+          ),
+        ),
+        if (w.data['approvalAccess'] == true)
+          IconButton(
+            tooltip: 'Persetujuan',
+            onPressed: () => open(ApprovalsScreen(api: widget.api)),
+            icon: Badge(
+              label: Text(
+                '${w.rows("requests").where((r) => r["canReview"] == true).length}',
+              ),
+              child: const Icon(Icons.fact_check_outlined),
+            ),
+          ),
+        IconButton(
           tooltip: 'Segarkan data',
           onPressed: widget.onRefresh,
           icon: const Icon(Icons.refresh),
         ),
       ],
     ),
-    body: RefreshIndicator(
-      onRefresh: widget.onRefresh,
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(20),
-        children: switch (tab) {
-          0 => dashboard(),
-          1 => requests(),
-          2 => payroll(),
-          _ => profile(),
-        },
+    body: SafeArea(
+      top: false,
+      child: RefreshIndicator(
+        onRefresh: widget.onRefresh,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+          children: switch (tab) {
+            0 => dashboard(),
+            1 => requests(),
+            2 => payroll(),
+            _ => profile(),
+          },
+        ),
       ),
     ),
     bottomNavigationBar: NavigationBar(
       selectedIndex: tab,
       onDestinationSelected: (value) => setState(() => tab = value),
-      destinations: const [
-        NavigationDestination(
+      destinations: [
+        const NavigationDestination(
           icon: Icon(Icons.grid_view_outlined),
           selectedIcon: Icon(Icons.grid_view_rounded),
           label: 'Beranda',
         ),
         NavigationDestination(
-          icon: Icon(Icons.assignment_outlined),
+          icon: Badge.count(
+            count: w.mine('requests').where((r) => r['unread'] == true).length,
+            isLabelVisible: w.mine('requests').any((r) => r['unread'] == true),
+            child: const Icon(Icons.assignment_outlined),
+          ),
           label: 'Pengajuan',
         ),
-        NavigationDestination(
+        const NavigationDestination(
           icon: Icon(Icons.receipt_long_outlined),
           label: 'Slip gaji',
         ),
-        NavigationDestination(
+        const NavigationDestination(
           icon: Icon(Icons.person_outline),
           label: 'Profil',
         ),
@@ -153,41 +195,95 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         .where((r) => r['status'] == 'Menunggu')
         .length;
     return [
+      Text(
+        'Semangat bekerja,',
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: muted),
+      ),
+      const SizedBox(height: 4),
+      Text(
+        text(w.actor, 'name'),
+        style: Theme.of(context).textTheme.headlineSmall,
+      ),
+      const SizedBox(height: 4),
+      Text(
+        '${text(w.employee, 'position')} • ${text(w.employee, 'department')}',
+        style: const TextStyle(color: muted),
+      ),
+      const SizedBox(height: 24),
       Container(
-        padding: const EdgeInsets.all(24),
-        margin: const EdgeInsets.only(bottom: 20),
+        margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF1D4ED8), Color(0xFF3B82F6)],
-          ),
-          borderRadius: BorderRadius.circular(24),
+          color: ink,
+          borderRadius: BorderRadius.circular(20),
         ),
+        padding: const EdgeInsets.all(20),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Semangat bekerja,',
-              style: TextStyle(color: Color(0xFFDBEAFE)),
+            Row(
+              children: [
+                const Icon(
+                  Icons.schedule_outlined,
+                  color: Color(0xFFB7CEFF),
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'Kehadiran hari ini',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                if (daily.completed)
+                  const Icon(
+                    Icons.check_circle_outline,
+                    color: Color(0xFFB7CEFF),
+                  ),
+              ],
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 16),
             Text(
-              text(w.actor, 'name'),
+              daily.completed
+                  ? 'Sampai jumpa besok'
+                  : daily.checkedIn
+                  ? 'Selamat bekerja'
+                  : 'Mulai hari kerja Anda',
               style: const TextStyle(
                 color: Colors.white,
+                fontSize: 20,
                 fontWeight: FontWeight.w700,
-                fontSize: 26,
               ),
             ),
             const SizedBox(height: 6),
             Text(
-              '${text(w.employee, 'position')} • ${text(w.employee, 'department')}',
-              style: const TextStyle(color: Color(0xFFDBEAFE)),
+              daily.description,
+              style: const TextStyle(color: Color(0xFFD1DEF1)),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
+            Wrap(
+              spacing: 32,
+              runSpacing: 12,
+              children: [
+                _AttendanceTime(
+                  label: 'Masuk',
+                  value: timeLabel(daily.record['checkIn']),
+                ),
+                _AttendanceTime(
+                  label: 'Pulang',
+                  value: timeLabel(daily.record['checkOut']),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
             FilledButton.icon(
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: brand,
+                disabledBackgroundColor: const Color(0xFF314766),
+                disabledForegroundColor: const Color(0xFFD1DEF1),
               ),
               onPressed: daily.completed
                   ? null
@@ -199,126 +295,156 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     ? Icons.logout
                     : Icons.login,
               ),
-              label: Text(daily.label),
+              label: Text(daily.label, textAlign: TextAlign.center),
             ),
           ],
         ),
       ),
-      Row(
-        children: [
-          Expanded(
-            child: Panel(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.beach_access_outlined, color: brand),
-                  const SizedBox(height: 12),
-                  Text(
-                    '${number(w.employee, 'leaveBalance').toInt()} hari',
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const Text(
-                    'Sisa cuti',
-                    style: TextStyle(color: Color(0xFF64748B)),
-                  ),
-                ],
-              ),
+      if (w.data['approvalAccess'] == true)
+        Panel(
+          child: ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.fact_check_outlined, color: brand),
+            title: const Text('Persetujuan'),
+            subtitle: Text(
+              '${w.rows("requests").where((r) => r["canReview"] == true).length} pengajuan menunggu tindakan Anda',
             ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => open(ApprovalsScreen(api: widget.api)),
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Panel(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.schedule, color: brand),
-                  const SizedBox(height: 12),
-                  Text(
-                    '$pending',
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const Text(
-                    'Menunggu',
-                    style: TextStyle(color: Color(0xFF64748B)),
-                  ),
-                ],
+        ),
+      Panel(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final stacked = MediaQuery.textScalerOf(context).scale(14) > 22;
+            final children = [
+              _Summary(
+                label: 'Sisa cuti',
+                value: '${number(w.employee, 'leaveBalance').toInt()} hari',
+                icon: Icons.event_available_outlined,
               ),
-            ),
-          ),
-        ],
+              _Summary(
+                label: 'Pengajuan menunggu',
+                value: '$pending',
+                icon: Icons.schedule_outlined,
+              ),
+            ];
+            return stacked
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [children[0], const Divider(), children[1]],
+                  )
+                : Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: children[0]),
+                      const SizedBox(width: 16),
+                      Expanded(child: children[1]),
+                    ],
+                  );
+          },
+        ),
       ),
-      const SizedBox(height: 8),
-      const Text(
+      const SizedBox(height: 12),
+      const SectionHeading(
         'Pengajuan cepat',
-        style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700),
+        subtitle: 'Pilih layanan yang Anda perlukan.',
       ),
-      const SizedBox(height: 14),
-      Wrap(
-        spacing: 10,
-        runSpacing: 10,
-        children: requestKinds
-            .map(
-              (kind) => ActionChip(
-                avatar: Icon(
-                  kind == 'Lembur'
-                      ? Icons.more_time
-                      : kind == 'Cuti'
-                      ? Icons.event_available
-                      : Icons.note_add_outlined,
-                  size: 18,
-                  color: brand,
+      const SizedBox(height: 12),
+      LayoutBuilder(
+        builder: (context, constraints) {
+          final columns = MediaQuery.textScalerOf(context).scale(14) > 21
+              ? 1
+              : 2;
+          final width = (constraints.maxWidth - (columns - 1) * 12) / columns;
+          return Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              for (final kind in requestKinds)
+                SizedBox(
+                  width: width,
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      side: const BorderSide(color: line),
+                      padding: const EdgeInsets.all(16),
+                      alignment: Alignment.centerLeft,
+                    ),
+                    onPressed: () => open(
+                      RequestForm(
+                        api: widget.api,
+                        initialKind: kind,
+                        workspace: w,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(requestIcon(kind), color: brand, size: 24),
+                        const SizedBox(height: 12),
+                        Text(
+                          kind,
+                          style: const TextStyle(
+                            color: ink,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                label: Text(kind),
-                onPressed: () =>
-                    open(RequestForm(api: widget.api, initialKind: kind)),
-              ),
-            )
-            .toList(),
+            ],
+          );
+        },
       ),
-      const SizedBox(height: 28),
-      const Text(
+      const SizedBox(height: 12),
+      const SectionHeading(
         'Riwayat kehadiran',
-        style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700),
+        subtitle: 'Catatan masuk dan pulang Anda.',
       ),
-      const SizedBox(height: 14),
+      OutlinedButton.icon(
+        onPressed: () =>
+            open(LeaveCalendarScreen(api: widget.api, workspace: w)),
+        icon: const Icon(Icons.calendar_month_outlined),
+        label: const Text('Kalender cuti rekan satu lokasi'),
+      ),
+      const SizedBox(height: 12),
       if (attendance.isEmpty)
-        const EmptyState('Belum ada catatan kehadiran.')
+        const Panel(child: EmptyState('Belum ada catatan kehadiran.'))
       else
         ...attendance
             .take(15)
             .map(
               (r) => Panel(
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        Expanded(
-                          child: Text(
-                            text(r, 'date'),
-                            style: const TextStyle(fontWeight: FontWeight.w600),
-                          ),
+                        Text(
+                          text(r, 'date'),
+                          style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
                         StatusPill(text(r, 'status')),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    Row(
+                    const Divider(),
+                    Wrap(
+                      spacing: 24,
+                      runSpacing: 8,
                       children: [
-                        Expanded(
-                          child: Text('Masuk  ${timeLabel(r['checkIn'])}'),
-                        ),
-                        Expanded(
-                          child: Text(
-                            'Pulang  ${timeLabel(r['checkOut'])}',
-                            textAlign: TextAlign.right,
+                        Text('Masuk  ${timeLabel(r['checkIn'])}'),
+                        Text('Pulang  ${timeLabel(r['checkOut'])}'),
+                        if (r['earlyDeparture'] == true)
+                          Text(
+                            'Pulang ${number(r, 'earlyMinutes').toInt()} menit lebih awal · ${text(r, 'earlyReason')}',
+                            style: const TextStyle(color: Color(0xFFB42318)),
                           ),
-                        ),
                       ],
                     ),
                   ],
@@ -331,8 +457,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   List<Widget> requests() {
     final rows = w.mine('requests');
     return [
+      const SectionHeading(
+        'Pengajuan Anda',
+        subtitle: 'Pantau persetujuan, revisi, dan dokumen Anda.',
+      ),
+      const SizedBox(height: 20),
       FilledButton.icon(
-        onPressed: () => open(RequestForm(api: widget.api)),
+        onPressed: () => open(RequestForm(api: widget.api, workspace: w)),
         icon: const Icon(Icons.add),
         label: const Text('Buat pengajuan'),
       ),
@@ -345,18 +476,35 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Expanded(
-                      child: Text(
-                        text(r, 'kind'),
-                        style: const TextStyle(
-                          color: brand,
-                          fontWeight: FontWeight.w600,
-                        ),
+                    Text(
+                      text(r, 'kind'),
+                      style: const TextStyle(
+                        color: brand,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     StatusPill(text(r, 'status')),
+                    if (r['unread'] == true)
+                      const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.circle, color: Color(0xFFB42318), size: 8),
+                          SizedBox(width: 6),
+                          Text(
+                            'Ada pembaruan',
+                            style: TextStyle(
+                              color: Color(0xFFB42318),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -368,16 +516,39 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   ),
                 ),
                 const SizedBox(height: 6),
-                Text(text(r, 'description')),
+                Text(
+                  text(r, 'description'),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: muted),
+                ),
+                if (text(r, 'pendingWith', '').isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      text(r, 'pendingWith'),
+                      style: const TextStyle(
+                        color: brand,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
                 const SizedBox(height: 12),
                 Text(
-                  '${text(r, 'startDate')} → ${text(r, 'endDate')}',
-                  style: const TextStyle(color: Color(0xFF64748B)),
+                  '${text(r, 'startDate')} s.d. ${text(r, 'endDate')}',
+                  style: const TextStyle(color: Color(0xFF52637A)),
                 ),
                 if (number(r, 'amount') > 0)
                   DetailLine('Nominal', rupiah(number(r, 'amount'))),
                 if (r['kind'] == 'Lembur')
                   DetailLine('Durasi', '${number(r, 'hours')} jam'),
+                OutlinedButton.icon(
+                  onPressed: () => open(
+                    RequestDetailScreen(api: widget.api, request: r, own: true),
+                  ),
+                  icon: const Icon(Icons.article_outlined),
+                  label: const Text('Rincian dan dokumen'),
+                ),
                 if (text(r, 'reviewNote', '').isNotEmpty)
                   DetailLine('Catatan HR', text(r, 'reviewNote')),
               ],
@@ -391,9 +562,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final rows = w.mine('payroll')
       ..sort((a, b) => text(b, 'period').compareTo(text(a, 'period')));
     return [
-      const Text(
-        'Rincian pendapatan dan potongan Anda.',
-        style: TextStyle(color: Color(0xFF64748B)),
+      const SectionHeading(
+        'Pendapatan Anda',
+        subtitle: 'Rincian pendapatan dan potongan per periode.',
       ),
       const SizedBox(height: 20),
       if (rows.isEmpty)
@@ -403,13 +574,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           (r) => Card(
             child: ListTile(
               contentPadding: const EdgeInsets.all(20),
-              title: Row(
+              title: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  Expanded(
-                    child: Text(
-                      text(r, 'period'),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
+                  Text(
+                    text(r, 'period'),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   StatusPill(text(r, 'status')),
                 ],
@@ -434,20 +606,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   List<Widget> profile() => [
-    OutlinedButton.icon(
-      onPressed: () async {
-        final changed = await Navigator.push<bool>(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ChangePasswordScreen(api: widget.api),
-          ),
-        );
-        if (changed == true && mounted) widget.onLogout();
-      },
-      icon: const Icon(Icons.lock_outline),
-      label: const Text('Ganti password'),
-    ),
-    const SizedBox(height: 16),
     Panel(
       child: Column(
         children: [
@@ -463,15 +621,23 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ),
           Text(
             text(w.actor, 'email'),
-            style: const TextStyle(color: Color(0xFF64748B)),
+            style: const TextStyle(color: Color(0xFF52637A)),
           ),
           const SizedBox(height: 20),
           DetailLine('ID karyawan', text(w.employee, 'id')),
           DetailLine('Departemen', text(w.employee, 'department')),
           DetailLine('Jabatan', text(w.employee, 'position')),
           DetailLine('Telepon', text(w.employee, 'phone')),
+          DetailLine('Bank', text(w.employee, 'bankName')),
+          DetailLine('Pemilik rekening', text(w.employee, 'bankAccountName')),
+          DetailLine('Nomor rekening', text(w.employee, 'bankAccountNumber')),
           DetailLine('Alamat', text(w.employee, 'address')),
           DetailLine('Status PTKP', text(w.employee, 'ptkp')),
+          DetailLine('NIK', text(w.employee, 'employeeNumber', 'Belum diisi')),
+          DetailLine(
+            'Hubungan kerja',
+            text(w.employee, 'employmentType', 'Belum diisi'),
+          ),
           DetailLine(
             'Pendaftaran wajah',
             w.employee['faceEnrolled'] == true
@@ -485,13 +651,72 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       padding: EdgeInsets.only(bottom: 20),
       child: Text(
         'Hubungi HR untuk memperbarui data pribadi.',
-        style: TextStyle(color: Color(0xFF64748B)),
+        style: TextStyle(color: Color(0xFF52637A)),
       ),
     ),
+    OutlinedButton.icon(
+      onPressed: () async {
+        final changed = await Navigator.push<bool>(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ChangePasswordScreen(api: widget.api),
+          ),
+        );
+        if (changed == true && mounted) widget.onLogout();
+      },
+      icon: const Icon(Icons.lock_outline),
+      label: const Text('Ganti password'),
+    ),
+    const SizedBox(height: 16),
     OutlinedButton.icon(
       onPressed: loggingOut ? null : logout,
       icon: const Icon(Icons.logout),
       label: Text(loggingOut ? 'Keluar…' : 'Keluar akun'),
     ),
   ];
+}
+
+class _AttendanceTime extends StatelessWidget {
+  const _AttendanceTime({required this.label, required this.value});
+  final String label, value;
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(label, style: const TextStyle(color: Color(0xFFD1DEF1))),
+      const SizedBox(height: 4),
+      Text(
+        value,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    ],
+  );
+}
+
+class _Summary extends StatelessWidget {
+  const _Summary({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+  final String label, value;
+  final IconData icon;
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Icon(icon, color: brand, size: 22),
+      const SizedBox(height: 12),
+      Text(
+        value,
+        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+      ),
+      const SizedBox(height: 4),
+      Text(label, style: const TextStyle(color: muted)),
+    ],
+  );
 }

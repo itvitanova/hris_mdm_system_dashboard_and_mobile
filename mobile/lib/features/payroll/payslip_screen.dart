@@ -62,6 +62,35 @@ class _PayslipScreenState extends State<PayslipScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const Text(
+                  'Gaji bersih',
+                  style: TextStyle(color: Color(0xFF64748B)),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  rupiah(number(p, 'netSalary')),
+                  style: const TextStyle(
+                    color: brand,
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                if (text(p, 'status') != 'Final')
+                  const Padding(
+                    padding: EdgeInsets.only(top: 12),
+                    child: Text(
+                      'Draft: nilai masih dapat berubah dan bukan bukti pembayaran.',
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SectionHeading('Rincian slip gaji'),
+          const SizedBox(height: 16),
+          Panel(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Text(
                   text(p, 'companyName', 'Perusahaan'),
                   style: const TextStyle(
@@ -91,7 +120,7 @@ class _PayslipScreenState extends State<PayslipScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'PENDAPATAN',
+                  'Pendapatan',
                   style: TextStyle(fontWeight: FontWeight.bold, color: brand),
                 ),
                 const SizedBox(height: 8),
@@ -123,7 +152,7 @@ class _PayslipScreenState extends State<PayslipScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'POTONGAN',
+                  'Potongan',
                   style: TextStyle(fontWeight: FontWeight.bold, color: brand),
                 ),
                 const SizedBox(height: 8),
@@ -143,33 +172,6 @@ class _PayslipScreenState extends State<PayslipScreen> {
                   const Divider(),
                 ],
                 DetailLine('Total potongan', rupiah(number(p, 'deductions'))),
-              ],
-            ),
-          ),
-          Panel(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Take-home pay',
-                  style: TextStyle(color: Color(0xFF64748B)),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  rupiah(number(p, 'netSalary')),
-                  style: const TextStyle(
-                    color: brand,
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                if (text(p, 'status') != 'Final')
-                  const Padding(
-                    padding: EdgeInsets.only(top: 12),
-                    child: Text(
-                      'Draft: nilai masih dapat berubah dan bukan bukti pembayaran.',
-                    ),
-                  ),
               ],
             ),
           ),

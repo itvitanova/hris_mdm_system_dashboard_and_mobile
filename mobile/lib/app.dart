@@ -5,6 +5,7 @@ import 'features/auth/login_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/attendance/face_enrollment_screen.dart';
 import 'shared/widgets.dart';
+import 'shared/theme.dart';
 
 class HrisApp extends StatefulWidget {
   const HrisApp({super.key, required this.api});
@@ -51,39 +52,7 @@ class _HrisAppState extends State<HrisApp> {
     title: 'MDM HR',
     navigatorKey: navigator,
     debugShowCheckedModeBanner: false,
-    theme: ThemeData(
-      useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(seedColor: brand, primary: brand),
-      scaffoldBackgroundColor: const Color(0xFFF5F7FB),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFFF5F7FB),
-        foregroundColor: Color(0xFF142541),
-        surfaceTintColor: Colors.transparent,
-      ),
-      cardTheme: CardThemeData(
-        color: Colors.white,
-        elevation: 0,
-        margin: const EdgeInsets.only(bottom: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFDCE3EE)),
-        ),
-        contentPadding: const EdgeInsets.all(16),
-      ),
-      filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          minimumSize: const Size(48, 50),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      ),
-    ),
+    theme: hrisTheme(),
     home: booting
         ? const Scaffold(body: Center(child: CircularProgressIndicator()))
         : startupError != null

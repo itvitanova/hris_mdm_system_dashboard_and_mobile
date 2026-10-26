@@ -3,31 +3,39 @@ package domain
 import "context"
 
 type Employee struct {
-	ServicePointID   string `json:"servicePointId"`
-	AllowAnyLocation bool   `json:"allowAnyLocation"`
-	ID               string `json:"id"`
-	Name             string `json:"name"`
-	Email            string `json:"email"`
-	Department       string `json:"department"`
-	Position         string `json:"position"`
-	DepartmentID     string `json:"departmentId"`
-	PositionID       string `json:"positionId"`
-	Status           string `json:"status"`
-	Phone            string `json:"phone"`
-	Address          string `json:"address"`
-	BirthDate        string `json:"birthDate"`
-	JoinDate         string `json:"joinDate"`
-	Salary           int64  `json:"salary"`
-	PTKP             string `json:"ptkp"`
-	LeaveBalance     int    `json:"leaveBalance"`
-	FaceEnrolled     bool   `json:"faceEnrolled"`
+	EmployeeNumber    string `json:"employeeNumber"`
+	EmploymentType    string `json:"employmentType"`
+	ManagerID         string `json:"managerId"`
+	BankName          string `json:"bankName"`
+	BankAccountName   string `json:"bankAccountName"`
+	BankAccountNumber string `json:"bankAccountNumber"`
+	FinanceVerifier   bool   `json:"financeVerifier"`
+	ServicePointID    string `json:"servicePointId"`
+	AllowAnyLocation  bool   `json:"allowAnyLocation"`
+	ID                string `json:"id"`
+	Name              string `json:"name"`
+	Email             string `json:"email"`
+	Department        string `json:"department"`
+	Position          string `json:"position"`
+	DepartmentID      string `json:"departmentId"`
+	PositionID        string `json:"positionId"`
+	Status            string `json:"status"`
+	Phone             string `json:"phone"`
+	Address           string `json:"address"`
+	BirthDate         string `json:"birthDate"`
+	JoinDate          string `json:"joinDate"`
+	Salary            int64  `json:"salary"`
+	PTKP              string `json:"ptkp"`
+	LeaveBalance      int    `json:"leaveBalance"`
+	FaceEnrolled      bool   `json:"faceEnrolled"`
 }
 type MasterData struct {
-	ID          string `json:"id"`
-	Code        string `json:"code"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Active      bool   `json:"active"`
+	DepartmentID string `json:"departmentId,omitempty"`
+	ID           string `json:"id"`
+	Code         string `json:"code"`
+	Name         string `json:"name"`
+	Description  string `json:"description"`
+	Active       bool   `json:"active"`
 }
 type User struct {
 	ID           string `json:"id"`
@@ -49,21 +57,34 @@ type Session struct {
 	ExpiresAt int64  `json:"expiresAt"`
 }
 type Request struct {
-	ID           string  `json:"id"`
-	EmployeeID   string  `json:"employeeId"`
-	EmployeeName string  `json:"employeeName"`
-	Kind         string  `json:"kind"`
-	Title        string  `json:"title"`
-	Description  string  `json:"description"`
-	Amount       int64   `json:"amount"`
-	StartDate    string  `json:"startDate"`
-	EndDate      string  `json:"endDate"`
-	Hours        float64 `json:"hours"`
-	Days         int     `json:"days"`
-	Status       string  `json:"status"`
-	CreatedAt    string  `json:"createdAt"`
-	ReviewedBy   string  `json:"reviewedBy"`
-	ReviewNote   string  `json:"reviewNote"`
+	Unread       bool            `json:"unread"`
+	UpdateToken  string          `json:"updateToken"`
+	PendingWith  string          `json:"pendingWith"`
+	Version      int             `json:"version"`
+	Revision     int             `json:"revision"`
+	Items        []ExpenseItem   `json:"items"`
+	Snapshot     RequestSnapshot `json:"snapshot"`
+	Steps        []ApprovalStep  `json:"steps"`
+	CurrentStep  int             `json:"currentStep"`
+	History      []ApprovalEvent `json:"history"`
+	FinalizedAt  string          `json:"finalizedAt"`
+	CanReview    bool            `json:"canReview"`
+	CanDownload  bool            `json:"canDownload"`
+	ID           string          `json:"id"`
+	EmployeeID   string          `json:"employeeId"`
+	EmployeeName string          `json:"employeeName"`
+	Kind         string          `json:"kind"`
+	Title        string          `json:"title"`
+	Description  string          `json:"description"`
+	Amount       int64           `json:"amount"`
+	StartDate    string          `json:"startDate"`
+	EndDate      string          `json:"endDate"`
+	Hours        float64         `json:"hours"`
+	Days         int             `json:"days"`
+	Status       string          `json:"status"`
+	CreatedAt    string          `json:"createdAt"`
+	ReviewedBy   string          `json:"reviewedBy"`
+	ReviewNote   string          `json:"reviewNote"`
 }
 type Inventory struct {
 	ID       string `json:"id"`
@@ -82,6 +103,10 @@ type StockMovement struct {
 	CreatedAt string `json:"createdAt"`
 }
 type Attendance struct {
+	EarlyDeparture   bool                `json:"earlyDeparture"`
+	EarlyMinutes     int                 `json:"earlyMinutes"`
+	EarlyReason      string              `json:"earlyReason"`
+	ScheduledEnd     string              `json:"scheduledEnd"`
 	CheckInLocation  *AttendanceLocation `json:"checkInLocation,omitempty"`
 	CheckOutLocation *AttendanceLocation `json:"checkOutLocation,omitempty"`
 	ID               string              `json:"id"`
@@ -98,6 +123,7 @@ type Attendance struct {
 	FaceVerified     bool                `json:"faceVerified"`
 }
 type ServicePoint struct {
+	WorkEnd   string  `json:"workEnd"`
 	ID        string  `json:"id"`
 	Code      string  `json:"code"`
 	Name      string  `json:"name"`
@@ -160,6 +186,7 @@ type Payroll struct {
 	Status         string `json:"status"`
 }
 type Settings struct {
+	WorkEnd        string  `json:"workEnd"`
 	ID             string  `json:"id"`
 	Company        string  `json:"company"`
 	CompanyAddress string  `json:"companyAddress"`

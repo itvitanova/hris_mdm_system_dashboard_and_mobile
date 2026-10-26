@@ -113,7 +113,9 @@ func TestLeaveReviewAtomicAndCannotSelfApprove(t *testing.T) {
 	if own[0].LeaveBalance != 10 {
 		t.Fatalf("leave balance %d, want 10", own[0].LeaveBalance)
 	}
-	must(t, a.SubmitRequest(ctx, admin, r))
+	if a.SubmitRequest(ctx, admin, r) == nil {
+		t.Fatal("root employee without a configured route submitted a request")
+	}
 	rows, err = a.Requests(ctx, admin)
 	must(t, err)
 	for _, row := range rows {
@@ -157,17 +159,22 @@ func TestConcurrentStockCannotBecomeNegative(t *testing.T) {
 }
 func TestPayrollDraftRefreshAndFinalLock(t *testing.T) {
 	a, admin, employee := setup(t)
-	r := domain.Request{Kind: "Reimbursement", Title: "Taxi", Description: "Client visit", Amount: 100000, StartDate: "2027-02-03", EndDate: "2027-02-03"}
+	r := domain.Request{Kind: "Reimbursement", Title: "Taxi", Description: "Client visit", Amount: 100000, StartDate: "2026-01-03", EndDate: "2026-01-03"}
+	receipt, err := a.UploadReceipt(ctx, employee, "nota.pdf", []byte("%PDF-1.4\nfixture"))
+	must(t, err)
+	r.Items = []domain.ExpenseItem{{Date: "2026-01-02", Description: "Client visit", Category: "Transportasi", Amount: 100000, ReceiptID: receipt.ID}}
 	must(t, a.SubmitRequest(ctx, employee, r))
 	requests, err := a.Requests(ctx, employee)
 	must(t, err)
 	for _, row := range requests {
 		if row.Title == "Taxi" {
 			must(t, a.ReviewRequest(ctx, admin, row.ID, "Disetujui", ""))
+			pending := requestByTitle(t, a, employee, r.Title)
+			must(t, a.ReviewRequest(ctx, financeActor(t, a), row.ID, "Disetujui", "", pending.Revision))
 		}
 	}
-	must(t, a.GeneratePayroll(ctx, admin, "2027-02"))
-	must(t, a.GeneratePayroll(ctx, admin, "2027-02"))
+	must(t, a.GeneratePayroll(ctx, admin, "2026-01"))
+	must(t, a.GeneratePayroll(ctx, admin, "2026-01"))
 	rows, err := a.Payroll(ctx, employee)
 	must(t, err)
 	if len(rows) != 1 || rows[0].Reimbursement != 0 {
@@ -175,7 +182,7 @@ func TestPayrollDraftRefreshAndFinalLock(t *testing.T) {
 	}
 	p := rows[0]
 	must(t, a.FinalizePayroll(ctx, admin, p.ID, p.Revision))
-	if a.GeneratePayroll(ctx, admin, "2027-02") == nil {
+	if a.GeneratePayroll(ctx, admin, "2026-01") == nil {
 		t.Fatal("final payroll overwritten")
 	}
 	if a.FinalizePayroll(ctx, admin, p.ID, 0) == nil {

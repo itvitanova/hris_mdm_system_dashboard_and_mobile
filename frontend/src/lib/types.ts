@@ -6,6 +6,13 @@ export type Actor = {
   name: string;
 };
 export type Employee = {
+  employeeNumber?: string;
+  employmentType?: string;
+  managerId?: string;
+  bankName?: string;
+  bankAccountName?: string;
+  bankAccountNumber?: string;
+  financeVerifier?: boolean;
   servicePointId: string;
   allowAnyLocation: boolean;
   id: string;
@@ -26,6 +33,29 @@ export type Employee = {
   faceEnrolled: boolean;
 };
 export type HRRequest = {
+  pendingWith?: string;
+  unread?: boolean;
+  updateToken?: string;
+  version?: number;
+  revision?: number;
+  items?: ExpenseItem[];
+  snapshot?: {
+    name: string;
+    employeeId: string;
+    department: string;
+    position: string;
+    phone: string;
+    bankName: string;
+    bankAccountName: string;
+    bankAccountNumber: string;
+    submittedAt: string;
+  };
+  steps?: ApprovalStep[];
+  currentStep?: number;
+  history?: ApprovalEvent[];
+  finalizedAt?: string;
+  canReview?: boolean;
+  canDownload?: boolean;
   id: string;
   employeeId: string;
   employeeName: string;
@@ -43,6 +73,10 @@ export type HRRequest = {
   reviewNote: string;
 };
 export type Attendance = {
+  earlyDeparture?: boolean;
+  earlyMinutes?: number;
+  earlyReason?: string;
+  scheduledEnd?: string;
   checkInLocation?: AttendanceLocation;
   checkOutLocation?: AttendanceLocation;
   id: string;
@@ -112,6 +146,7 @@ export type Settings = {
   longitude: number;
   radius: number;
   workStart: string;
+  workEnd?: string;
   timezone: string;
 };
 export type ServicePoint = {
@@ -125,6 +160,7 @@ export type ServicePoint = {
   radius: number;
   timezone: string;
   workStart: string;
+  workEnd?: string;
   active: boolean;
 };
 export type AttendancePolicy = ServicePoint & { allowAnyLocation: boolean };
@@ -136,6 +172,8 @@ export type AttendanceLocation = {
   policy: AttendancePolicy;
 };
 export type Workspace = {
+  approvalAccess?: boolean;
+  approvalPolicies?: ApprovalPolicy[];
   servicePoints?: ServicePoint[];
   attendancePolicy?: AttendancePolicy;
   attendanceDate?: string;
@@ -158,6 +196,8 @@ export type Workspace = {
   }[];
 };
 export type View =
+  | "Persetujuan"
+  | "Alur Persetujuan"
   | "Service Point"
   | "Departemen"
   | "Jabatan"
@@ -175,9 +215,42 @@ export type View =
   | "Mobile";
 
 export type MasterData = {
+  departmentId?: string;
   id: string;
   code: string;
   name: string;
   description: string;
   active: boolean;
 };
+export type ExpenseItem = {
+  date: string;
+  description: string;
+  category: string;
+  amount: number;
+  receiptId: string;
+};
+export type ApprovalEvent = {
+  revision: number;
+  step: number;
+  employeeId: string;
+  name: string;
+  decision: string;
+  note: string;
+  at: string;
+};
+export type ApprovalStep = {
+  name: string;
+  source: string;
+  mode: string;
+  status: string;
+  approvers: { employeeId: string; name: string }[];
+  decisions: ApprovalEvent[];
+};
+export type ApprovalStage = {
+  name: string;
+  source: string;
+  level: number;
+  employeeIds: string[];
+  mode: string;
+};
+export type ApprovalPolicy = { id: string; stages: ApprovalStage[] };

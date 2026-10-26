@@ -39,6 +39,7 @@ import type {
 } from "@/lib/types";
 import { Avatar, Modal } from "./common";
 import { Button } from "./ui/button";
+import { ApprovalCenter, ApprovalPolicyView } from "./request-center";
 import { Dashboard } from "./dashboard";
 import { Forms, SettingsForm, type FormState } from "./forms";
 import { AttendanceCamera } from "./attendance-camera";
@@ -63,6 +64,8 @@ const nav = [
       { name: "Karyawan", icon: Users },
       { name: "Kehadiran", icon: CalendarDays },
       { name: "Cuti", icon: FileText },
+      { name: "Persetujuan", icon: ShieldCheck },
+      { name: "Alur Persetujuan", icon: Settings },
     ],
   },
   {
@@ -91,6 +94,8 @@ const navigationMasters = [
   },
 ];
 const views: View[] = [
+  "Persetujuan",
+  "Alur Persetujuan",
   "Service Point",
   ...masterMenus.map((m) => m.view),
   "Pengajuan",
@@ -258,7 +263,14 @@ export default function Workspace() {
       />
     );
   const admin = data.actor.role === "admin";
-  const pending = data.requests.filter((r) => r.status === "Menunggu");
+  const pending = data.requests.filter(
+    (r) =>
+      r.canReview ??
+      (!r.version &&
+        data.actor.role === "admin" &&
+        r.status === "Menunggu" &&
+        r.employeeId !== data.actor.employeeId),
+  );
   const props = {
     data,
     open: setForm,
@@ -282,41 +294,39 @@ export default function Workspace() {
           <Brand />
           <span className="workspace-tier">HR WORKSPACE</span>
         </div>
-        <button
-          className="workspace-selector"
-          onClick={() => navigate(admin ? "Pengaturan" : "Mobile")}
-        >
-          <span className="company-mark">
-            <Building2 size={17} />
-          </span>
-          <span>
-            <strong>{data.settings.company}</strong>
-            <small>Company workspace</small>
-          </span>
-          <ChevronDown size={14} />
-        </button>
         <nav>
           {nav.map((group) => (
             <div className="nav-group" key={group.group}>
               <span className="nav-label">{group.group}</span>
-              {group.items.map((item) => (
-                <button
-                  key={item.name}
-                  className={`nav-item ${view === item.name ? "active" : ""}`}
-                  onClick={() => navigate(item.name)}
-                >
-                  <item.icon size={18} strokeWidth={1.8} />
-                  <span>
-                    {item.name === "Karyawan" && !admin
-                      ? "Profil saya"
-                      : item.name}
-                  </span>
-                  {item.name === "Cuti" &&
-                    pending.filter((r) => r.kind === "Cuti").length > 0 && (
-                      <b>{pending.filter((r) => r.kind === "Cuti").length}</b>
+              {group.items
+                .filter((item) =>
+                  item.name === "Persetujuan"
+                    ? data.approvalAccess
+                    : item.name === "Alur Persetujuan"
+                      ? admin
+                      : true,
+                )
+                .map((item) => (
+                  <button
+                    key={item.name}
+                    className={`nav-item ${view === item.name ? "active" : ""}`}
+                    onClick={() => navigate(item.name)}
+                  >
+                    <item.icon size={18} strokeWidth={1.8} />
+                    <span>
+                      {item.name === "Karyawan" && !admin
+                        ? "Profil saya"
+                        : item.name}
+                    </span>
+                    {item.name === "Persetujuan" && (
+                      <b>{data.requests.filter((r) => r.canReview).length}</b>
                     )}
-                </button>
-              ))}
+                    {item.name === "Cuti" &&
+                      pending.filter((r) => r.kind === "Cuti").length > 0 && (
+                        <b>{pending.filter((r) => r.kind === "Cuti").length}</b>
+                      )}
+                  </button>
+                ))}
             </div>
           ))}
           {admin && (
@@ -470,7 +480,13 @@ export default function Workspace() {
               onReview={review}
             />
           )}
-          {view === "Karyawan" && <EmployeesView {...props} />}
+          {view === "Persetujuan" && (
+            <ApprovalCenter data={data} onReview={review} />
+          )}
+          {view === "Alur Persetujuan" && admin && (
+            <ApprovalPolicyView data={data} onSaved={saved} />
+          )}
+          {view === "Karyawan" && <EmployeesView {...props} onSaved={saved} />}
           {view === "Service Point" && admin && (
             <ServicePointsView data={data} onSaved={saved} />
           )}

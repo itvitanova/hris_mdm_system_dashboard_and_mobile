@@ -28,6 +28,7 @@ export function AttendanceCamera({
     stream = useRef<MediaStream | null>(null),
     alive = useRef(true);
   const [started, setStarted] = useState(false),
+    [earlyReason, setEarlyReason] = useState(""),
     [photo, setPhoto] = useState(""),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
@@ -120,6 +121,7 @@ export function AttendanceCamera({
           throw new Error("Perbarui lokasi GPS sebelum absensi");
         await post("/attendance/punch", {
           type,
+          earlyReason,
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
           accuracy: position.coords.accuracy,
@@ -211,6 +213,22 @@ export function AttendanceCamera({
               </small>
             </span>
           </div>
+        )}
+        {!enrollID && data.attendancePolicy?.workEnd && (
+          <label className="field">
+            <span>Alasan pulang lebih awal</span>
+            <textarea
+              value={earlyReason}
+              onChange={(e) => setEarlyReason(e.target.value)}
+              maxLength={500}
+              rows={3}
+              placeholder={`Wajib jika pulang sebelum ${data.attendancePolicy.workEnd}`}
+            />
+            <small>
+              Alasan dicatat bersama absensi jika pulang sebelum jadwal. Isi
+              minimal 5 karakter.
+            </small>
+          </label>
         )}
         <p className="form-note">
           Foto dikirim ke layanan verifikasi untuk pencocokan wajah dan

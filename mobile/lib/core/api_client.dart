@@ -25,7 +25,7 @@ class ApiClient {
            baseUrl ??
            const String.fromEnvironment(
              'API_BASE_URL',
-             defaultValue: 'http://10.0.2.2:3000',
+             defaultValue: 'https://hris.mdmcorp.co.id',
            );
   final http.Client _client;
   final FlutterSecureStorage _storage;
@@ -56,7 +56,7 @@ class ApiClient {
       final response = await _client
           .send(request)
           .then(http.Response.fromStream)
-          .timeout(const Duration(seconds: 45));
+          .timeout(Duration(seconds: path.contains('/document/') ? 120 : 45));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         String message = 'Permintaan gagal (${response.statusCode}).';
         try {
@@ -108,8 +108,30 @@ class ApiClient {
   Future<Map<String, dynamic>> workspace() async =>
       jsonDecode((await _send('GET', '/workspace')).body)
           as Map<String, dynamic>;
+  Future<List<Map<String, dynamic>>> getList(String path) async =>
+      (jsonDecode((await _send('GET', path)).body) as List)
+          .map((v) => Map<String, dynamic>.from(v as Map))
+          .toList();
   Future<void> post(String path, Map<String, dynamic> body) async {
     await _send('POST', path, body);
+  }
+
+  Future<Map<String, dynamic>> postJson(
+    String path,
+    Map<String, dynamic> body,
+  ) async =>
+      jsonDecode((await _send('POST', path, body)).body)
+          as Map<String, dynamic>;
+
+  Future<({Uint8List bytes, String contentType})> requestFile(
+    String path,
+  ) async {
+    final response = await _send('GET', path);
+    return (
+      bytes: response.bodyBytes,
+      contentType:
+          response.headers['content-type'] ?? 'application/octet-stream',
+    );
   }
 
   Future<Uint8List> payslip(String id) async {

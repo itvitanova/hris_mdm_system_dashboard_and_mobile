@@ -1,3 +1,4 @@
+import { choose } from "./choose";
 import { test, expect } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 
@@ -15,16 +16,14 @@ test("payroll components, TER, formal PDF and final lock", async ({
   await dialog.getByLabel("Periode payroll").fill("2031-11");
   await dialog.getByRole("button", { name: "Simpan", exact: true }).click();
   await expect(dialog).not.toBeVisible();
-  await page
-    .getByLabel("Periode payroll", { exact: true })
-    .selectOption("2031-11");
+  await choose(page.locator("body"), "Periode payroll", "2031-11");
   const row = page.getByRole("row").filter({ hasText: "Nadia Putri" });
   await row.getByRole("button", { name: "Edit komponen", exact: true }).click();
   await expect(dialog.getByLabel("Tunjangan")).toHaveValue("0");
   await expect(dialog.getByLabel("Bonus")).toHaveValue("0");
   await dialog.getByLabel("Tunjangan").fill("1000000");
   await dialog.getByLabel("Bonus").fill("500000");
-  await dialog.getByLabel("Status PTKP").selectOption("TK/0");
+  await choose(dialog, "Status PTKP", "TK/0");
   await dialog
     .getByRole("button", { name: "Simpan komponen", exact: true })
     .click();
@@ -76,9 +75,7 @@ test("December explicit manual PPh21, refund, Excel template and invalid import"
   await dialog.getByLabel("Periode payroll").fill("2031-12");
   await dialog.getByRole("button", { name: "Simpan", exact: true }).click();
   await expect(dialog).not.toBeVisible();
-  await page
-    .getByLabel("Periode payroll", { exact: true })
-    .selectOption("2031-12");
+  await choose(page.locator("body"), "Periode payroll", "2031-12");
   const row = page.getByRole("row").filter({ hasText: "Nadia Putri" });
   await expect(
     row.getByRole("button", { name: "Finalisasi", exact: true }),
@@ -86,7 +83,7 @@ test("December explicit manual PPh21, refund, Excel template and invalid import"
   await row.getByRole("button", { name: "Edit komponen", exact: true }).click();
   await expect(dialog.getByLabel("Tunjangan")).toHaveValue("0");
   await expect(dialog.getByLabel("Bonus")).toHaveValue("0");
-  await dialog.getByLabel("Status PTKP").selectOption("K/1");
+  await choose(dialog, "Status PTKP", "K/1");
   await dialog.getByLabel("PPh21 periode ini").fill("-500000");
   await dialog
     .getByLabel("Catatan PPh21 manual")

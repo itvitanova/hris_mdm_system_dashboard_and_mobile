@@ -1,0 +1,98 @@
+name: hrismdm-prod
+
+x-runtime: &runtime
+  restart: unless-stopped
+  init: true
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+  postgres:
+    <<: *runtime
+    image: postgres:17-alpine
+    mem_limit: 384m
+    environment:
+      POSTGRES_USER: hris_admin
+      POSTGRES_DB: hrismdm
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:?Set database admin password}
+      POSTGRES_APP_PASSWORD: ${POSTGRES_PASSWORD:?Set application database password}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-db.sh:/docker-entrypoint-initdb.d/10-hris-role.sh:ro
+    networks: [database]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hris_admin -d hrismdm"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    <<: *runtime
+    image: hrismdm-backend:${HRIS_RELEASE:?Set HRIS_RELEASE}
+    mem_limit: 512m
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL}
+      LISTEN_ADDR: 0.0.0.0:8080
+      DEMO_SEED: "false"
+      APP_ORIGIN: ${APP_ORIGIN:?Set production HTTPS origin}
+      COOKIE_SECURE: "true"
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:?Set bootstrap email}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:?Set bootstrap password}
+      FACE_PROVIDER_URL: ${FACE_PROVIDER_URL-http://face:8000}
+      FACE_PROVIDER_KEY: ${FACE_PROVIDER_KEY:?Set provider key}
+    networks: [app, database]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  frontend:
+    <<: *runtime
+    image: hrismdm-frontend:${FRONTEND_RELEASE:-${HRIS_RELEASE:?Set HRIS_RELEASE}}
+    mem_limit: 384m
+    volumes:
+      - ./downloads:/app/public/downloads:ro
+    ports:
+      - "${WEB_BIND_IP:-127.0.0.1}:${WEB_PORT:-8000}:3000"
+    networks: [app]
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  face:
+    <<: *runtime
+    profiles: [face]
+    image: hrismdm-face:${HRIS_RELEASE:?Set HRIS_RELEASE}
+    mem_limit: 1536m
+    cpus: 1.5
+    environment:
+      FACE_PROVIDER_KEY: ${FACE_PROVIDER_KEY:?Set provider key}
+    networks: [app]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 24
+      start_period: 180s
+
+networks:
+  app:
+  database:
+    internal: true
+
+volumes:
+  postgres-data:

@@ -1,3 +1,4 @@
+import { choose } from "./choose";
 import { test, expect } from "@playwright/test";
 
 test("master submenu, CRUD, employee selections and reference protection", async ({
@@ -30,6 +31,7 @@ test("master submenu, CRUD, employee selections and reference protection", async
   await page.getByRole("button", { name: "Tambah jabatan" }).click();
   await dialog.getByLabel("Kode").fill("POS-QA");
   await dialog.getByLabel("Nama jabatan").fill("QA Specialist");
+  await choose(dialog, "Departemen", { label: "Quality Assurance" });
   await dialog.getByRole("button", { name: "Simpan", exact: true }).click();
   await expect(dialog).not.toBeVisible();
   await sidebar.getByRole("button", { name: "Karyawan", exact: true }).click();
@@ -38,16 +40,17 @@ test("master submenu, CRUD, employee selections and reference protection", async
     .click();
   await dialog.getByLabel("Nama lengkap").fill("Master Reference QA");
   await dialog.getByLabel("Email kantor").fill("master-reference@mdm.local");
-  await expect(dialog.getByLabel("Departemen")).toHaveJSProperty(
-    "tagName",
-    "SELECT",
-  );
-  await dialog
-    .getByLabel("Departemen")
-    .selectOption({ label: "Quality Assurance" });
-  await dialog.getByLabel("Jabatan").selectOption({ label: "QA Specialist" });
-  await dialog.getByLabel("Status PTKP").selectOption("TK/0");
-  await dialog.getByLabel("Service Point / HQ").selectOption("HQ");
+  await choose(dialog, "Hubungan kerja", "PKWT");
+  await dialog.getByLabel("Nama bank").fill("Bank contoh");
+  await dialog.getByLabel("Nama pemilik rekening").fill("Karyawan contoh");
+  await dialog.getByLabel("Nomor rekening").fill("0012345678");
+  await expect(
+    dialog.getByRole("combobox", { name: /Jabatan/ }),
+  ).toBeDisabled();
+  await choose(dialog, "Departemen", { label: "Quality Assurance" });
+  await choose(dialog, "Jabatan", { label: "QA Specialist" });
+  await choose(dialog, "Status PTKP", "TK/0");
+  await choose(dialog, "Service Point / HQ", "HQ");
   await dialog.getByRole("button", { name: "Simpan", exact: true }).click();
   await expect(dialog).not.toBeVisible();
   await sidebar
@@ -76,16 +79,19 @@ test("master submenu, CRUD, employee selections and reference protection", async
   await page
     .getByRole("button", { name: "Tambah karyawan", exact: true })
     .click();
+  await dialog.getByRole("combobox", { name: /Departemen/ }).click();
   await expect(
-    dialog
-      .getByLabel("Departemen")
-      .getByRole("option", { name: "Quality & Testing", exact: true }),
+    dialog.getByRole("option", { name: "Quality & Testing", exact: true }),
   ).toHaveCount(0);
+  await dialog
+    .getByRole("textbox", { name: /Cari departemen/ })
+    .press("Escape");
   await dialog.getByRole("button", { name: "Batal", exact: true }).click();
   await sidebar.getByRole("button", { name: "Jabatan", exact: true }).click();
   await page.getByRole("button", { name: "Tambah jabatan" }).click();
   await dialog.getByLabel("Kode").fill("POS-TEMP");
   await dialog.getByLabel("Nama jabatan").fill("Temporary Role");
+  await choose(dialog, "Departemen", { label: "Engineering" });
   await dialog.getByRole("button", { name: "Simpan", exact: true }).click();
   await expect(dialog).not.toBeVisible();
   await page

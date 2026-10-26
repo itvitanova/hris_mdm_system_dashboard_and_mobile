@@ -143,11 +143,12 @@ func (a *App) Enroll(ctx context.Context, actor domain.Actor, id, photo string) 
 }
 
 type Punch struct {
-	Type      string  `json:"type"`
-	Latitude  float64 `json:"latitude"`
-	Longitude float64 `json:"longitude"`
-	Accuracy  float64 `json:"accuracy"`
-	Photo     string  `json:"photo"`
+	EarlyReason string  `json:"earlyReason"`
+	Type        string  `json:"type"`
+	Latitude    float64 `json:"latitude"`
+	Longitude   float64 `json:"longitude"`
+	Accuracy    float64 `json:"accuracy"`
+	Photo       string  `json:"photo"`
 }
 
 func (a *App) Punch(ctx context.Context, actor domain.Actor, p Punch) error {
@@ -239,6 +240,9 @@ func (a *App) Punch(ctx context.Context, actor domain.Actor, p Punch) error {
 			if row.CheckOut != "" {
 				return errors.New("sudah absen pulang hari ini")
 			}
+			if err := applyDeparture(&row, t, policy, p.EarlyReason); err != nil {
+				return err
+			}
 			row.CheckOut = t.Format(time.RFC3339)
 			row.CheckOutLocation = snapshot
 		}
@@ -247,6 +251,28 @@ func (a *App) Punch(ctx context.Context, actor domain.Actor, p Punch) error {
 		}
 		return audit(ctx, s, actor, "attendance."+p.Type, id)
 	})
+}
+
+func applyDeparture(row *domain.Attendance, t time.Time, policy domain.AttendancePolicy, reason string) error {
+	if policy.WorkEnd == "" {
+		return nil
+	}
+	end, err := time.ParseInLocation("2006-01-02 15:04", row.Date+" "+policy.WorkEnd, t.Location())
+	if err != nil {
+		return errors.New("jadwal pulang tidak valid; hubungi admin")
+	}
+	row.ScheduledEnd = end.Format(time.RFC3339)
+	if !t.Before(end) {
+		return nil
+	}
+	reason = strings.TrimSpace(reason)
+	if len([]rune(reason)) < 5 || len([]rune(reason)) > 500 {
+		return errors.New("pulang sebelum jadwal: isi alasan 5–500 karakter")
+	}
+	row.EarlyDeparture = true
+	row.EarlyMinutes = int(math.Ceil(end.Sub(t).Minutes()))
+	row.EarlyReason = reason
+	return nil
 }
 func (a *App) Attendance(ctx context.Context, actor domain.Actor) ([]domain.Attendance, error) {
 	var all []domain.Attendance

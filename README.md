@@ -56,7 +56,7 @@ Jangan menghapus volume PostgreSQL bila data masih diperlukan. Ubah `WEB_PORT` d
 | Master Data | Submenu departemen, jabatan, dan Service Point / HQ (koordinat, radius, zona waktu, jam masuk), kode/nama unik, tambah/edit, aktif/nonaktif, hapus data yang belum dipakai; formulir karyawan memilih master melalui dropdown |
 | Kehadiran | Kamera depan, GPS, masuk/pulang, pencocokan wajah dan liveness melalui provider, riwayat harian, filter dan ekspor |
 | Cuti | Pengajuan rentang tanggal, validasi saldo, deteksi tumpang tindih saat persetujuan, pengurangan saldo secara atomik |
-| Reimbursement | Nominal, keperluan/referensi bukti dan persetujuan; dibayar di luar payroll |
+| Reimbursement | Multi rincian, bukti transaksi privat, approval bertahap, verifikasi finance, Excel/PDF template kantor; dibayar di luar payroll |
 | Petty cash | Pengajuan dana, keperluan, persetujuan dan catatan keputusan |
 | General Affair | Katalog barang habis pakai, stok minimum, mutasi masuk/keluar, pencegahan stok negatif, riwayat, pengajuan kebutuhan |
 | Lembur | Pengajuan jam per tanggal, persetujuan, estimasi komponen payroll |
@@ -140,7 +140,7 @@ Geolokasi browser dapat dipalsukan. PWA ini melakukan validasi jarak di server t
 
 ## Batas aturan bisnis awal
 
-- **Cuti** menggunakan hari kalender inklusif; belum ada kalender hari libur, jadwal shift, akrual, jenis cuti terpisah atau persetujuan bertingkat.
+- **Cuti** menggunakan hari kalender inklusif; belum ada kalender hari libur, jadwal shift, akrual otomatis, atau jenis cuti terpisah. Persetujuan bertingkat kini tersedia melalui konfigurasi alur.
 - **Lembur** di payroll memakai rumus estimasi `gaji pokok / 173 × 1,5 × jam disetujui`. Ini placeholder kebijakan perusahaan, bukan implementasi peraturan upah lembur. Satu pengajuan berlaku untuk satu tanggal.
 - **Payroll** mengikuti aturan komponen pada bagian di bawah. Prorata, potongan ketidakhadiran, THR, tambahan komponen di luar empat pendapatan, dan penyesuaian slip yang telah final belum disediakan. Persetujuan lembur setelah finalisasi membutuhkan proses koreksi terpisah yang belum tersedia.
 - **Finalisasi payroll** tidak mentransfer dana. **Persetujuan petty cash/reimbursement** juga bukan bukti pembayaran. **Persetujuan GA** tidak mengeluarkan barang otomatis; petugas mencatat mutasi stok terpisah.
@@ -163,6 +163,11 @@ Geolokasi browser dapat dipalsukan. PWA ini melakukan validasi jarak di server t
 Draft format lama otomatis diperbarui saat startup dan versi aslinya diarsipkan pada koleksi `payroll_legacy`. Slip historis yang sudah final dipertahankan dengan perhitungan lama dan ditandai sebagai historis. Font PDF Lato disertakan dengan lisensi OFL pada `backend/internal/document/assets/OFL.txt`.
 
 ## PWA dan deployment
+
+Pilot produksi tersedia di **https://hris.mdmcorp.co.id** pada VPS Tencent.
+Konfigurasi Compose/Nginx, backup, migrasi, dan pembaruan APK ada di
+[panduan produksi](deploy/production/README.md). File `.env` aktif berada di
+`/opt/hrismdm` pada server dan tidak masuk version control.
 
 PWA memakai aplikasi web yang sama, bukan APK terpisah. Buka **Ruang karyawan → Pasang aplikasi**. Chrome/Android mendukung install prompt bila memenuhi syarat; Safari/iPhone melalui Bagikan → Tambahkan ke Layar Utama.
 
@@ -212,3 +217,5 @@ Jalankan `node scripts/migrate-legacy.mjs`, lalu mulai stack. Script menyimpan e
 - [shadcn/ui — manual installation](https://ui.shadcn.com/docs/installation/manual)
 
 Versi dependency aktual dikunci di `frontend/package-lock.json` dan `backend/go.sum`.
+
+Konfigurasi fitur baru: [Approval organisasi dan reimbursement](docs/approval-reimbursement.md).

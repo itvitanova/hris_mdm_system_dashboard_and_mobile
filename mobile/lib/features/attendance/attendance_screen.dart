@@ -120,13 +120,82 @@ class _AttendanceScreenState extends State<AttendanceScreen>
       if (!mounted || !available || error != null || position == null) return;
       final type = DailyAttendance(workspace).nextType;
       if (type == null) return;
+      var earlyReason = '';
+      final end = text(workspace.attendancePolicy, 'workEnd', '');
+      final serverTime = text(workspace.data, 'serverTime', '');
+      final early =
+          type == 'out' &&
+          end.isNotEmpty &&
+          serverTime.length >= 16 &&
+          serverTime.substring(11, 16).compareTo(end) < 0;
+      if (early) {
+        final note = TextEditingController();
+        final noteForm = GlobalKey<FormState>();
+        final reason = await showDialog<String>(
+          context: context,
+          builder: (context) => AlertDialog(
+            insetPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 24,
+            ),
+            title: const Text('Pulang sebelum jadwal'),
+            content: Form(
+              key: noteForm,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Jadwal pulang lokasi Anda pukul $end. Alasan akan dicatat bersama absensi.',
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: note,
+                      minLines: 3,
+                      maxLines: 5,
+                      maxLength: 500,
+                      decoration: const InputDecoration(
+                        labelText: 'Alasan pulang lebih awal',
+                      ),
+                      validator: (v) => (v?.trim().length ?? 0) < 5
+                          ? 'Isi alasan minimal 5 karakter'
+                          : null,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Batal'),
+              ),
+              FilledButton(
+                onPressed: () {
+                  if (noteForm.currentState!.validate()) {
+                    Navigator.pop(context, note.text.trim());
+                  }
+                },
+                child: const Text('Lanjutkan absensi'),
+              ),
+            ],
+          ),
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 250));
+        note.dispose();
+        if (reason == null || !mounted) return;
+        earlyReason = reason;
+      }
+      if (!mounted) return;
       scanning = true;
       final result = await Navigator.push<bool>(
         context,
         MaterialPageRoute(
           builder: (_) => AutoFaceScreen(
             title: type == 'in' ? 'Absensi Masuk' : 'Absensi Keluar',
-            onCapture: (photo) => service.punch(type, photo),
+            onCapture: (photo) =>
+                service.punch(type, photo, earlyReason: earlyReason),
           ),
         ),
       );
@@ -175,6 +244,13 @@ class _AttendanceScreenState extends State<AttendanceScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
+                  'Jadwal ${text(policy, "workStart")} – ${text(policy, "workEnd", "jam pulang belum diatur")}',
+                  style: const TextStyle(
+                    color: muted,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
                   anywhere
                       ? 'Anda diizinkan absensi dari lokasi mana saja. GPS aktual masuk dan keluar tetap dicatat.'
                       : 'Lokasi diperiksa otomatis. Absensi hanya diterima dalam radius ${number(policy, 'radius').round()} meter dari lokasi penugasan.',
@@ -192,7 +268,11 @@ class _AttendanceScreenState extends State<AttendanceScreen>
                 if (distance != null)
                   Text(
                     'Jarak ${distance.round()} m • akurasi ±${position!.accuracy.round()} m',
-                    style: TextStyle(color: safe ? Colors.teal : Colors.red),
+                    style: TextStyle(
+                      color: safe
+                          ? const Color(0xFF08745D)
+                          : const Color(0xFFB42318),
+                    ),
                   ),
                 Text(
                   safe
@@ -202,7 +282,10 @@ class _AttendanceScreenState extends State<AttendanceScreen>
                       : 'Menunggu lokasi yang memenuhi syarat.',
                 ),
                 if (error != null)
-                  Text(error!, style: const TextStyle(color: Colors.red)),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: ErrorNotice(error!),
+                  ),
                 if (policy['latitude'] is num &&
                     policy['longitude'] is num &&
                     number(policy, 'radius') > 0)
@@ -235,14 +318,14 @@ class _AttendanceScreenState extends State<AttendanceScreen>
               children: [
                 const Icon(
                   Icons.face_retouching_natural,
-                  size: 70,
+                  size: 40,
                   color: brand,
                 ),
                 const SizedBox(height: 18),
                 const Text(
                   'Cukup arahkan wajah',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 23, fontWeight: FontWeight.w700),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 10),
                 const Text(
@@ -280,7 +363,7 @@ class _AttendanceScreenState extends State<AttendanceScreen>
             anywhere
                 ? 'Verifikasi wajah dan GPS tetap wajib untuk absensi.'
                 : 'Wajah tidak cocok atau lokasi di luar radius: absensi ditolak.',
-            style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
+            style: const TextStyle(color: Color(0xFF52637A), fontSize: 12),
           ),
         ],
       ),

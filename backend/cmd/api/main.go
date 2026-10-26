@@ -42,7 +42,7 @@ func main() {
 		log.Fatal(err)
 	}
 	handler := (&transport.Server{App: app, Origin: env("APP_ORIGIN", "http://localhost:3000"), Secure: os.Getenv("COOKIE_SECURE") == "true", Demo: demo}).Handler()
-	server := &http.Server{Addr: env("LISTEN_ADDR", "127.0.0.1:8080"), Handler: handler, ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 30 * time.Second, WriteTimeout: 35 * time.Second, IdleTimeout: 60 * time.Second}
+	server := &http.Server{Addr: env("LISTEN_ADDR", "127.0.0.1:8080"), Handler: handler, ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 30 * time.Second, WriteTimeout: 120 * time.Second, IdleTimeout: 60 * time.Second}
 	go func() {
 		log.Printf("HRIS API listening on %s (demo=%v)", server.Addr, demo)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {

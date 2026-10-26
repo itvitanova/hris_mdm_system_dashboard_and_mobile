@@ -1,3 +1,4 @@
+import { choose } from "./choose";
 import { test, expect } from "@playwright/test";
 
 test("service point coordinates, assignment, admin permission switch and map links", async ({
@@ -17,7 +18,7 @@ test("service point coordinates, assignment, admin permission switch and map lin
   await dialog.getByLabel("Nama lokasi").fill("Makassar Service Point");
   await dialog.getByLabel("Latitude").fill("-5.147665");
   await dialog.getByLabel("Longitude").fill("119.432732");
-  await dialog.getByLabel("Zona waktu").selectOption("Asia/Makassar");
+  await choose(dialog, "Zona waktu", "Asia/Makassar");
   await dialog
     .getByRole("button", { name: "Simpan lokasi", exact: true })
     .click();
@@ -31,7 +32,9 @@ test("service point coordinates, assignment, admin permission switch and map lin
   await row
     .getByRole("button", { name: "Edit Makassar Service Point", exact: true })
     .click();
-  await expect(dialog.getByLabel("Zona waktu")).toHaveValue("Asia/Makassar");
+  await expect(
+    dialog.getByRole("combobox", { name: /Zona waktu/ }),
+  ).toContainText("WITA");
   await dialog.getByLabel("Radius absensi").fill("150");
   await dialog
     .getByRole("button", { name: "Simpan lokasi", exact: true })
@@ -43,12 +46,16 @@ test("service point coordinates, assignment, admin permission switch and map lin
     .click();
   await dialog.getByLabel("Nama lengkap").fill("Service Point QA");
   await dialog.getByLabel("Email kantor").fill("servicepoint-qa@mdm.local");
-  await dialog.getByLabel("Departemen").selectOption({ index: 1 });
-  await dialog.getByLabel("Jabatan").selectOption({ index: 1 });
-  await dialog
-    .getByLabel("Service Point / HQ")
-    .selectOption({ label: "Makassar Service Point (Service Point)" });
-  await dialog.getByLabel("Status PTKP").selectOption("TK/0");
+  await choose(dialog, "Hubungan kerja", "PKWT");
+  await dialog.getByLabel("Nama bank").fill("Bank contoh");
+  await dialog.getByLabel("Nama pemilik rekening").fill("Karyawan contoh");
+  await dialog.getByLabel("Nomor rekening").fill("0012345678");
+  await choose(dialog, "Departemen", { index: 1 });
+  await choose(dialog, "Jabatan", { index: 1 });
+  await choose(dialog, "Service Point / HQ", {
+    label: "Makassar Service Point (Service Point)",
+  });
+  await choose(dialog, "Status PTKP", "TK/0");
   const toggle = dialog.getByRole("switch");
   await expect(toggle).not.toBeChecked();
   await toggle.check();

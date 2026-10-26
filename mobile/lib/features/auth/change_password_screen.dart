@@ -98,7 +98,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           ),
           const SizedBox(height: 24),
           if (error != null)
-            Text(error!, style: const TextStyle(color: Colors.red)),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: ErrorNotice(error!),
+            ),
           FilledButton(
             onPressed: busy ? null : save,
             child: Text(busy ? 'Menyimpan…' : 'Simpan password'),

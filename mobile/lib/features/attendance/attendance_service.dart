@@ -192,7 +192,11 @@ class AttendanceService {
     );
   }
 
-  Future<void> punch(String type, XFile photo) async {
+  Future<void> punch(
+    String type,
+    XFile photo, {
+    String earlyReason = '',
+  }) async {
     // Never validate against an office snapshot from before an admin update.
     final settings = Workspace(await api.workspace()).attendancePolicy;
     // Re-fetch after taking the picture, never reuse the preview location.
@@ -201,6 +205,7 @@ class AttendanceService {
     if (error != null) throw ApiException(error);
     await api.post('/attendance/punch', {
       'type': type,
+      'earlyReason': earlyReason,
       'latitude': position.latitude,
       'longitude': position.longitude,
       'accuracy': position.accuracy,

@@ -1,4 +1,5 @@
 "use client";
+import { SearchSelect } from "./ui/search-select";
 import { useState, type FormEvent } from "react";
 import {
   ArrowDownToLine,
@@ -138,7 +139,7 @@ export function PayrollView({
             />
           </label>
           <div>
-            <select
+            <SearchSelect
               aria-label="Periode payroll"
               value={period}
               onChange={(e) => setPeriod(e.target.value)}
@@ -150,7 +151,7 @@ export function PayrollView({
                 .map((p) => (
                   <option key={p}>{p}</option>
                 ))}
-            </select>
+            </SearchSelect>
             <Button
               variant="outline"
               disabled={!rows.length}
@@ -594,7 +595,7 @@ function PayrollEditor({
             </strong>
           </div>
           <Field label="Status PTKP *">
-            <select
+            <SearchSelect
               value={ptkp}
               required
               onChange={(e) => setPTKP(e.target.value)}
@@ -605,7 +606,7 @@ function PayrollEditor({
               {ptkpOptions.map((s) => (
                 <option key={s}>{s}</option>
               ))}
-            </select>
+            </SearchSelect>
           </Field>
           <Field label="Kategori TER">
             <Input readOnly value={taxCategory(ptkp) || "—"} />
@@ -623,14 +624,14 @@ function PayrollEditor({
             </span>
           </label>
           <Field label="Perhitungan PPh21" wide>
-            <select
+            <SearchSelect
               value={manual ? "manual" : "auto"}
               disabled={last}
               onChange={(e) => setMode(e.target.value as "auto" | "manual")}
             >
               <option value="auto">Otomatis TER (Januari–November)</option>
               <option value="manual">Manual HR / koreksi</option>
-            </select>
+            </SearchSelect>
           </Field>
           {manual && (
             <>

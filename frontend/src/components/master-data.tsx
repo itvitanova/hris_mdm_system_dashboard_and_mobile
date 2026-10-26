@@ -1,4 +1,5 @@
 "use client";
+import { SearchSelect } from "./ui/search-select";
 import { useState, type FormEvent } from "react";
 import { Pencil, Plus, Search, Trash2, Loader2, Database } from "lucide-react";
 import type { MasterData, Workspace } from "@/lib/types";
@@ -55,6 +56,7 @@ export function MasterDataView({
         id: editing?.id || "",
         code: f.get("code"),
         name: f.get("name"),
+        departmentId: f.get("departmentId") || "",
         description: f.get("description"),
         active: f.get("active") === "on",
       });
@@ -129,7 +131,7 @@ export function MasterDataView({
             />
           </label>
           <div>
-            <select
+            <SearchSelect
               aria-label="Filter status master"
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
@@ -137,7 +139,7 @@ export function MasterDataView({
               <option value="all">Semua status</option>
               <option value="active">Aktif</option>
               <option value="inactive">Nonaktif</option>
-            </select>
+            </SearchSelect>
           </div>
         </div>
         <div className="table-wrap">
@@ -160,6 +162,13 @@ export function MasterDataView({
                   </td>
                   <td>
                     <strong className="table-main">{row.name}</strong>
+                    {config.kind === "positions" && (
+                      <span className="table-sub">
+                        {data.masterData.departments?.find(
+                          (d) => d.id === row.departmentId,
+                        )?.name || "Departemen belum dihubungkan"}
+                      </span>
+                    )}
                   </td>
                   <td>
                     <span className="master-description">
@@ -223,13 +232,41 @@ export function MasterDataView({
       {editing && (
         <Modal
           title={`${editing.id ? "Edit" : "Tambah"} ${config.title.toLowerCase()}`}
-          subtitle="Kode dan nama harus unik dalam jenis master yang sama."
+          subtitle={
+            config.kind === "positions"
+              ? "Kode jabatan harus unik. Nama yang sama boleh digunakan pada departemen berbeda."
+              : "Kode dan nama departemen harus unik."
+          }
           onClose={() => {
             if (!busy) setEditing(null);
           }}
         >
           <form onSubmit={save}>
             <div className="form-grid">
+              {config.kind === "positions" && (
+                <Field label="Departemen *" wide>
+                  <SearchSelect
+                    name="departmentId"
+                    required
+                    defaultValue={editing.departmentId || ""}
+                  >
+                    <option value="" disabled>
+                      Pilih departemen
+                    </option>
+                    {(data.masterData.departments || [])
+                      .filter((d) => d.active || d.id === editing.departmentId)
+                      .map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {d.name}
+                        </option>
+                      ))}
+                  </SearchSelect>
+                  <small>
+                    Jabatan ini hanya tersedia bagi karyawan pada departemen
+                    tersebut.
+                  </small>
+                </Field>
+              )}
               <Field label="Kode *">
                 <Input
                   name="code"

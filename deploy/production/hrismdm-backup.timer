@@ -1,0 +1,10 @@
+[Unit]
+Description=Back up HRIS daily at 02:30 Jakarta time
+
+[Timer]
+OnCalendar=*-*-* 02:30:00 Asia/Jakarta
+Persistent=true
+Unit=hrismdm-backup.service
+
+[Install]
+WantedBy=timers.target

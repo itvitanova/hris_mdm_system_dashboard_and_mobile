@@ -1,4 +1,6 @@
 "use client";
+import { EmployeeDataActions } from "./employee-import";
+import { RequestDetails } from "./request-center";
 import { MapLink } from "./map-link";
 import { useState } from "react";
 import {
@@ -50,7 +52,8 @@ export function EmployeesView({
   query,
   onQuery,
   onEmployee,
-}: ViewProps) {
+  onSaved,
+}: ViewProps & { onSaved?: (message: string) => Promise<void> }) {
   const [dept, setDept] = useState("Semua departemen"),
     [status, setStatus] = useState("Semua status"),
     [servicePoint, setServicePoint] = useState("");
@@ -153,28 +156,7 @@ export function EmployeesView({
               <option>Probation</option>
               <option>Nonaktif</option>
             </select>
-            <Button
-              variant="outline"
-              size="icon"
-              aria-label="Ekspor karyawan"
-              disabled={!rows.length}
-              onClick={() =>
-                csv(
-                  "karyawan.csv",
-                  rows.map((e) => ({
-                    ID: e.id,
-                    Nama: e.name,
-                    Email: e.email,
-                    Departemen: e.department,
-                    Jabatan: e.position,
-                    ServicePoint: siteName(e),
-                    Status: e.status,
-                  })),
-                )
-              }
-            >
-              <ArrowDownToLine size={16} />
-            </Button>
+            {admin && <EmployeeDataActions onSaved={onSaved} />}
           </div>
         </div>
         <div className="table-wrap">
@@ -333,6 +315,9 @@ export function AttendanceView({
                     Tanggal: r.date,
                     Masuk: r.checkIn,
                     Pulang: r.checkOut,
+                    PulangAwal: r.earlyDeparture ? "YA" : "TIDAK",
+                    MenitPulangAwal: r.earlyMinutes || 0,
+                    AlasanPulangAwal: r.earlyReason || "",
                     Status: r.status,
                     Jarak: r.distance,
                     Verifikasi: r.faceVerified,
@@ -391,6 +376,13 @@ export function AttendanceView({
                   </td>
                   <td>
                     <Badge>{r.status}</Badge>
+                    {r.earlyDeparture && (
+                      <span className="table-sub" style={{ color: "#b42318" }}>
+                        Pulang {r.earlyMinutes} menit lebih awal
+                        <br />
+                        {r.earlyReason}
+                      </span>
+                    )}
                   </td>
                   <td>
                     <span
@@ -459,12 +451,24 @@ export function RequestsView({
   kind,
 }: { kind: string } & ViewProps) {
   const [filter, setFilter] = useState("Semua status");
+  const [month, setMonth] = useState("");
+  const [detail, setDetail] = useState<HRRequest | null>(null);
   const all = data.requests.filter(
-    (r) => kind === "Pengajuan" || r.kind === kind,
+    (r) =>
+      (kind === "Pengajuan" || r.kind === kind) &&
+      (data.actor.role === "admin" || r.employeeId === data.actor.employeeId) &&
+      (!month ||
+        localDate(data.settings.timezone, new Date(r.createdAt)).startsWith(
+          month,
+        )),
   );
   const rows = all.filter(
     (r) =>
       (filter === "Semua status" || r.status === filter) &&
+      (!month ||
+        localDate(data.settings.timezone, new Date(r.createdAt)).startsWith(
+          month,
+        )) &&
       `${r.title} ${r.employeeName}`
         .toLowerCase()
         .includes(query.toLowerCase()),
@@ -530,6 +534,16 @@ export function RequestsView({
             placeholder="Cari nama atau pengajuan…"
           />
           <div>
+            {kind === "Reimbursement" && (
+              <label className="month-filter">
+                Bulan pengajuan
+                <input
+                  type="month"
+                  value={month}
+                  onChange={(e) => setMonth(e.target.value)}
+                />
+              </label>
+            )}
             <select
               aria-label="Status pengajuan"
               value={filter}
@@ -539,6 +553,7 @@ export function RequestsView({
               <option>Menunggu</option>
               <option>Disetujui</option>
               <option>Ditolak</option>
+              <option>Perlu revisi</option>
             </select>
             <Button
               variant="outline"
@@ -610,6 +625,24 @@ export function RequestsView({
                     >
                       {r.description}
                     </span>
+                    <Button
+                      className="request-detail-trigger"
+                      variant="outline"
+                      onClick={() => setDetail(r)}
+                    >
+                      Rincian dan dokumen
+                    </Button>
+                    {r.status === "Perlu revisi" &&
+                      r.employeeId === data.actor.employeeId && (
+                        <Button
+                          variant="outline"
+                          onClick={() =>
+                            open({ type: "request", kind: r.kind, request: r })
+                          }
+                        >
+                          Perbaiki pengajuan
+                        </Button>
+                      )}
                     {r.reviewNote && (
                       <span className="table-sub">Catatan: {r.reviewNote}</span>
                     )}
@@ -635,11 +668,18 @@ export function RequestsView({
                   </td>
                   <td>
                     <Badge>{r.status}</Badge>
+                    {r.status === "Menunggu" && r.pendingWith && (
+                      <span className="table-sub request-next-actor">
+                        {r.pendingWith}
+                      </span>
+                    )}
                   </td>
                   <td>
-                    {data.actor.role === "admin" &&
-                    r.status === "Menunggu" &&
-                    r.employeeId !== data.actor.employeeId ? (
+                    {(r.canReview ??
+                    (data.actor.role === "admin" &&
+                      !r.version &&
+                      r.status === "Menunggu" &&
+                      r.employeeId !== data.actor.employeeId)) ? (
                       <div className="review-actions">
                         <button
                           className="approve-action"
@@ -657,7 +697,11 @@ export function RequestsView({
                         </button>
                       </div>
                     ) : (
-                      <span className="muted">{r.reviewedBy || "—"}</span>
+                      <span className="request-next-actor">
+                        {r.status === "Menunggu"
+                          ? r.pendingWith || "Menunggu peninjauan"
+                          : r.reviewedBy || "—"}
+                      </span>
                     )}
                   </td>
                 </tr>
@@ -672,9 +716,20 @@ export function RequestsView({
           />
         )}
         <div className="panel-table-footer">
-          {rows.length} pengajuan · Persetujuan mengikuti akses admin
+          {rows.length} pengajuan · Persetujuan mengikuti alur dan penugasan
         </div>
       </section>
+      {detail && (
+        <Modal
+          title="Rincian dan dokumen"
+          subtitle="Pengajuan reimbursement dan riwayat persetujuannya"
+          onClose={() => setDetail(null)}
+        >
+          <RequestDetails
+            request={data.requests.find((r) => r.id === detail.id) || detail}
+          />
+        </Modal>
+      )}
     </>
   );
 }
@@ -1060,6 +1115,8 @@ export function EmployeeDetail({
             ["Bergabung", displayDate(e.joinDate)],
             ["Gaji pokok", rupiah(e.salary)],
             ["Status PTKP", e.ptkp || "Belum diisi"],
+            ["NIK", e.employeeNumber || "Belum diisi"],
+            ["Hubungan kerja", e.employmentType || "Belum diisi"],
             ["Saldo cuti", `${e.leaveBalance} hari`],
             ["Wajah", e.faceEnrolled ? "Sudah terdaftar" : "Belum terdaftar"],
           ].map(([k, v]) => (

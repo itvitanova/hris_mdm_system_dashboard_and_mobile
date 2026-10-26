@@ -8,6 +8,7 @@ import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import '../../core/api_client.dart';
 import '../../shared/widgets.dart';
 import 'camera_input.dart';
+import 'camera_error.dart';
 import 'face_capture_gate.dart';
 
 class AutoFaceScreen extends StatefulWidget {
@@ -151,11 +152,7 @@ class _AutoFaceScreenState extends State<AutoFaceScreen>
 
   void _reportError(Object error) {
     if (!mounted || _closed) return;
-    final message = error is CameraException
-        ? (error.code.contains('AccessDenied')
-              ? 'Izin kamera diperlukan. Aktifkan izin kamera di pengaturan aplikasi.'
-              : 'Kamera tidak dapat dibuka. Tutup pemindai lalu coba lagi.')
-        : error.toString();
+    final message = cameraErrorMessage(error);
     setState(() {
       _error = message;
       _capturing = false;
@@ -280,6 +277,10 @@ class _AutoFaceScreenState extends State<AutoFaceScreen>
         title: Text(widget.title),
         backgroundColor: const Color(0xFF0F172A),
         foregroundColor: Colors.white,
+        titleTextStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+        ),
       ),
       body: SafeArea(
         child: ListView(

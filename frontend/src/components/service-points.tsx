@@ -1,4 +1,5 @@
 "use client";
+import { SearchSelect } from "./ui/search-select";
 import { useState, type FormEvent } from "react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { api, post } from "@/lib/api";
@@ -141,6 +142,7 @@ export function ServicePointsView({
                     <td>
                       {p.radius} m · {p.timezone}
                       <div>Masuk {p.workStart}</div>
+                      <div>Pulang {p.workEnd || "Belum diatur"}</div>
                     </td>
                     <td>{usage}</td>
                     <td>
@@ -208,17 +210,17 @@ export function ServicePointsView({
                 />
               </Field>
               <Field label="Jenis lokasi">
-                <select name="kind" defaultValue={editing.kind}>
+                <SearchSelect name="kind" defaultValue={editing.kind}>
                   <option>Service Point</option>
                   <option>HQ</option>
-                </select>
+                </SearchSelect>
               </Field>
               <Field label="Zona waktu">
-                <select name="timezone" defaultValue={editing.timezone}>
+                <SearchSelect name="timezone" defaultValue={editing.timezone}>
                   <option value="Asia/Jakarta">WIB</option>
                   <option value="Asia/Makassar">WITA</option>
                   <option value="Asia/Jayapura">WIT</option>
-                </select>
+                </SearchSelect>
               </Field>
               <Field label="Latitude *">
                 <Input
@@ -259,6 +261,17 @@ export function ServicePointsView({
                   required
                   defaultValue={editing.workStart}
                 />
+              </Field>
+              <Field label="Jam pulang">
+                <Input
+                  name="workEnd"
+                  type="time"
+                  defaultValue={editing.workEnd || ""}
+                />
+                <small>
+                  Isi untuk mencatat pulang lebih awal beserta alasannya. Jadwal
+                  pada hari yang sama.
+                </small>
               </Field>
               <Field label="Alamat" wide>
                 <Input

@@ -53,8 +53,27 @@ func (a *App) SaveMasterData(ctx context.Context, actor domain.Actor, kind strin
 		if err := s.List(ctx, collection, &rows); err != nil {
 			return err
 		}
+		if kind == "positions" {
+			var department domain.MasterData
+			var previous domain.MasterData
+			if v.ID != "" {
+				_ = s.Get(ctx, "master_positions", v.ID, &previous)
+			}
+			if s.Get(ctx, "master_departments", v.DepartmentID, &department) != nil || (!department.Active && previous.DepartmentID != v.DepartmentID) {
+				return errors.New("pilih departemen aktif untuk jabatan")
+			}
+			var employees []domain.Employee
+			if err := s.List(ctx, "employees", &employees); err != nil {
+				return err
+			}
+			for _, e := range employees {
+				if e.PositionID == v.ID && e.DepartmentID != v.DepartmentID {
+					return errors.New("jabatan masih digunakan departemen lain; buat jabatan baru")
+				}
+			}
+		}
 		for _, row := range rows {
-			if row.ID != v.ID && (strings.EqualFold(row.Name, v.Name) || strings.EqualFold(row.Code, v.Code)) {
+			if row.ID != v.ID && (strings.EqualFold(row.Name, v.Name) && (kind != "positions" || row.DepartmentID == v.DepartmentID) || strings.EqualFold(row.Code, v.Code)) {
 				return errors.New("kode atau nama sudah digunakan")
 			}
 		}
@@ -115,6 +134,17 @@ func (a *App) DeleteMasterData(ctx context.Context, actor domain.Actor, kind, id
 				return errors.New("data masih digunakan karyawan; nonaktifkan jika tidak ingin dipilih lagi")
 			}
 		}
+		if kind == "departments" {
+			var positions []domain.MasterData
+			if err := s.List(ctx, "master_positions", &positions); err != nil {
+				return err
+			}
+			for _, p := range positions {
+				if p.DepartmentID == id {
+					return errors.New("departemen masih memiliki jabatan; nonaktifkan jika tidak digunakan")
+				}
+			}
+		}
 		if err := s.Delete(ctx, collection, id); err != nil {
 			return err
 		}
@@ -152,13 +182,20 @@ func (a *App) EnsureMasterData(ctx context.Context) error {
 			}
 			catalogs[kind] = rows
 		}
-		find := func(kind, name string) (domain.MasterData, error) {
+		find := func(kind, name, departmentID string) (domain.MasterData, error) {
 			name = cleanName(name)
 			if name == "" {
 				name = "Belum ditentukan"
 			}
-			for _, v := range catalogs[kind] {
-				if strings.EqualFold(v.Name, name) {
+			for i, v := range catalogs[kind] {
+				if strings.EqualFold(v.Name, name) && (kind != "positions" || v.DepartmentID == departmentID || v.DepartmentID == "") {
+					if kind == "positions" && v.DepartmentID == "" {
+						v.DepartmentID = departmentID
+						catalogs[kind][i] = v
+						if err := s.Put(ctx, "master_positions", v.ID, v); err != nil {
+							return v, err
+						}
+					}
 					return v, nil
 				}
 			}
@@ -167,7 +204,7 @@ func (a *App) EnsureMasterData(ctx context.Context) error {
 			if kind == "positions" {
 				prefix = "POS"
 			}
-			v := domain.MasterData{ID: id, Code: prefix + "-" + strings.ToUpper(id[:12]), Name: name, Active: true}
+			v := domain.MasterData{ID: id, Code: prefix + "-" + strings.ToUpper(id[:12]), Name: name, Active: true, DepartmentID: departmentID}
 			if err := s.Put(ctx, "master_"+kind, id, v); err != nil {
 				return v, err
 			}
@@ -177,7 +214,7 @@ func (a *App) EnsureMasterData(ctx context.Context) error {
 		for _, e := range employees {
 			changed := false
 			if e.DepartmentID == "" {
-				v, err := find("departments", e.Department)
+				v, err := find("departments", e.Department, "")
 				if err != nil {
 					return err
 				}
@@ -185,8 +222,14 @@ func (a *App) EnsureMasterData(ctx context.Context) error {
 				e.Department = v.Name
 				changed = true
 			}
-			if e.PositionID == "" {
-				v, err := find("positions", e.Position)
+			var currentPosition domain.MasterData
+			positionMissing := e.PositionID == "" || s.Get(ctx, "master_positions", e.PositionID, &currentPosition) != nil
+			if positionMissing || currentPosition.DepartmentID != e.DepartmentID {
+				positionName := e.Position
+				if !positionMissing {
+					positionName = currentPosition.Name
+				}
+				v, err := find("positions", positionName, e.DepartmentID)
 				if err != nil {
 					return err
 				}

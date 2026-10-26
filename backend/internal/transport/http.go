@@ -143,7 +143,18 @@ func (s *Server) Handler() http.Handler {
 			return err
 		}
 		attendanceDate := time.Now().In(officeLocation).Format("2006-01-02")
-		respond(w, 200, map[string]any{"actor": a, "employees": employees, "requests": requests, "attendance": attendance, "attendanceDate": attendanceDate, "servicePoints": points, "attendancePolicy": policy, "payroll": payroll, "inventory": inventory, "stockMovements": movements, "settings": settings, "faceAvailable": s.App.Face.Available(), "demo": s.Demo, "masterData": masters})
+		approvalAccess, err := s.App.ApprovalAccess(ctx, a)
+		if err != nil {
+			return err
+		}
+		policies := []domain.ApprovalPolicy{}
+		if a.Role == "admin" {
+			policies, err = s.App.ApprovalPolicies(ctx, a)
+			if err != nil {
+				return err
+			}
+		}
+		respond(w, 200, map[string]any{"serverTime": time.Now().In(officeLocation).Format(time.RFC3339), "actor": a, "approvalAccess": approvalAccess, "approvalPolicies": policies, "employees": employees, "requests": requests, "attendance": attendance, "attendanceDate": attendanceDate, "servicePoints": points, "attendancePolicy": policy, "payroll": payroll, "inventory": inventory, "stockMovements": movements, "settings": settings, "faceAvailable": s.App.Face.Available(), "demo": s.Demo, "masterData": masters})
 		return nil
 	}))
 	m.HandleFunc("GET /api/service-points", s.protect(func(w http.ResponseWriter, r *http.Request, a domain.Actor) error {
@@ -224,6 +235,8 @@ func (s *Server) Handler() http.Handler {
 		respond(w, 201, map[string]bool{"ok": true})
 		return nil
 	}))
+	s.requestRoutes(m)
+	s.employeeRoutes(m)
 	m.HandleFunc("POST /api/requests", s.protect(func(w http.ResponseWriter, r *http.Request, a domain.Actor) error {
 		var v domain.Request
 		if err := decode(r, &v); err != nil {
@@ -237,13 +250,14 @@ func (s *Server) Handler() http.Handler {
 	}))
 	m.HandleFunc("POST /api/requests/{id}/review", s.protect(func(w http.ResponseWriter, r *http.Request, a domain.Actor) error {
 		var v struct {
-			Status string `json:"status"`
-			Note   string `json:"note"`
+			Status   string `json:"status"`
+			Revision int    `json:"revision"`
+			Note     string `json:"note"`
 		}
 		if err := decode(r, &v); err != nil {
 			return err
 		}
-		if err := s.App.ReviewRequest(r.Context(), a, r.PathValue("id"), v.Status, v.Note); err != nil {
+		if err := s.App.ReviewRequest(r.Context(), a, r.PathValue("id"), v.Status, v.Note, v.Revision); err != nil {
 			return err
 		}
 		respond(w, 200, map[string]bool{"ok": true})

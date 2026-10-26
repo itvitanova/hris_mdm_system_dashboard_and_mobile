@@ -440,9 +440,11 @@ export function Dashboard({
                         <Badge>{r.status}</Badge>
                       </td>
                       <td className="align-right">
-                        {admin &&
-                        r.status === "Menunggu" &&
-                        r.employeeId !== actor.employeeId ? (
+                        {(r.canReview ??
+                        (admin &&
+                          !r.version &&
+                          r.status === "Menunggu" &&
+                          r.employeeId !== actor.employeeId)) ? (
                           <button
                             className="review-btn"
                             onClick={() => onReview(r, "Disetujui")}

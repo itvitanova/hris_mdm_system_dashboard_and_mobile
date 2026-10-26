@@ -1,9 +1,12 @@
 "use client";
+import { SearchSelect } from "./ui/search-select";
 import { useState, type FormEvent } from "react";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { ExpenseEditor, RequestDetails } from "./request-center";
+import type { ExpenseItem } from "@/lib/types";
 import { Field, Modal } from "./common";
 import { api, post, localDate } from "@/lib/api";
 import { ptkpOptions, readDataURL } from "@/lib/payroll";
@@ -51,7 +54,23 @@ export function Forms({
 }) {
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
-    [kind, setKind] = useState(form.kind || "Cuti");
+    [kind, setKind] = useState(form.request?.kind || form.kind || "Cuti");
+  const [uploadBusy, setUploadBusy] = useState(false);
+  const [departmentId, setDepartmentId] = useState(
+    form.employee?.departmentId || "",
+  );
+  const [positionId, setPositionId] = useState(form.employee?.positionId || "");
+  const [items, setItems] = useState<ExpenseItem[]>(
+    form.request?.items || [
+      {
+        date: localDate(data.settings.timezone),
+        description: "",
+        category: "",
+        amount: 0,
+        receiptId: "",
+      },
+    ],
+  );
   const titles = {
     employee: form.employee ? "Edit data karyawan" : "Tambah karyawan",
     request: "Buat pengajuan",
@@ -60,10 +79,11 @@ export function Forms({
     payroll: "Buat draft payroll",
     finalize: "Finalisasi payroll",
     account: "Buat akun karyawan",
-    review: `${form.decision === "Disetujui" ? "Setujui" : "Tolak"} pengajuan`,
+    review: `${form.decision === "Disetujui" ? "Setujui" : form.decision === "Perlu revisi" ? "Minta revisi" : "Tolak"} pengajuan`,
   };
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (busy || uploadBusy) return;
     setBusy(true);
     setError("");
     const f = new FormData(e.currentTarget);
@@ -74,6 +94,8 @@ export function Forms({
         case "employee":
           await post("/employees", {
             id: form.employee?.id || "",
+            employeeNumber: str("employeeNumber"),
+            employmentType: str("employmentType"),
             name: str("name"),
             email: str("email"),
             departmentId: str("departmentId"),
@@ -82,6 +104,11 @@ export function Forms({
             allowAnyLocation: f.get("allowAnyLocation") === "on",
             status: str("status"),
             phone: str("phone"),
+            managerId: str("managerId"),
+            bankName: str("bankName"),
+            bankAccountName: str("bankAccountName"),
+            bankAccountNumber: str("bankAccountNumber"),
+            financeVerifier: f.get("financeVerifier") === "on",
             address: str("address"),
             birthDate: str("birthDate"),
             joinDate: str("joinDate"),
@@ -92,13 +119,27 @@ export function Forms({
           });
           break;
         case "request":
+          if (kind === "Reimbursement" && items.some((i) => !i.receiptId))
+            throw new Error("Unggah bukti untuk setiap rincian pengeluaran");
           await post("/requests", {
+            id: form.request?.id || "",
+            revision: form.request?.revision || 0,
+            items: kind === "Reimbursement" ? items : [],
             kind,
             title: str("title"),
             description: str("description"),
-            startDate: str("startDate"),
-            endDate: str("endDate"),
-            amount: num("amount"),
+            startDate:
+              kind === "Reimbursement"
+                ? localDate(data.settings.timezone)
+                : str("startDate"),
+            endDate:
+              kind === "Reimbursement"
+                ? localDate(data.settings.timezone)
+                : str("endDate"),
+            amount:
+              kind === "Reimbursement"
+                ? items.reduce((n, i) => n + i.amount, 0)
+                : num("amount"),
             hours: num("hours"),
           });
           break;
@@ -135,6 +176,7 @@ export function Forms({
         case "review":
           await post(`/requests/${form.request?.id}/review`, {
             status: form.decision,
+            revision: form.request?.revision || 0,
             note: str("note"),
           });
           break;
@@ -185,10 +227,14 @@ export function Forms({
                 />
               </Field>
               <Field label="Departemen *">
-                <select
+                <SearchSelect
                   name="departmentId"
                   required
-                  defaultValue={emp?.departmentId || ""}
+                  value={departmentId}
+                  onChange={(e) => {
+                    setDepartmentId(e.target.value);
+                    setPositionId("");
+                  }}
                 >
                   <option value="" disabled>
                     Pilih departemen
@@ -201,26 +247,32 @@ export function Forms({
                         {!d.active ? " (nonaktif)" : ""}
                       </option>
                     ))}
-                </select>
+                </SearchSelect>
               </Field>
               <Field label="Jabatan *">
-                <select
+                <SearchSelect
                   name="positionId"
                   required
-                  defaultValue={emp?.positionId || ""}
+                  value={positionId}
+                  disabled={!departmentId}
+                  onChange={(e) => setPositionId(e.target.value)}
                 >
                   <option value="" disabled>
                     Pilih jabatan
                   </option>
                   {(data.masterData.positions || [])
-                    .filter((p) => p.active || p.id === emp?.positionId)
+                    .filter(
+                      (p) =>
+                        p.departmentId === departmentId &&
+                        (p.active || p.id === emp?.positionId),
+                    )
                     .map((p) => (
                       <option key={p.id} value={p.id}>
                         {p.name}
                         {!p.active ? " (nonaktif)" : ""}
                       </option>
                     ))}
-                </select>
+                </SearchSelect>
               </Field>
               {(!(data.masterData.departments || []).some((d) => d.active) ||
                 !(data.masterData.positions || []).some((p) => p.active)) && (
@@ -230,7 +282,7 @@ export function Forms({
                 </p>
               )}
               <Field label="Service Point / HQ *" wide>
-                <select
+                <SearchSelect
                   name="servicePointId"
                   required
                   defaultValue={emp?.servicePointId || ""}
@@ -245,7 +297,7 @@ export function Forms({
                         {p.name} ({p.kind}){!p.active ? " - nonaktif" : ""}
                       </option>
                     ))}
-                </select>
+                </SearchSelect>
               </Field>
               <label className="attendance-permission-switch full">
                 <input
@@ -263,6 +315,71 @@ export function Forms({
                   </small>
                 </span>
               </label>
+              <Field label="Atasan langsung" wide>
+                <SearchSelect
+                  name="managerId"
+                  defaultValue={emp?.managerId || ""}
+                >
+                  <option value="">
+                    Belum ditetapkan / pimpinan tertinggi
+                  </option>
+                  {data.employees
+                    .filter((e) => e.id !== emp?.id && e.status !== "Nonaktif")
+                    .map((e) => (
+                      <option key={e.id} value={e.id}>
+                        {e.name} · {e.position}
+                      </option>
+                    ))}
+                </SearchSelect>
+                <small>
+                  Pengajuan diarahkan ke atasan ini. Pimpinan tanpa atasan
+                  memerlukan alur dengan approver khusus.
+                </small>
+              </Field>
+              <Field label="Nama bank *">
+                <Input
+                  name="bankName"
+                  required={!emp}
+                  maxLength={100}
+                  defaultValue={emp?.bankName}
+                />
+              </Field>
+              <Field label="Nama pemilik rekening *">
+                <Input
+                  name="bankAccountName"
+                  required={!emp}
+                  maxLength={120}
+                  defaultValue={emp?.bankAccountName}
+                />
+              </Field>
+              <Field label="Nomor rekening *" wide>
+                <Input
+                  name="bankAccountNumber"
+                  required={!emp}
+                  inputMode="numeric"
+                  pattern="[0-9]+"
+                  maxLength={40}
+                  defaultValue={emp?.bankAccountNumber}
+                />
+                <small>
+                  Rekening ini digunakan untuk payroll dan reimbursement. Angka
+                  nol di depan tetap disimpan.
+                </small>
+              </Field>
+              <label className="attendance-permission-switch full">
+                <input
+                  type="checkbox"
+                  name="financeVerifier"
+                  defaultChecked={emp?.financeVerifier || false}
+                />
+                <span>
+                  <strong>Petugas verifikasi finance</strong>
+                  <small>
+                    Memerlukan akun aktif. Akses hanya pada pengajuan yang
+                    ditugaskan, tanpa memberikan hak admin/payroll tambahan.
+                  </small>
+                </span>
+              </label>
               <Field label="Nomor telepon">
                 <Input
                   name="phone"
@@ -272,11 +389,35 @@ export function Forms({
                 />
               </Field>
               <Field label="Status">
-                <select name="status" defaultValue={emp?.status || "Aktif"}>
+                <SearchSelect
+                  name="status"
+                  defaultValue={emp?.status || "Aktif"}
+                >
                   <option>Aktif</option>
                   <option>Probation</option>
                   <option>Nonaktif</option>
-                </select>
+                </SearchSelect>
+              </Field>
+              <Field label="NIK karyawan">
+                <Input
+                  name="employeeNumber"
+                  maxLength={50}
+                  defaultValue={emp?.employeeNumber}
+                  placeholder="Nomor induk karyawan"
+                />
+              </Field>
+              <Field label="Hubungan kerja *">
+                <SearchSelect
+                  name="employmentType"
+                  required
+                  defaultValue={emp?.employmentType || ""}
+                >
+                  <option value="" disabled>
+                    Pilih hubungan kerja
+                  </option>
+                  <option>PKWT</option>
+                  <option>PKWTT</option>
+                </SearchSelect>
               </Field>
               <Field label="Tanggal lahir">
                 <Input
@@ -313,14 +454,18 @@ export function Forms({
                 />
               </Field>
               <Field label="Status PTKP *" wide>
-                <select name="ptkp" required defaultValue={emp?.ptkp || ""}>
+                <SearchSelect
+                  name="ptkp"
+                  required
+                  defaultValue={emp?.ptkp || ""}
+                >
                   <option value="" disabled>
                     Pilih status PTKP untuk PPh21
                   </option>
                   {ptkpOptions.map((status) => (
                     <option key={status}>{status}</option>
                   ))}
-                </select>
+                </SearchSelect>
               </Field>
               <Field label="Alamat tempat tinggal" wide>
                 <Textarea name="address" defaultValue={emp?.address} rows={2} />
@@ -336,15 +481,19 @@ export function Forms({
           {form.type === "request" && (
             <>
               <Field label="Jenis pengajuan *" wide>
-                <select value={kind} onChange={(e) => setKind(e.target.value)}>
+                <SearchSelect
+                  value={kind}
+                  onChange={(e) => setKind(e.target.value)}
+                >
                   {kinds.map((k) => (
                     <option key={k}>{k}</option>
                   ))}
-                </select>
+                </SearchSelect>
               </Field>
               <Field label="Judul pengajuan *" wide>
                 <Input
                   name="title"
+                  defaultValue={form.request?.title}
                   required
                   maxLength={160}
                   placeholder={
@@ -354,26 +503,37 @@ export function Forms({
                   }
                 />
               </Field>
-              <Field label="Tanggal mulai *">
-                <Input
-                  name="startDate"
-                  type="date"
-                  required
-                  defaultValue={localDate(data.settings.timezone)}
-                />
-              </Field>
-              <Field label="Tanggal selesai *">
-                <Input
-                  name="endDate"
-                  type="date"
-                  required
-                  defaultValue={localDate(data.settings.timezone)}
-                />
-              </Field>
-              {(kind === "Reimbursement" || kind === "Petty Cash") && (
+              {kind !== "Reimbursement" && (
+                <>
+                  <Field label="Tanggal mulai *">
+                    <Input
+                      name="startDate"
+                      type="date"
+                      required
+                      defaultValue={
+                        form.request?.startDate ||
+                        localDate(data.settings.timezone)
+                      }
+                    />
+                  </Field>
+                  <Field label="Tanggal selesai *">
+                    <Input
+                      name="endDate"
+                      type="date"
+                      required
+                      defaultValue={
+                        form.request?.endDate ||
+                        localDate(data.settings.timezone)
+                      }
+                    />
+                  </Field>
+                </>
+              )}
+              {kind === "Petty Cash" && (
                 <Field label="Nominal pengajuan (Rp) *" wide>
                   <Input
                     name="amount"
+                    defaultValue={form.request?.amount}
                     type="number"
                     min="1"
                     max="1000000000000"
@@ -382,10 +542,37 @@ export function Forms({
                   />
                 </Field>
               )}
+              {kind === "Reimbursement" && (
+                <>
+                  <div className="form-note full">
+                    Rekening pemohon:{" "}
+                    {data.employees.find((e) => e.id === data.actor.employeeId)
+                      ?.bankName || "Belum lengkap"}{" "}
+                    ·{" "}
+                    {
+                      data.employees.find((e) => e.id === data.actor.employeeId)
+                        ?.bankAccountName
+                    }{" "}
+                    ·{" "}
+                    {
+                      data.employees.find((e) => e.id === data.actor.employeeId)
+                        ?.bankAccountNumber
+                    }
+                    . Hubungi HR untuk perubahan rekening.
+                  </div>
+                  <ExpenseEditor
+                    items={items}
+                    onChange={setItems}
+                    disabled={busy || uploadBusy}
+                    onBusy={setUploadBusy}
+                  />
+                </>
+              )}
               {kind === "Lembur" && (
                 <Field label="Durasi lembur (jam) *" wide>
                   <Input
                     name="hours"
+                    defaultValue={form.request?.hours}
                     type="number"
                     min="0.5"
                     max="24"
@@ -398,6 +585,7 @@ export function Forms({
               <Field label="Detail keperluan / referensi bukti *" wide>
                 <Textarea
                   name="description"
+                  defaultValue={form.request?.description}
                   required
                   rows={4}
                   maxLength={3000}
@@ -409,7 +597,7 @@ export function Forms({
                   ? "Cuti dihitung per hari kalender, termasuk akhir pekan. Saldo dipotong setelah disetujui."
                   : kind === "Lembur"
                     ? "Gunakan tanggal mulai dan selesai yang sama. Buat pengajuan terpisah untuk hari berbeda."
-                    : "Pengajuan dikirim ke admin untuk ditinjau. Persetujuan tidak otomatis melakukan pembayaran atau mengeluarkan stok."}
+                    : "Pengajuan mengikuti alur persetujuan yang ditetapkan kantor. Persetujuan tidak otomatis melakukan pembayaran atau mengeluarkan stok."}
               </p>
             </>
           )}
@@ -423,12 +611,12 @@ export function Forms({
                 />
               </Field>
               <Field label="Kategori *">
-                <select name="category">
+                <SearchSelect name="category">
                   <option>Alat tulis</option>
                   <option>Pantry</option>
                   <option>Kebersihan</option>
                   <option>Lainnya</option>
-                </select>
+                </SearchSelect>
               </Field>
               <Field label="Satuan *">
                 <Input name="unit" required placeholder="rim, box, pak…" />
@@ -464,10 +652,10 @@ export function Forms({
                 </p>
               </div>
               <Field label="Jenis mutasi *">
-                <select name="direction">
+                <SearchSelect name="direction">
                   <option value="in">Barang masuk</option>
                   <option value="out">Barang keluar</option>
-                </select>
+                </SearchSelect>
               </Field>
               <Field label="Jumlah *">
                 <Input
@@ -481,6 +669,7 @@ export function Forms({
               <Field label="Catatan mutasi *" wide>
                 <Textarea
                   name="note"
+                  maxLength={2000}
                   rows={3}
                   required
                   placeholder="Keperluan / nomor referensi penerimaan"
@@ -554,10 +743,10 @@ export function Forms({
                 />
               </Field>
               <Field label="Peran akses *" wide>
-                <select name="role">
+                <SearchSelect name="role">
                   <option value="employee">Karyawan</option>
                   <option value="admin">Administrator HR</option>
-                </select>
+                </SearchSelect>
               </Field>
               <p className="form-note full">
                 Admin dapat mengakses seluruh data HR dan payroll. Sampaikan
@@ -574,9 +763,16 @@ export function Forms({
                 </p>
                 <p>{form.request?.description}</p>
               </div>
+              {form.request && (
+                <div className="full">
+                  <RequestDetails request={form.request} />
+                </div>
+              )}
               <Field label="Catatan keputusan" wide>
                 <Textarea
                   name="note"
+                  required={form.decision !== "Disetujui"}
+                  maxLength={2000}
                   rows={3}
                   placeholder="Tambahkan catatan untuk karyawan…"
                 />
@@ -595,11 +791,11 @@ export function Forms({
             variant="outline"
             type="button"
             onClick={onClose}
-            disabled={busy}
+            disabled={busy || uploadBusy}
           >
             Batal
           </Button>
-          <Button type="submit" disabled={busy}>
+          <Button type="submit" disabled={busy || uploadBusy}>
             {busy && <Loader2 className="spin" size={16} />}{" "}
             {form.type === "request"
               ? "Kirim pengajuan"
@@ -639,6 +835,7 @@ export function SettingsForm({
           latitude: Number(f.get("latitude")),
           longitude: Number(f.get("longitude")),
           workStart: f.get("workStart"),
+          workEnd: f.get("workEnd"),
           timezone: f.get("timezone"),
           radius: Number(f.get("radius")),
         }),
@@ -757,12 +954,20 @@ export function SettingsForm({
             defaultValue={data.settings.workStart}
           />
         </Field>
+        <Field label="Jam pulang">
+          <Input
+            name="workEnd"
+            type="time"
+            defaultValue={data.settings.workEnd || ""}
+          />
+          <small>Digunakan untuk mendeteksi pulang sebelum jadwal di HQ.</small>
+        </Field>
         <Field label="Zona waktu *" wide>
-          <select name="timezone" defaultValue={data.settings.timezone}>
+          <SearchSelect name="timezone" defaultValue={data.settings.timezone}>
             <option>Asia/Jakarta</option>
             <option>Asia/Makassar</option>
             <option>Asia/Jayapura</option>
-          </select>
+          </SearchSelect>
         </Field>
       </div>
       {error && (

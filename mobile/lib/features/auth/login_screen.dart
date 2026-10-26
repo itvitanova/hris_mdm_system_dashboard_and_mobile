@@ -56,20 +56,18 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Container(
-                        padding: const EdgeInsets.all(18),
-                        decoration: BoxDecoration(
-                          color: brand,
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        child: const Icon(
-                          Icons.apartment_rounded,
-                          color: Colors.white,
-                          size: 34,
-                        ),
+                    const Text(
+                      'MDM HR',
+                      style: TextStyle(
+                        color: brand,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 20,
                       ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Ruang kerja karyawan',
+                      style: TextStyle(color: muted),
                     ),
                     const SizedBox(height: 32),
                     const Text(
@@ -82,8 +80,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'Satu tempat untuk hari kerja Anda.',
-                      style: TextStyle(color: Color(0xFF64748B), fontSize: 16),
+                      'Masuk untuk mengelola kehadiran, pengajuan, dan slip gaji Anda.',
+                      style: TextStyle(color: Color(0xFF52637A), fontSize: 16),
                     ),
                     const SizedBox(height: 32),
                     TextFormField(
@@ -104,6 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: password,
                       autofillHints: const [AutofillHints.password],
                       obscureText: hidden,
+                      textInputAction: TextInputAction.done,
                       onFieldSubmitted: (_) => submit(),
                       decoration: InputDecoration(
                         labelText: 'Kata sandi',
@@ -126,10 +125,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     if (error != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 16),
-                        child: Text(
-                          error!,
-                          style: const TextStyle(color: Colors.red),
-                        ),
+                        child: ErrorNotice(error!),
                       ),
                     const SizedBox(height: 24),
                     FilledButton(
@@ -144,9 +140,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 28),
                     const Text(
-                      'MDM HR • Employee self-service',
+                      'Gunakan akun karyawan yang diberikan HR.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Color(0xFF94A3B8)),
+                      style: TextStyle(color: muted),
                     ),
                   ],
                 ),

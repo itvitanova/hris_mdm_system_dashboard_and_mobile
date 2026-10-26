@@ -50,13 +50,20 @@ func (a *App) Initialize(ctx context.Context, demo bool) error {
 			birth := fmt.Sprintf("199%d-%s-%02d", i%9, today.Format("01"), (today.Day()+i*2-1)%28+1)
 			e := domain.Employee{ID: id, Name: name, Email: email, Department: depts[i%6], Position: positions[i%6], Status: "Aktif", Phone: fmt.Sprintf("0812%08d", 12340000+i), Address: "Jakarta Selatan, DKI Jakarta", BirthDate: birth, JoinDate: fmt.Sprintf("202%d-02-01", 2+i%4), Salary: int64(6500000 + i%6*1500000), LeaveBalance: 12}
 			e.PTKP = "TK/0" // Demo fixture only. Existing real profiles are never assigned a guessed PTKP.
+			if i > 0 {
+				e.ManagerID = "EMP-001"
+			}
+			e.BankName = "Bank contoh"
+			e.BankAccountName = name
+			e.BankAccountNumber = fmt.Sprintf("000000%06d", i+1)
+			e.FinanceVerifier = i == 14
 			if i == 6 || i == 12 {
 				e.Status = "Probation"
 			}
 			if err := s.Put(ctx, "employees", id, e); err != nil {
 				return err
 			}
-			if i < 2 {
+			if i < 2 || i == 14 {
 				role := "employee"
 				if i == 0 {
 					role = "admin"

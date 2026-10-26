@@ -63,6 +63,11 @@ func (a *App) SaveSettings(ctx context.Context, actor domain.Actor, v domain.Set
 	if _, err := time.Parse("15:04", v.WorkStart); err != nil {
 		return errors.New("jam masuk tidak valid")
 	}
+	if v.WorkEnd != "" {
+		if _, err := time.Parse("15:04", v.WorkEnd); err != nil || v.WorkEnd <= v.WorkStart {
+			return errors.New("jam pulang harus setelah jam masuk pada hari yang sama")
+		}
+	}
 	v.ID = "company"
 	if v.Radius == 0 {
 		v.Radius = 100
@@ -82,6 +87,7 @@ func (a *App) SaveSettings(ctx context.Context, actor domain.Actor, v domain.Set
 			hq.Radius = v.Radius
 			hq.Timezone = v.Timezone
 			hq.WorkStart = v.WorkStart
+			hq.WorkEnd = v.WorkEnd
 			if err := s.Put(ctx, "service_points", hq.ID, hq); err != nil {
 				return err
 			}
@@ -105,12 +111,39 @@ func (a *App) Employees(ctx context.Context, actor domain.Actor) ([]domain.Emplo
 	return rows, nil
 }
 func (a *App) SaveEmployee(ctx context.Context, actor domain.Actor, v domain.Employee) error {
+	return a.write(ctx, func(s domain.Store) error { return a.saveEmployee(ctx, s, actor, v) })
+}
+
+func (a *App) saveEmployee(ctx context.Context, store domain.Store, actor domain.Actor, v domain.Employee) error {
 	if actor.Role != "admin" {
 		return ErrForbidden
 	}
 	v.Name = strings.TrimSpace(v.Name)
 	v.Email = strings.ToLower(strings.TrimSpace(v.Email))
+	v.EmployeeNumber = strings.TrimSpace(v.EmployeeNumber)
+	if len(v.EmployeeNumber) > 50 {
+		return errors.New("NIK karyawan maksimal 50 karakter")
+	}
 	v.PTKP = strings.ToUpper(strings.TrimSpace(v.PTKP))
+	v.BankName = strings.TrimSpace(v.BankName)
+	v.BankAccountName = strings.TrimSpace(v.BankAccountName)
+	v.BankAccountNumber = strings.TrimSpace(v.BankAccountNumber)
+	if v.EmploymentType != "" && v.EmploymentType != "PKWT" && v.EmploymentType != "PKWTT" {
+		return errors.New("jenis hubungan kerja harus PKWT atau PKWTT")
+	}
+	if v.ID == "" && (v.BankName == "" || v.BankAccountName == "" || v.BankAccountNumber == "") {
+		return errors.New("nama bank, pemilik rekening, dan nomor rekening wajib saat pendaftaran karyawan")
+	}
+	if len(v.BankName) > 100 || len(v.BankAccountName) > 120 || len(v.BankAccountNumber) > 40 {
+		return errors.New("informasi rekening terlalu panjang")
+	}
+	if v.BankAccountNumber != "" {
+		for _, c := range v.BankAccountNumber {
+			if c < '0' || c > '9' {
+				return errors.New("nomor rekening hanya boleh berisi angka")
+			}
+		}
+	}
 	if v.PTKP != "" && PTKPCategory(v.PTKP) == "" {
 		return errors.New("status PTKP tidak valid")
 	}
@@ -130,12 +163,15 @@ func (a *App) SaveEmployee(ctx context.Context, actor domain.Actor, v domain.Emp
 	if v.Status != "Aktif" && v.Status != "Probation" && v.Status != "Nonaktif" {
 		return errors.New("status karyawan tidak valid")
 	}
-	return a.write(ctx, func(s domain.Store) error {
+	return func(s domain.Store) error {
 		var previous domain.Employee
 		if v.ID != "" {
 			if err := s.Get(ctx, "employees", v.ID, &previous); err != nil {
 				return errors.New("karyawan tidak ditemukan")
 			}
+		}
+		if err := validateReportingLine(ctx, s, v); err != nil {
+			return err
 		}
 		department, err := resolveMaster(ctx, s, "departments", v.DepartmentID, previous.DepartmentID)
 		if err != nil {
@@ -144,6 +180,9 @@ func (a *App) SaveEmployee(ctx context.Context, actor domain.Actor, v domain.Emp
 		position, err := resolveMaster(ctx, s, "positions", v.PositionID, previous.PositionID)
 		if err != nil {
 			return err
+		}
+		if position.DepartmentID != department.ID {
+			return errors.New("jabatan tidak termasuk departemen yang dipilih")
 		}
 		if v.ServicePointID == "" {
 			v.ServicePointID = previous.ServicePointID
@@ -165,6 +204,9 @@ func (a *App) SaveEmployee(ctx context.Context, actor domain.Actor, v domain.Emp
 			return err
 		}
 		for _, e := range all {
+			if v.EmployeeNumber != "" && strings.EqualFold(e.EmployeeNumber, v.EmployeeNumber) && e.ID != v.ID {
+				return errors.New("NIK karyawan sudah digunakan")
+			}
 			if strings.EqualFold(e.Email, v.Email) && e.ID != v.ID {
 				return errors.New("email sudah digunakan")
 			}
@@ -195,7 +237,7 @@ func (a *App) SaveEmployee(ctx context.Context, actor domain.Actor, v domain.Emp
 			}
 		}
 		return audit(ctx, s, actor, "employee.save", v.ID)
-	})
+	}(store)
 }
 func money(v int64) error {
 	if v < 0 || v > 1000000000000 {
