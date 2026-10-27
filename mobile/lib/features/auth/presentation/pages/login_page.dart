@@ -220,12 +220,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             topLeft: Radius.circular(32.r),
                             topRight: Radius.circular(32.r),
                           ),
-                          border: Border(
-                            top: BorderSide(
-                              color: Colors.white.withValues(alpha: 0.8),
-                              width: 1.5.w,
-                            ),
-                          ),
                           boxShadow: [
                             BoxShadow(
                               color: const Color(0xFF0F172A)
@@ -612,11 +606,11 @@ class _AbstractTealBackground extends StatelessWidget {
 
         // Abstract Concentric Rings (Top Left)
         Positioned(
-          top: 15.w,
+          top: -25.w,
           left: -25.w,
           child: Container(
-            width: 170.w,
-            height: 170.w,
+            width: 150.w,
+            height: 150.w,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
@@ -627,11 +621,11 @@ class _AbstractTealBackground extends StatelessWidget {
           ),
         ),
         Positioned(
-          top: 40.w,
-          left: 0,
+          top: -5.w,
+          left: -5.w,
           child: Container(
-            width: 120.w,
-            height: 120.w,
+            width: 110.w,
+            height: 110.w,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
@@ -644,15 +638,15 @@ class _AbstractTealBackground extends StatelessWidget {
 
         // Abstract Rotated Frosted Squircle (Top Right / Center)
         Positioned(
-          top: -20.w,
+          top: -25.w,
           right: 25.w,
           child: Transform.rotate(
             angle: -0.32,
             child: Container(
-              width: 140.w,
-              height: 140.w,
+              width: 130.w,
+              height: 130.w,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(36.r),
+                borderRadius: BorderRadius.circular(34.r),
                 color: Colors.white.withValues(alpha: 0.05),
                 border: Border.all(
                   color: Colors.white.withValues(alpha: 0.14),
@@ -665,15 +659,15 @@ class _AbstractTealBackground extends StatelessWidget {
 
         // Smaller Abstract Diamond Squircle (Floating Mid-Right)
         Positioned(
-          top: 80.w,
-          right: -10.w,
+          top: 45.w,
+          right: -8.w,
           child: Transform.rotate(
             angle: 0.42,
             child: Container(
-              width: 80.w,
-              height: 80.w,
+              width: 60.w,
+              height: 60.w,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(22.r),
+                borderRadius: BorderRadius.circular(18.r),
                 color: const Color(0xFF2DD4BF).withValues(alpha: 0.06),
                 border: Border.all(
                   color: Colors.white.withValues(alpha: 0.12),
@@ -692,16 +686,19 @@ class _AbstractTealBackground extends StatelessWidget {
 class _AbstractTealCurvesPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
+    // Reference height for the top header zone (above the white card)
+    final headerH = 147.w;
+
     // Upper sweeping abstract wave
     final path1 = Path();
-    path1.moveTo(0, size.height * 0.18);
+    path1.moveTo(0, headerH * 0.65);
     path1.cubicTo(
       size.width * 0.35,
-      size.height * 0.08,
+      headerH * 0.25,
       size.width * 0.65,
-      size.height * 0.28,
+      headerH * 0.85,
       size.width,
-      size.height * 0.15,
+      headerH * 0.50,
     );
     path1.lineTo(size.width, 0);
     path1.lineTo(0, 0);
@@ -717,20 +714,20 @@ class _AbstractTealCurvesPainter extends CustomPainter {
           Colors.transparent,
         ],
         stops: const [0.0, 0.5, 1.0],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height * 0.3));
+      ).createShader(Rect.fromLTWH(0, 0, size.width, headerH));
 
     canvas.drawPath(path1, paint1);
 
     // Diagonal intersecting secondary wave
     final path2 = Path();
-    path2.moveTo(0, size.height * 0.32);
+    path2.moveTo(0, headerH * 0.88);
     path2.cubicTo(
       size.width * 0.4,
-      size.height * 0.22,
+      headerH * 0.55,
       size.width * 0.7,
-      size.height * 0.38,
+      headerH * 0.95,
       size.width,
-      size.height * 0.24,
+      headerH * 0.70,
     );
     path2.lineTo(size.width, 0);
     path2.lineTo(0, 0);
@@ -745,11 +742,12 @@ class _AbstractTealCurvesPainter extends CustomPainter {
           const Color(0xFF0F766E).withValues(alpha: 0.04),
           Colors.transparent,
         ],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height * 0.4));
+        stops: const [0.0, 0.5, 1.0],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, headerH));
 
     canvas.drawPath(path2, paint2);
 
-    // Glowing subtle contour stroke line
+    // Glowing subtle contour stroke line (flows cleanly above the white card)
     final strokePaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.2
@@ -759,17 +757,17 @@ class _AbstractTealCurvesPainter extends CustomPainter {
           const Color(0xFF5EEAD4).withValues(alpha: 0.30),
           Colors.transparent,
         ],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+      ).createShader(Rect.fromLTWH(0, 0, size.width, headerH));
 
     final linePath = Path();
-    linePath.moveTo(0, size.height * 0.25);
+    linePath.moveTo(0, headerH * 0.78);
     linePath.cubicTo(
       size.width * 0.3,
-      size.height * 0.15,
+      headerH * 0.45,
       size.width * 0.75,
-      size.height * 0.30,
+      headerH * 0.88,
       size.width,
-      size.height * 0.18,
+      headerH * 0.55,
     );
     canvas.drawPath(linePath, strokePaint);
   }
