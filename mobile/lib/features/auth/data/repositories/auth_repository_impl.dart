@@ -32,10 +32,17 @@ class AuthRepositoryImpl implements AuthRepository {
       await remoteDataSource.login(email, password);
       return const Success(null);
     } on ApiException catch (e) {
-      if (e.status == 400 || e.status == 401 || e.status == 422) {
-        return FailureResult(ValidationFailure(e.message, e.status));
+      var msg = e.message;
+      if (e.status == 401 &&
+          (msg.contains('status 401') ||
+              msg.contains('Permintaan gagal') ||
+              msg.toLowerCase().contains('unauthorized'))) {
+        msg = 'Email atau password salah';
       }
-      return FailureResult(ServerFailure(e.message, e.status));
+      if (e.status == 400 || e.status == 401 || e.status == 422) {
+        return FailureResult(ValidationFailure(msg, e.status));
+      }
+      return FailureResult(ServerFailure(msg, e.status));
     } catch (e) {
       return FailureResult(ServerFailure(e.toString()));
     }
