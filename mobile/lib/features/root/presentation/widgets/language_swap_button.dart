@@ -4,8 +4,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 
 enum AppLanguage {
-  id('id', 'Bahasa Indonesia', 'ID', '🇮🇩'),
-  en('en', 'English', 'EN', '🇬🇧');
+  id('id', 'ID', 'ID', '🇮🇩'),
+  en('en', 'EN', 'EN', '🇬🇧');
 
   final String code;
   final String name;
@@ -66,7 +66,8 @@ class _LanguageSwapButtonState extends State<LanguageSwapButton> {
         ),
         offset: Offset(0, 46.w),
         constraints: BoxConstraints(
-          minWidth: 160.w,
+          minWidth: 90.w,
+          maxWidth: 105.w
         ),
         initialValue: currentLanguage,
         onSelected: (AppLanguage selectedLang) {
@@ -122,7 +123,7 @@ class _LanguageSwapButtonState extends State<LanguageSwapButton> {
             return PopupMenuItem<AppLanguage>(
               value: lang,
               height: 44.w,
-              padding: EdgeInsets.symmetric(horizontal: 6.w),
+              padding: EdgeInsets.symmetric(horizontal: 8.w),
               child: Container(
                 padding: EdgeInsets.symmetric(
                   horizontal: 8.w,

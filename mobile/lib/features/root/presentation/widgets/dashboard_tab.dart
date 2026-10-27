@@ -447,14 +447,17 @@ class _DashboardTabState extends State<DashboardTab> {
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [AppColors.deepTeal, Color(0xFF0F5B6B)],
+                    colors: [
+                      AppColors.filterGradientStart,
+                      AppColors.filterGradientEnd,
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.deepTeal.withValues(alpha: 0.25),
+                      color: AppColors.filterGradientStart.withValues(alpha: 0.25),
                       blurRadius: 16,
                       offset: const Offset(0, 8),
                     ),
@@ -525,8 +528,8 @@ class _DashboardTabState extends State<DashboardTab> {
                     FilledButton.icon(
                       style: FilledButton.styleFrom(
                         backgroundColor: Colors.white,
-                        foregroundColor: AppColors.deepTeal,
-                        disabledBackgroundColor: const Color(0xFF0F5B6B),
+                        foregroundColor: AppColors.filterGradientStart,
+                        disabledBackgroundColor: const Color(0xFF0F766E),
                         disabledForegroundColor: const Color(0xFFB2EBF2),
                       ),
                       onPressed: daily.completed
@@ -544,19 +547,19 @@ class _DashboardTabState extends State<DashboardTab> {
                   ],
                 ),
               ),
-              if (w.data['approvalAccess'] == true)
-                Panel(
-                  child: ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.fact_check_outlined, color: AppColors.deepTeal),
-                    title: const Text('Persetujuan'),
-                    subtitle: Text(
-                      '${w.rows("requests").where((r) => r["canReview"] == true).length} pengajuan menunggu tindakan Anda',
-                    ),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => open(ApprovalsScreen(api: api)),
+              Panel(
+                child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.fact_check_outlined, color: AppColors.deepTeal),
+                  title: const Text('Persetujuan'),
+                  subtitle: Text(
+                    '${w.rows("requests").where((r) => r["canReview"] == true).length} pengajuan menunggu tindakan Anda',
                   ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => open(ApprovalsScreen(api: api)),
                 ),
+              ),
+
               Panel(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
