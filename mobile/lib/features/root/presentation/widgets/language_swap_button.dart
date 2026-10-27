@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 
@@ -58,15 +59,15 @@ class _LanguageSwapButtonState extends State<LanguageSwapButton> {
         shadowColor: Colors.black.withValues(alpha: 0.16),
         color: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16.r),
           side: const BorderSide(
             color: Color(0xFFE2E8F0),
             width: 1.2,
           ),
         ),
-        offset: const Offset(0, 44),
-        constraints: const BoxConstraints(
-          minWidth: 160,
+        offset: Offset(0, 46.w),
+        constraints: BoxConstraints(
+          minWidth: 160.w,
         ),
         initialValue: currentLanguage,
         onSelected: (AppLanguage selectedLang) {
@@ -82,20 +83,20 @@ class _LanguageSwapButtonState extends State<LanguageSwapButton> {
                 behavior: SnackBarBehavior.floating,
                 backgroundColor: const Color(0xFF0F766E),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(10.r),
                 ),
-                margin: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
+                margin: EdgeInsets.symmetric(
+                  horizontal: 16.w,
+                  vertical: 14.w,
                 ),
                 duration: const Duration(seconds: 2),
                 content: Row(
                   children: [
                     Text(
                       selectedLang.flagEmoji,
-                      style: const TextStyle(fontSize: 16),
+                      style: TextStyle(fontSize: 16.sp),
                     ),
-                    const SizedBox(width: 10),
+                    SizedBox(width: 10.w),
                     Expanded(
                       child: Text(
                         selectedLang == AppLanguage.id
@@ -103,9 +104,9 @@ class _LanguageSwapButtonState extends State<LanguageSwapButton> {
                             : selectedLang == AppLanguage.en
                                 ? 'Language switched to English'
                                 : '语言已切换为简体中文',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'Inter',
-                          fontSize: 12.5,
+                          fontSize: 12.5.sp,
                           color: Colors.white,
                           fontWeight: FontWeight.w500,
                         ),
@@ -123,32 +124,32 @@ class _LanguageSwapButtonState extends State<LanguageSwapButton> {
 
             return PopupMenuItem<AppLanguage>(
               value: lang,
-              height: 44,
-              padding: const EdgeInsets.symmetric(horizontal: 6),
+              height: 44.w,
+              padding: EdgeInsets.symmetric(horizontal: 6.w),
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 6,
+                padding: EdgeInsets.symmetric(
+                  horizontal: 8.w,
+                  vertical: 6.w,
                 ),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? const Color(0xFFF0FDFA)
                       : Colors.transparent,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(10.r),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       lang.flagEmoji,
-                      style: const TextStyle(fontSize: 17),
+                      style: TextStyle(fontSize: 17.sp),
                     ),
-                    const SizedBox(width: 10),
+                    SizedBox(width: 10.w),
                     Text(
                       lang.name,
                       style: TextStyle(
                         fontFamily: 'Inter',
-                        fontSize: 13,
+                        fontSize: 13.sp,
                         fontWeight: isSelected
                             ? FontWeight.w700
                             : FontWeight.w500,
@@ -158,10 +159,10 @@ class _LanguageSwapButtonState extends State<LanguageSwapButton> {
                       ),
                     ),
                     if (isSelected) ...[
-                      const SizedBox(width: 8),
-                      const Icon(
+                      SizedBox(width: 8.w),
+                      Icon(
                         Icons.check_rounded,
-                        size: 18,
+                        size: 18.w,
                         color: AppColors.filterTealAccent,
                       ),
                     ],
@@ -172,14 +173,14 @@ class _LanguageSwapButtonState extends State<LanguageSwapButton> {
           }).toList();
         },
         child: Container(
-          height: 38,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
+          height: 40.w,
+          padding: EdgeInsets.symmetric(horizontal: 10.w),
           decoration: BoxDecoration(
             color: const Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(13.r),
             border: Border.all(
               color: const Color(0xFFE2E8F0),
-              width: 1,
+              width: 1.w,
             ),
             boxShadow: const [AppShadows.shadow094],
           ),
@@ -188,24 +189,24 @@ class _LanguageSwapButtonState extends State<LanguageSwapButton> {
             children: [
               Text(
                 currentLanguage.flagEmoji,
-                style: const TextStyle(fontSize: 15),
+                style: TextStyle(fontSize: 15.sp),
               ),
-              const SizedBox(width: 6),
+              SizedBox(width: 6.w),
               Text(
                 currentLanguage.shortLabel,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Inter',
-                  fontSize: 12.5,
+                  fontSize: 12.5.sp,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF0F172A),
+                  color: const Color(0xFF0F172A),
                   letterSpacing: 0.3,
                 ),
               ),
-              const SizedBox(width: 2),
-              const Icon(
+              SizedBox(width: 2.w),
+              Icon(
                 Icons.arrow_drop_down_rounded,
-                size: 18,
-                color: Color(0xFF64748B),
+                size: 18.w,
+                color: const Color(0xFF64748B),
               ),
             ],
           ),
