@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:uicons/uicons.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/workspace.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -314,6 +315,23 @@ class _DashboardTabState extends State<DashboardTab> {
     }
   }
 
+  IconData _getUiconForKind(String kind) {
+    switch (kind) {
+      case 'Cuti':
+        return UIcons.regularRounded.calendar;
+      case 'Reimbursement':
+        return UIcons.regularRounded.receipt;
+      case 'Petty Cash':
+        return UIcons.regularRounded.wallet;
+      case 'General Affair':
+        return UIcons.regularRounded.briefcase;
+      case 'Lembur':
+        return UIcons.regularRounded.clock;
+      default:
+        return UIcons.regularRounded.document;
+    }
+  }
+
   Widget _buildSubHeader(BuildContext context) {
     final position = text(w.employee, 'position');
     final department = text(w.employee, 'department');
@@ -547,19 +565,19 @@ class _DashboardTabState extends State<DashboardTab> {
                   ],
                 ),
               ),
-              Panel(
-                child: ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.fact_check_outlined, color: AppColors.deepTeal),
-                  title: const Text('Persetujuan'),
-                  subtitle: Text(
-                    '${w.rows("requests").where((r) => r["canReview"] == true).length} pengajuan menunggu tindakan Anda',
+              if (w.data['approvalAccess'] == true)
+                Panel(
+                  child: ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.fact_check_outlined, color: AppColors.deepTeal),
+                    title: const Text('Persetujuan'),
+                    subtitle: Text(
+                      '${w.rows("requests").where((r) => r["canReview"] == true).length} pengajuan menunggu tindakan Anda',
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => open(ApprovalsScreen(api: api)),
                   ),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => open(ApprovalsScreen(api: api)),
                 ),
-              ),
-
               Panel(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
@@ -598,54 +616,102 @@ class _DashboardTabState extends State<DashboardTab> {
                 subtitle: 'Pilih layanan yang Anda perlukan.',
               ),
               const SizedBox(height: 12),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final columns = MediaQuery.textScalerOf(context).scale(14) > 21
-                      ? 1
-                      : 2;
-                  final width = (constraints.maxWidth - (columns - 1) * 12) / columns;
-                  return Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: [
-                      for (final kind in requestKinds)
-                        SizedBox(
-                          width: width,
-                          child: OutlinedButton(
-                            style: OutlinedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              side: const BorderSide(color: line),
-                              padding: const EdgeInsets.all(16),
-                              alignment: Alignment.centerLeft,
+              for (final kind in requestKinds) ...[
+                Builder(
+                  builder: (context) {
+                    final count = w
+                        .mine('requests')
+                        .where((r) => r['kind'] == kind)
+                        .length;
+                    return Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10.w),
+                        boxShadow: const [AppShadows.shadow094],
+                        color: Colors.white,
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(10.w),
+                          onTap: () => open(
+                            RequestForm(
+                              api: api,
+                              initialKind: kind,
+                              workspace: w,
                             ),
-                            onPressed: () => open(
-                              RequestForm(
-                                api: api,
-                                initialKind: kind,
-                                workspace: w,
-                              ),
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 14.w,
+                              vertical: 10.w,
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            child: Row(
                               children: [
-                                Icon(requestIcon(kind), color: AppColors.deepTeal, size: 24),
-                                const SizedBox(height: 12),
-                                Text(
-                                  kind,
-                                  style: const TextStyle(
-                                    color: ink,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
+                                Container(
+                                  width: 34.w,
+                                  height: 34.w,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF0FDFA),
+                                    borderRadius: BorderRadius.circular(8.r),
+                                    border: Border.all(
+                                      color: const Color(0xFFCCFBF1),
+                                      width: 1.w,
+                                    ),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Icon(
+                                    _getUiconForKind(kind),
+                                    size: 17.w,
+                                    color: const Color(0xFF0D9488),
+                                  ),
+                                ),
+                                SizedBox(width: 12.w),
+                                Expanded(
+                                  child: Text(
+                                    'Pengajuan $kind ($count)',
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 14.5.sp,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        Color(0xFF0F766E),
+                                        Color(0xFF14B8A6),
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(8.r),
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        color: Color(0x250F766E),
+                                        blurRadius: 6,
+                                        offset: Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  padding: EdgeInsets.all(6.w),
+                                  child: Icon(
+                                    UIcons.boldRounded.plus,
+                                    size: 16.w,
+                                    color: Colors.white,
                                   ),
                                 ),
                               ],
                             ),
                           ),
                         ),
-                    ],
-                  );
-                },
-              ),
+                      ),
+                    );
+                  },
+                ),
+                SizedBox(height: 10.w),
+              ],
               const SizedBox(height: 12),
               const SectionHeading(
                 'Riwayat kehadiran',
