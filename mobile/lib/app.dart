@@ -36,7 +36,9 @@ class _HrisAppState extends State<HrisApp> {
   @override
   void initState() {
     super.initState();
-    initDependencies(customApiClient: widget.api);
+    if (!sl.isRegistered<ApiClient>()) {
+      initDependencies(customApiClient: widget.api);
+    }
     _authBloc = sl<AuthBloc>()..add(const AuthCheckRequested());
     _workspaceBloc = sl<WorkspaceBloc>();
     _attendanceBloc = sl<AttendanceBloc>();

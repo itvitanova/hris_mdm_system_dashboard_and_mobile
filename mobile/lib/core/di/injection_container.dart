@@ -10,6 +10,9 @@ final sl = GetIt.instance;
 
 Future<void> initDependencies({ApiClient? customApiClient}) async {
   if (sl.isRegistered<ApiClient>()) {
+    if (customApiClient == null || identical(sl<ApiClient>(), customApiClient)) {
+      return;
+    }
     await sl.reset();
   }
 

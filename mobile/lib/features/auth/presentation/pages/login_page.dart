@@ -5,9 +5,9 @@ import '../../../../core/api_client.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../blocs/auth_bloc.dart';
-import '../blocs/auth_event.dart';
-import '../blocs/auth_state.dart';
+import '../bloc/auth_bloc.dart';
+import '../bloc/auth_event.dart';
+import '../bloc/auth_state.dart';
 import '../widgets/input_auth.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -498,7 +498,6 @@ class _LoginScreenState extends State<LoginScreen> {
           listener: (context, state) {
             if (state is Authenticated) {
               passwordTextC.clear();
-              widget.onLogin?.call();
             } else if (state is AuthActionFailure) {
               setState(() {
                 busy = false;
