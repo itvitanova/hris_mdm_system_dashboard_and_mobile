@@ -5,8 +5,7 @@ import '../../../../core/theme/app_shadows.dart';
 
 enum AppLanguage {
   id('id', 'Bahasa Indonesia', 'ID', '🇮🇩'),
-  en('en', 'English', 'EN', '🇬🇧'),
-  zh('zh', '简体中文', 'ZH', '🇨🇳');
+  en('en', 'English', 'EN', '🇬🇧');
 
   final String code;
   final String name;
@@ -101,9 +100,7 @@ class _LanguageSwapButtonState extends State<LanguageSwapButton> {
                       child: Text(
                         selectedLang == AppLanguage.id
                             ? 'Bahasa berhasil diubah ke Bahasa Indonesia'
-                            : selectedLang == AppLanguage.en
-                                ? 'Language switched to English'
-                                : '语言已切换为简体中文',
+                            : 'Language switched to English',
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 12.5.sp,

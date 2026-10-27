@@ -284,10 +284,6 @@ class _DashboardTabState extends State<DashboardTab> {
       final dayName = days[date.weekday - 1];
       final monthName = months[date.month - 1];
       return '$dayName, ${date.day} $monthName ${date.year}';
-    } else if (lang == AppLanguage.zh) {
-      const days = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'];
-      final dayName = days[date.weekday - 1];
-      return '${date.year}年${date.month}月${date.day}日 $dayName';
     } else {
       const days = [
         'Senin',
