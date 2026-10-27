@@ -66,7 +66,9 @@ class ApiClient {
         } catch (_) {
           /* Non-JSON gateway error. */
         }
-        if (response.statusCode == 401 && path != '/auth/login') {
+        if (response.statusCode == 401 &&
+            path != '/auth/login' &&
+            path != '/auth/logout') {
           await forget();
           onUnauthorized?.call();
         }
@@ -149,7 +151,13 @@ class ApiClient {
 
   Future<void> logout() async {
     // Preserve on connection failure so revocation can be retried.
-    await post('/auth/logout', {});
+    if (_cookie != null) {
+      try {
+        await post('/auth/logout', {});
+      } catch (_) {
+        // Ignored: network error or session already expired on server
+      }
+    }
     await forget();
   }
 

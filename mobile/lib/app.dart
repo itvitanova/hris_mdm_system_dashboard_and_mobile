@@ -47,7 +47,9 @@ class _HrisAppState extends State<HrisApp> {
 
     widget.api.onUnauthorized = () {
       navigator.currentState?.popUntil((route) => route.isFirst);
-      _authBloc.add(const AuthLogoutRequested());
+      if (_authBloc.state is Authenticated) {
+        _authBloc.add(const AuthLogoutRequested());
+      }
     };
   }
 
@@ -107,6 +109,7 @@ class _HrisAppState extends State<HrisApp> {
 
           if (state is Authenticated) {
             return WorkspaceLoader(
+              key: const ValueKey('workspace_loader'),
               api: widget.api,
               onLogout: () =>
                   context.read<AuthBloc>().add(const AuthLogoutRequested()),
@@ -114,6 +117,7 @@ class _HrisAppState extends State<HrisApp> {
           }
 
           return LoginScreen(
+            key: const ValueKey('login_screen'),
             api: widget.api,
             onLogin: () =>
                 context.read<AuthBloc>().add(const AuthCheckRequested()),

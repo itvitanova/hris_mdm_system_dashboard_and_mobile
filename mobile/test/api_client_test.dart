@@ -52,4 +52,13 @@ void main() {
     expect(expired, isTrue);
     expect(await api.restore(), isFalse);
   });
+  test('logout does not trigger onUnauthorized when unauthenticated or on 401', () async {
+    final client = MockClient((_) async => http.Response('{"error":"Unauthorized"}', 401));
+    final api = ApiClient(baseUrl: 'https://example.test', client: client);
+    var unauthorizedCalled = false;
+    api.onUnauthorized = () => unauthorizedCalled = true;
+
+    await api.logout();
+    expect(unauthorizedCalled, isFalse);
+  });
 }
