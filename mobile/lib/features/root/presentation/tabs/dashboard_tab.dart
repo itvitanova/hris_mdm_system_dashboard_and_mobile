@@ -7,6 +7,7 @@ import '../../../../shared/widgets.dart';
 import '../../../attendance/attendance_screen.dart';
 import '../../../attendance/daily_attendance.dart';
 import '../../../requests/request_form.dart';
+import '../../../requests/request_detail.dart';
 import '../../../requests/request_notifications.dart';
 import '../../../home/leave_calendar_screen.dart';
 import '../widgets/language_swap_button.dart';
@@ -567,48 +568,62 @@ class _DashboardTabState extends State<DashboardTab> {
                       onPressed: daily.completed
                           ? null
                           : () => open(AttendanceScreen(api: api, workspace: w)),
-                      icon: const Icon(Icons.login),
-                      label: Text(daily.label),
+                      icon: Icon(
+                        daily.completed
+                            ? Icons.check_circle_outline
+                            : daily.checkedIn
+                            ? Icons.logout
+                            : Icons.login,
+                      ),
+                      label: Text(daily.label, textAlign: TextAlign.center),
                     ),
                   ],
                 ),
               ),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final stacked = constraints.maxWidth < 320;
-                  final children = [
-                    Panel(
-                      child: _Summary(
-                        label: 'Sisa cuti',
-                        value:
-                            '${number(w.employee, 'leaveBalance').toInt()} hari',
-                        icon: Icons.beach_access_outlined,
-                      ),
+              if (w.data['approvalAccess'] == true)
+                Panel(
+                  child: ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.fact_check_outlined, color: AppColors.deepTeal),
+                    title: const Text('Persetujuan'),
+                    subtitle: Text(
+                      '${w.rows("requests").where((r) => r["canReview"] == true).length} pengajuan menunggu tindakan Anda',
                     ),
-                    Panel(
-                      child: _Summary(
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => open(ApprovalsScreen(api: api)),
+                  ),
+                ),
+              Panel(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final stacked = MediaQuery.textScalerOf(context).scale(14) > 22;
+                    final children = [
+                      _Summary(
+                        label: 'Sisa cuti',
+                        value: '${number(w.employee, 'leaveBalance').toInt()} hari',
+                        icon: Icons.event_available_outlined,
+                      ),
+                      _Summary(
                         label: 'Pengajuan menunggu',
                         value: '$pending',
-                        icon: Icons.hourglass_top_outlined,
+                        icon: Icons.schedule_outlined,
                       ),
-                    ),
-                  ];
-                  return stacked
-                      ? Column(
-                          children: [
-                            children[0],
-                            const SizedBox(height: 12),
-                            children[1],
-                          ],
-                        )
-                      : Row(
-                          children: [
-                            Expanded(child: children[0]),
-                            const SizedBox(width: 16),
-                            Expanded(child: children[1]),
-                          ],
-                        );
-                },
+                    ];
+                    return stacked
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [children[0], const Divider(), children[1]],
+                          )
+                        : Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(child: children[0]),
+                              const SizedBox(width: 16),
+                              Expanded(child: children[1]),
+                            ],
+                          );
+                  },
+                ),
               ),
               const SizedBox(height: 12),
               const SectionHeading(
@@ -618,10 +633,10 @@ class _DashboardTabState extends State<DashboardTab> {
               const SizedBox(height: 12),
               LayoutBuilder(
                 builder: (context, constraints) {
-                  final columns =
-                      MediaQuery.textScalerOf(context).scale(14) > 21 ? 1 : 2;
-                  final width =
-                      (constraints.maxWidth - (columns - 1) * 12) / columns;
+                  final columns = MediaQuery.textScalerOf(context).scale(14) > 21
+                      ? 1
+                      : 2;
+                  final width = (constraints.maxWidth - (columns - 1) * 12) / columns;
                   return Wrap(
                     spacing: 12,
                     runSpacing: 12,
@@ -646,11 +661,7 @@ class _DashboardTabState extends State<DashboardTab> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Icon(
-                                  requestIcon(kind),
-                                  color: AppColors.deepTeal,
-                                  size: 24,
-                                ),
+                                Icon(requestIcon(kind), color: AppColors.deepTeal, size: 24),
                                 const SizedBox(height: 12),
                                 Text(
                                   kind,
@@ -674,8 +685,7 @@ class _DashboardTabState extends State<DashboardTab> {
                 subtitle: 'Catatan masuk dan pulang Anda.',
               ),
               OutlinedButton.icon(
-                onPressed: () =>
-                    open(LeaveCalendarScreen(api: api, workspace: w)),
+                onPressed: () => open(LeaveCalendarScreen(api: api, workspace: w)),
                 icon: const Icon(Icons.calendar_month_outlined),
                 label: const Text('Kalender cuti rekan satu lokasi'),
               ),
@@ -697,9 +707,7 @@ class _DashboardTabState extends State<DashboardTab> {
                               children: [
                                 Text(
                                   text(r, 'date'),
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                  style: const TextStyle(fontWeight: FontWeight.w600),
                                 ),
                                 StatusPill(text(r, 'status')),
                               ],
@@ -714,9 +722,7 @@ class _DashboardTabState extends State<DashboardTab> {
                                 if (r['earlyDeparture'] == true)
                                   Text(
                                     'Pulang ${number(r, 'earlyMinutes').toInt()} menit lebih awal · ${text(r, 'earlyReason')}',
-                                    style: const TextStyle(
-                                      color: Color(0xFFB42318),
-                                    ),
+                                    style: const TextStyle(color: Color(0xFFB42318)),
                                   ),
                               ],
                             ),
