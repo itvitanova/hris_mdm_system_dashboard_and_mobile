@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/workspace.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets.dart';
+import '../../../home/leave_calendar_screen.dart';
 import '../../../requests/request_form.dart';
 import '../../../requests/request_detail.dart';
 import '../../../requests/request_notifications.dart';
@@ -29,7 +29,6 @@ class RequestsTab extends StatelessWidget {
     final unreadCount = rows.where((r) => r['unread'] == true).length;
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
       appBar: AppBar(
         title: const Text(
           'Pengajuan',
@@ -37,14 +36,31 @@ class RequestsTab extends StatelessWidget {
         ),
         actions: [
           IconButton(
+            tooltip: 'Kalender cuti',
+            onPressed: () => open(LeaveCalendarScreen(api: api, workspace: w)),
+            icon: const Icon(Icons.calendar_month_outlined),
+          ),
+          IconButton(
             tooltip: 'Notifikasi pengajuan',
-            onPressed: () => open(RequestNotificationsScreen(api: api, workspace: w)),
+            onPressed: () =>
+                open(RequestNotificationsScreen(api: api, workspace: w)),
             icon: Badge.count(
               count: unreadCount,
               isLabelVisible: unreadCount > 0,
               child: const Icon(Icons.notifications_outlined),
             ),
           ),
+          if (w.data['approvalAccess'] == true)
+            IconButton(
+              tooltip: 'Persetujuan',
+              onPressed: () => open(ApprovalsScreen(api: api)),
+              icon: Badge(
+                label: Text(
+                  '${w.rows("requests").where((r) => r["canReview"] == true).length}',
+                ),
+                child: const Icon(Icons.fact_check_outlined),
+              ),
+            ),
           IconButton(
             tooltip: 'Segarkan data',
             onPressed: onRefresh,
@@ -66,10 +82,6 @@ class RequestsTab extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               FilledButton.icon(
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.deepTeal,
-                  foregroundColor: Colors.white,
-                ),
                 onPressed: () => open(RequestForm(api: api, workspace: w)),
                 icon: const Icon(Icons.add),
                 label: const Text('Buat pengajuan'),
@@ -91,7 +103,7 @@ class RequestsTab extends StatelessWidget {
                             Text(
                               text(r, 'kind'),
                               style: const TextStyle(
-                                color: AppColors.deepTeal,
+                                color: brand,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -100,7 +112,11 @@ class RequestsTab extends StatelessWidget {
                               const Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.circle, color: Color(0xFFB42318), size: 8),
+                                  Icon(
+                                    Icons.circle,
+                                    color: Color(0xFFB42318),
+                                    size: 8,
+                                  ),
                                   SizedBox(width: 6),
                                   Text(
                                     'Ada pembaruan',
@@ -135,7 +151,7 @@ class RequestsTab extends StatelessWidget {
                             child: Text(
                               text(r, 'pendingWith'),
                               style: const TextStyle(
-                                color: AppColors.deepTeal,
+                                color: brand,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -151,7 +167,11 @@ class RequestsTab extends StatelessWidget {
                           DetailLine('Durasi', '${number(r, 'hours')} jam'),
                         OutlinedButton.icon(
                           onPressed: () => open(
-                            RequestDetailScreen(api: api, request: r, own: true),
+                            RequestDetailScreen(
+                              api: api,
+                              request: r,
+                              own: true,
+                            ),
                           ),
                           icon: const Icon(Icons.article_outlined),
                           label: const Text('Rincian dan dokumen'),
