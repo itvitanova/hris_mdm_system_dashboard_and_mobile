@@ -212,7 +212,8 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
       PersistentBottomNavBarItem(
         icon: _tabIcon(
           svg: SvgPicture.asset(
-            'assets/icon/message-time-active.svg',
+            'assets/icon/message-time.svg',
+            colorFilter: const ColorFilter.mode(AppColors.deepTeal, BlendMode.srcIn),
             width: 24,
             height: 24,
           ),
