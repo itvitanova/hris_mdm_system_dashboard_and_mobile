@@ -167,7 +167,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       SizedBox(width: 8.w),
                       Text(
-                        'MDM ATTENDANCE SYSTEM',
+                        'HRIS MDM SYSTEM',
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 11.sp,
