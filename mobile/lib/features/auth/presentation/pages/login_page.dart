@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../blocs/auth_bloc.dart';
 import '../blocs/auth_event.dart';
 import '../blocs/auth_state.dart';
@@ -126,267 +127,273 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Widget _buildForm(BuildContext context, bool isLoading) {
-    return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppColors.filterGradientStart,
-              AppColors.filterGradientEnd,
+  Widget _buildTopHeader() {
+    return SizedBox(
+      height: 147.w,
+      width: double.infinity,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Center(
+                child: Container(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 14.w, vertical: 7.w),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(20.r),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.28),
+                      width: 1.w,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.verified_user_rounded,
+                        color: const Color(0xFF5EEAD4),
+                        size: 15.w,
+                      ),
+                      SizedBox(width: 8.w),
+                      Text(
+                        'MDM ATTENDANCE SYSTEM',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          letterSpacing: 1.1,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ),
-        child: SafeArea(
-          bottom: false,
-          child: CustomScrollView(
+      ),
+    );
+  }
+
+  Widget _buildForm(BuildContext context, bool isLoading) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF042F2E),
+      resizeToAvoidBottomInset: true,
+      body: Stack(
+        children: [
+          // ================= ABSTRACT TEAL GRADIENT BACKGROUND =================
+          const Positioned.fill(
+            child: _AbstractTealBackground(),
+          ),
+
+          // ================= SCROLLABLE CONTENT =================
+          CustomScrollView(
             slivers: [
               SliverFillRemaining(
                 hasScrollBody: false,
                 child: Column(
                   children: [
-                    // Atmospheric Header with Fintech Card Gradient Overlay (~185w)
-                    const _FintechCardWavesHeader(),
+                    // Top Header with brand pill and abstract ambience
+                    _buildTopHeader(),
 
-                    // Form Sheet
+                    // Bottom White Card
                     Expanded(
                       child: Container(
                         width: double.infinity,
+                        margin: EdgeInsets.zero,
                         decoration: BoxDecoration(
                           color: AppColors.white,
                           borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(28.r),
-                            topRight: Radius.circular(28.r),
+                            topLeft: Radius.circular(32.r),
+                            topRight: Radius.circular(32.r),
+                          ),
+                          border: Border(
+                            top: BorderSide(
+                              color: Colors.white.withValues(alpha: 0.8),
+                              width: 1.5.w,
+                            ),
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.08),
-                              blurRadius: 20,
-                              offset: const Offset(0, -4),
+                              color: const Color(0xFF0F172A)
+                                  .withValues(alpha: 0.16),
+                              blurRadius: 30,
+                              offset: const Offset(0, -8),
                             ),
                           ],
-                        ),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 26.w,
-                          vertical: 22.w,
                         ),
                         child: Form(
                           key: form,
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              // App Logo Center
-                              Center(
+                              SizedBox(height: 12.w),
+                              // Handle bar
+                              Container(
+                                width: 38.w,
+                                height: 4.w,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFCBD5E1),
+                                  borderRadius: BorderRadius.circular(2.w),
+                                ),
+                              ),
+                              SizedBox(height: 28.w),
+                              SizedBox(
+                                width: 150.w,
+                                height: 56.w,
                                 child: Image.asset(
-                                  'assets/img/app_logo.png',
-                                  height: 42.w,
+                                  "assets/img/app_logo.png",
                                   fit: BoxFit.contain,
                                   errorBuilder: (context, error, stackTrace) =>
-                                      Text(
-                                    'MDM HR',
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 22.sp,
-                                      color: AppColors.filterGradientStart,
+                                      Center(
+                                    child: Text(
+                                      'MDM HR',
+                                      style: TextStyle(
+                                        fontFamily: 'Inter',
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 22.sp,
+                                        color: AppColors.filterGradientStart,
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                              SizedBox(height: 12.w),
-
-                              // Soft Corporate Badge
-                              Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 8.w,
-                                  vertical: 3.w,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF0FDFA),
-                                  borderRadius: BorderRadius.circular(5.r),
-                                  border: Border.all(
-                                    color: const Color(0xFFCCFBF1),
-                                    width: 1.w,
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
+                              SizedBox(height: 40.w),
+                              SizedBox(
+                                width: 322.w,
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
                                   children: [
-                                    Container(
-                                      width: 5.w,
-                                      height: 5.w,
-                                      decoration: const BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Color(0xFF0D9488),
-                                      ),
-                                    ),
-                                    SizedBox(width: 4.w),
                                     Text(
-                                      'PORTAL PRESENSI KARYAWAN',
-                                      style: TextStyle(
-                                        fontFamily: 'Inter',
-                                        fontSize: 8.5.sp,
-                                        fontWeight: FontWeight.w700,
-                                        color: const Color(0xFF0F766E),
-                                        letterSpacing: 0.5,
-                                      ),
+                                      "Welcome Back, 👋",
+                                      style: AppTextStyles.interExtraBold18,
+                                    ),
+                                    SizedBox(height: 5.h),
+                                    Text(
+                                      "Please enter your login details to access your account.",
+                                      style: AppTextStyles
+                                          .inter13RegularSecondary,
                                     ),
                                   ],
                                 ),
                               ),
-                              SizedBox(height: 6.w),
-
-                              // Greeting Block
-                              Text(
-                                'Welcome Back, 👋',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 18.sp,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF1E293B),
-                                  letterSpacing: -0.2,
-                                ),
-                              ),
-                              SizedBox(height: 3.w),
-                              Text(
-                                'Please enter your login details to access your account.',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 12.5.sp,
-                                  fontWeight: FontWeight.w400,
-                                  color: const Color(0xFF64748B),
-                                  height: 1.35,
-                                ),
-                              ),
-                              SizedBox(height: 16.w),
-
-                              // Form Inputs
-                              InputAuth(
-                                label: 'E-Mail',
-                                hintText: 'Enter your email',
-                                controller: emailTextC,
-                                isPassword: false,
-                                enabled: !isLoading,
-                                prefixIcon: Icons.mail_outline_rounded,
-                                keyboardType: TextInputType.emailAddress,
-                                autofillHints: const [AutofillHints.username],
-                                textInputAction: TextInputAction.next,
-                                validator: (v) => v == null || !v.contains('@')
-                                    ? 'Masukkan email yang valid'
-                                    : null,
-                              ),
-                              SizedBox(height: 14.w),
-                              InputAuth(
-                                label: 'Password',
-                                hintText: 'Enter your password',
-                                controller: passwordTextC,
-                                isPassword: true,
-                                enabled: !isLoading,
-                                prefixIcon: Icons.lock_outline_rounded,
-                                autofillHints: const [AutofillHints.password],
-                                textInputAction: TextInputAction.done,
-                                onFieldSubmitted: (_) => submit(),
-                                validator: (v) => v == null || v.isEmpty
-                                    ? 'Masukkan kata sandi'
-                                    : null,
-                              ),
-                              SizedBox(height: 12.w),
-
-                              // Remember Me & Forgot Password Row
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                              SizedBox(height: 20.w),
+                              Column(
                                 children: [
-                                  Flexible(
-                                    child: InkWell(
-                                      borderRadius: BorderRadius.circular(6.r),
-                                      onTap: isLoading
-                                          ? null
-                                          : () {
-                                              setState(() {
-                                                isChecked = !isChecked;
-                                              });
-                                            },
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          SizedBox(
-                                            width: 20.w,
-                                            height: 20.w,
-                                            child: Checkbox(
-                                              value: isChecked,
-                                              onChanged: isLoading
-                                                  ? null
-                                                  : (bool? value) {
-                                                      setState(() {
-                                                        isChecked =
-                                                            value ?? false;
-                                                      });
-                                                    },
-                                              activeColor: AppColors.deepTeal,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(4.r),
-                                              ),
-                                              side: BorderSide(
-                                                color: const Color(0xFFCBD5E1),
-                                                width: 1.3.w,
-                                              ),
-                                              materialTapTargetSize:
-                                                  MaterialTapTargetSize
-                                                      .shrinkWrap,
-                                            ),
-                                          ),
-                                          SizedBox(width: 8.w),
-                                          Flexible(
-                                            child: Text(
-                                              'Remember me',
-                                              overflow: TextOverflow.ellipsis,
-                                              style: TextStyle(
-                                                fontFamily: 'Inter',
-                                                fontSize: 13.sp,
-                                                fontWeight: FontWeight.w500,
-                                                color: const Color(0xFF475569),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
+                                  InputAuth(
+                                    label: "E-Mail",
+                                    hintText: "Enter your email",
+                                    isPassword: false,
+                                    controller: emailTextC,
+                                    enabled: !isLoading,
+                                    keyboardType:
+                                        TextInputType.emailAddress,
+                                    autofillHints: const [
+                                      AutofillHints.username
+                                    ],
+                                    textInputAction: TextInputAction.next,
+                                    validator: (v) =>
+                                        v == null || !v.contains('@')
+                                            ? 'Masukkan email yang valid'
+                                            : null,
                                   ),
-                                  InkWell(
-                                    borderRadius: BorderRadius.circular(6.r),
-                                    onTap: () {},
-                                    child: Padding(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 4.w,
-                                        vertical: 2.w,
-                                      ),
-                                      child: Text(
-                                        'Forgot Password?',
-                                        style: TextStyle(
-                                          fontFamily: 'Inter',
-                                          fontSize: 13.sp,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppColors.deepTeal,
+                                  SizedBox(height: 10.h),
+                                  InputAuth(
+                                    label: "Password",
+                                    hintText: "Enter your password",
+                                    isPassword: true,
+                                    controller: passwordTextC,
+                                    enabled: !isLoading,
+                                    autofillHints: const [
+                                      AutofillHints.password
+                                    ],
+                                    textInputAction: TextInputAction.done,
+                                    onFieldSubmitted: (_) => submit(),
+                                    validator: (v) =>
+                                        v == null || v.isEmpty
+                                            ? 'Masukkan kata sandi'
+                                            : null,
+                                  ),
+                                  SizedBox(height: 10.h),
+                                  SizedBox(
+                                    width: 322.w,
+                                    child: Row(
+                                      children: [
+                                        Checkbox(
+                                          value: isChecked,
+                                          visualDensity:
+                                              VisualDensity.compact,
+                                          materialTapTargetSize:
+                                              MaterialTapTargetSize
+                                                  .shrinkWrap,
+                                          onChanged: isLoading
+                                              ? null
+                                              : (bool? value) {
+                                                  setState(() {
+                                                    isChecked =
+                                                        value ?? false;
+                                                  });
+                                                },
+                                          activeColor:
+                                              AppColors.filterTealAccent,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(4.r),
+                                          ),
+                                          side: BorderSide(
+                                            color: const Color(0xFFCBD5E1),
+                                            width: 1.3.w,
+                                          ),
                                         ),
-                                      ),
+                                        SizedBox(width: 6.w),
+                                        Expanded(
+                                          child: Text(
+                                            "Remember me",
+                                            style: AppTextStyles
+                                                .inter128RegularPrimary,
+                                          ),
+                                        ),
+                                        GestureDetector(
+                                          onTap: () {},
+                                          child: Text(
+                                            "Forgot Password",
+                                            style: TextStyle(
+                                              fontFamily: 'Inter',
+                                              fontSize: 12.sp,
+                                              color: isLoading
+                                                  ? AppColors.textTertiary
+                                                  : AppColors
+                                                      .filterTealAccent,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
                               ),
-                              SizedBox(height: 20.w),
-
-                              // Sign In Primary Gradient Button
+                              SizedBox(height: 30.w),
+                              // Gradient Sign In Button
                               Container(
-                                width: double.infinity,
+                                width: 322.w,
                                 height: 48.w,
                                 decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(14.r),
+                                  borderRadius:
+                                      BorderRadius.circular(12.r),
                                   gradient: const LinearGradient(
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
@@ -398,23 +405,25 @@ class _LoginScreenState extends State<LoginScreen> {
                                   boxShadow: [
                                     BoxShadow(
                                       color: const Color(0xFF0D9488)
-                                          .withValues(alpha: 0.28),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 4),
+                                          .withValues(alpha: 0.32),
+                                      blurRadius: 14,
+                                      offset: const Offset(0, 5),
                                     ),
                                   ],
                                 ),
                                 child: Material(
                                   color: Colors.transparent,
                                   child: InkWell(
-                                    borderRadius: BorderRadius.circular(14.r),
+                                    borderRadius:
+                                        BorderRadius.circular(12.r),
                                     onTap: isLoading ? null : submit,
                                     child: Center(
                                       child: isLoading
                                           ? Row(
                                               mainAxisAlignment:
                                                   MainAxisAlignment.center,
-                                              mainAxisSize: MainAxisSize.min,
+                                              mainAxisSize:
+                                                  MainAxisSize.min,
                                               children: [
                                                 SizedBox(
                                                   width: 18.w,
@@ -424,37 +433,40 @@ class _LoginScreenState extends State<LoginScreen> {
                                                     strokeWidth: 2.2,
                                                     valueColor:
                                                         AlwaysStoppedAnimation<
-                                                          Color
-                                                        >(AppColors.white),
+                                                            Color>(
+                                                      AppColors.white,
+                                                    ),
                                                   ),
                                                 ),
                                                 SizedBox(width: 10.w),
                                                 Text(
-                                                  'Signing In...',
+                                                  "Signing In...",
                                                   style: TextStyle(
                                                     fontFamily: 'Inter',
                                                     color: AppColors.white,
-                                                    fontWeight: FontWeight.w600,
-                                                    fontSize: 14.5.sp,
+                                                    fontWeight:
+                                                        FontWeight.w600,
+                                                    fontSize: 14.sp,
                                                   ),
                                                 ),
                                               ],
                                             )
                                           : Text(
-                                              'Sign In',
+                                              "Sign In",
                                               style: TextStyle(
                                                 fontFamily: 'Inter',
                                                 color: AppColors.white,
-                                                fontWeight: FontWeight.w700,
-                                                fontSize: 14.5.sp,
-                                                letterSpacing: 0.2,
+                                                fontWeight:
+                                                    FontWeight.w600,
+                                                fontSize: 14.sp,
+                                                letterSpacing: 0.3,
                                               ),
                                             ),
                                     ),
                                   ),
                                 ),
                               ),
-                              SizedBox(height: 24.w),
+                              SizedBox(height: 32.w),
                             ],
                           ),
                         ),
@@ -465,7 +477,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }
@@ -508,145 +520,244 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-/// Header Atmospheric dengan Gradient Overlay Kurva Kartu Debit/Fintech (~185w)
-class _FintechCardWavesHeader extends StatelessWidget {
-  const _FintechCardWavesHeader();
+/// Abstract Teal Gradient Background with glowing orbs, fluid curves, and geometric glass accents
+class _AbstractTealBackground extends StatelessWidget {
+  const _AbstractTealBackground();
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 185.w,
-      child: ClipRect(
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            // Ambient Radial Glow (Top-Right Mint)
-            Positioned(
-              top: -30.w,
-              right: -20.w,
-              child: Container(
-                width: 200.w,
-                height: 200.w,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      const Color(0xFF5EEAD4).withValues(alpha: 0.18),
-                      Colors.transparent,
-                    ],
-                  ),
+    return Stack(
+      children: [
+        // Base Multi-stop Teal Gradient
+        Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF042F2E), // Deep midnight teal
+                Color(0xFF0F766E), // Corporate teal start
+                Color(0xFF115E59), // Rich medium teal
+                Color(0xFF0D9488), // Signature corporate teal
+              ],
+              stops: [0.0, 0.35, 0.70, 1.0],
+            ),
+          ),
+        ),
+
+        // Fluid Abstract Vector Curves Painter
+        Positioned.fill(
+          child: CustomPaint(
+            painter: _AbstractTealCurvesPainter(),
+          ),
+        ),
+
+        // Glowing Radial Orb 1 (Top Right)
+        Positioned(
+          top: -60.w,
+          right: -40.w,
+          child: Container(
+            width: 260.w,
+            height: 260.w,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  const Color(0xFF2DD4BF).withValues(alpha: 0.35),
+                  const Color(0xFF14B8A6).withValues(alpha: 0.12),
+                  Colors.transparent,
+                ],
+                stops: const [0.0, 0.55, 1.0],
+              ),
+            ),
+          ),
+        ),
+
+        // Glowing Radial Orb 2 (Mid Left)
+        Positioned(
+          top: 60.w,
+          left: -60.w,
+          child: Container(
+            width: 200.w,
+            height: 200.w,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  const Color(0xFF14B8A6).withValues(alpha: 0.25),
+                  const Color(0xFF0F766E).withValues(alpha: 0.08),
+                  Colors.transparent,
+                ],
+                stops: const [0.0, 0.60, 1.0],
+              ),
+            ),
+          ),
+        ),
+
+        // Abstract Concentric Rings (Top Left)
+        Positioned(
+          top: 15.w,
+          left: -25.w,
+          child: Container(
+            width: 170.w,
+            height: 170.w,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: const Color(0xFF5EEAD4).withValues(alpha: 0.16),
+                width: 1.2.w,
+              ),
+            ),
+          ),
+        ),
+        Positioned(
+          top: 40.w,
+          left: 0,
+          child: Container(
+            width: 120.w,
+            height: 120.w,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: const Color(0xFF2DD4BF).withValues(alpha: 0.10),
+                width: 1.w,
+              ),
+            ),
+          ),
+        ),
+
+        // Abstract Rotated Frosted Squircle (Top Right / Center)
+        Positioned(
+          top: -20.w,
+          right: 25.w,
+          child: Transform.rotate(
+            angle: -0.32,
+            child: Container(
+              width: 140.w,
+              height: 140.w,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(36.r),
+                color: Colors.white.withValues(alpha: 0.05),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.14),
+                  width: 1.w,
                 ),
               ),
             ),
-
-            // Fintech Card Overlapping Waves Overlay
-            const CustomPaint(
-              painter: _FintechCardWavesPainter(),
-            ),
-          ],
+          ),
         ),
-      ),
+
+        // Smaller Abstract Diamond Squircle (Floating Mid-Right)
+        Positioned(
+          top: 80.w,
+          right: -10.w,
+          child: Transform.rotate(
+            angle: 0.42,
+            child: Container(
+              width: 80.w,
+              height: 80.w,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(22.r),
+                color: const Color(0xFF2DD4BF).withValues(alpha: 0.06),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  width: 1.w,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
 
-/// CustomPainter untuk rendering gelombang kurva bertingkat gaya fintech
-class _FintechCardWavesPainter extends CustomPainter {
-  const _FintechCardWavesPainter();
-
+/// CustomPainter that renders fluid abstract waves & glowing contours in teal
+class _AbstractTealCurvesPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-
-    // Wave 1: Lapisan Kurva Atas (Soft Frosted Fill)
-    final path1 = Path()
-      ..moveTo(0, 0)
-      ..lineTo(size.width, 0)
-      ..lineTo(size.width, size.height * 0.45)
-      ..cubicTo(
-        size.width * 0.65,
-        size.height * 0.20,
-        size.width * 0.35,
-        size.height * 0.70,
-        0,
-        size.height * 0.55,
-      )
-      ..close();
+    // Upper sweeping abstract wave
+    final path1 = Path();
+    path1.moveTo(0, size.height * 0.18);
+    path1.cubicTo(
+      size.width * 0.35,
+      size.height * 0.08,
+      size.width * 0.65,
+      size.height * 0.28,
+      size.width,
+      size.height * 0.15,
+    );
+    path1.lineTo(size.width, 0);
+    path1.lineTo(0, 0);
+    path1.close();
 
     final paint1 = Paint()
-      ..style = PaintingStyle.fill
       ..shader = LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          Colors.white.withValues(alpha: 0.12),
-          Colors.white.withValues(alpha: 0.03),
+          const Color(0xFF2DD4BF).withValues(alpha: 0.20),
+          const Color(0xFF14B8A6).withValues(alpha: 0.05),
           Colors.transparent,
         ],
         stops: const [0.0, 0.5, 1.0],
-      ).createShader(rect);
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height * 0.3));
 
     canvas.drawPath(path1, paint1);
 
-    // Wave 2: Lapisan Kurva Tengah / Gelombang Silang
-    final path2 = Path()
-      ..moveTo(0, size.height * 0.35)
-      ..cubicTo(
-        size.width * 0.30,
-        size.height * 0.80,
-        size.width * 0.70,
-        size.height * 0.15,
-        size.width,
-        size.height * 0.65,
-      )
-      ..lineTo(size.width, size.height)
-      ..lineTo(0, size.height)
-      ..close();
+    // Diagonal intersecting secondary wave
+    final path2 = Path();
+    path2.moveTo(0, size.height * 0.32);
+    path2.cubicTo(
+      size.width * 0.4,
+      size.height * 0.22,
+      size.width * 0.7,
+      size.height * 0.38,
+      size.width,
+      size.height * 0.24,
+    );
+    path2.lineTo(size.width, 0);
+    path2.lineTo(0, 0);
+    path2.close();
 
     final paint2 = Paint()
-      ..style = PaintingStyle.fill
       ..shader = LinearGradient(
-        begin: Alignment.bottomLeft,
-        end: Alignment.topRight,
+        begin: Alignment.topRight,
+        end: Alignment.bottomLeft,
         colors: [
-          Colors.white.withValues(alpha: 0.08),
-          const Color(0xFF5EEAD4).withValues(alpha: 0.09),
+          const Color(0xFF14B8A6).withValues(alpha: 0.14),
+          const Color(0xFF0F766E).withValues(alpha: 0.04),
           Colors.transparent,
         ],
-        stops: const [0.0, 0.45, 1.0],
-      ).createShader(rect);
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height * 0.4));
 
     canvas.drawPath(path2, paint2);
 
-    // Wave 3: Garis Aksen Kontur Tipis (Frosted Shimmer Line)
-    final path3 = Path()
-      ..moveTo(0, size.height * 0.60)
-      ..cubicTo(
-        size.width * 0.40,
-        size.height * 0.35,
-        size.width * 0.70,
-        size.height * 0.85,
-        size.width,
-        size.height * 0.45,
-      );
-
-    final paint3 = Paint()
+    // Glowing subtle contour stroke line
+    final strokePaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.2
       ..shader = LinearGradient(
-        begin: Alignment.centerLeft,
-        end: Alignment.centerRight,
         colors: [
           Colors.transparent,
-          Colors.white.withValues(alpha: 0.20),
-          const Color(0xFF5EEAD4).withValues(alpha: 0.25),
+          const Color(0xFF5EEAD4).withValues(alpha: 0.30),
           Colors.transparent,
         ],
-        stops: const [0.0, 0.35, 0.70, 1.0],
-      ).createShader(rect);
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 
-    canvas.drawPath(path3, paint3);
+    final linePath = Path();
+    linePath.moveTo(0, size.height * 0.25);
+    linePath.cubicTo(
+      size.width * 0.3,
+      size.height * 0.15,
+      size.width * 0.75,
+      size.height * 0.30,
+      size.width,
+      size.height * 0.18,
+    );
+    canvas.drawPath(linePath, strokePaint);
   }
 
   @override

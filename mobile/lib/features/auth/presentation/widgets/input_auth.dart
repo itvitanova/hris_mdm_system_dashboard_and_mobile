@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 
 class InputAuth extends StatefulWidget {
   final String label;
@@ -9,8 +10,9 @@ class InputAuth extends StatefulWidget {
   final TextEditingController controller;
   final String? Function(String?)? validator;
   final bool enabled;
-  final IconData? prefixIcon;
+  final Key? fieldKey;
   final TextInputType? keyboardType;
+  final Widget? prefixIcon;
   final Iterable<String>? autofillHints;
   final TextInputAction? textInputAction;
   final void Function(String)? onFieldSubmitted;
@@ -23,8 +25,9 @@ class InputAuth extends StatefulWidget {
     this.isPassword = false,
     this.validator,
     this.enabled = true,
-    this.prefixIcon,
+    this.fieldKey,
     this.keyboardType,
+    this.prefixIcon,
     this.autofillHints,
     this.textInputAction,
     this.onFieldSubmitted,
@@ -58,129 +61,126 @@ class _InputAuthState extends State<InputAuth> {
 
   @override
   Widget build(BuildContext context) {
-    final bool hasFocus = _focusNode.hasFocus;
+    final bool isFocused = widget.enabled && _focusNode.hasFocus;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          widget.label,
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 13.sp,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF334155),
-            letterSpacing: -0.1,
-          ),
-        ),
-        SizedBox(height: 7.w),
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12.r),
-            color: widget.enabled
-                ? (hasFocus ? Colors.white : const Color(0xFFF8FAFC))
-                : const Color(0xFFF1F5F9),
-            boxShadow: [
-              if (widget.enabled && hasFocus)
-                BoxShadow(
-                  color: AppColors.filterTealAccent.withValues(alpha: 0.14),
-                  spreadRadius: 3.w,
-                  blurRadius: 6,
-                  offset: const Offset(0, 1),
-                )
-              else
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.02),
-                  blurRadius: 4,
-                  offset: const Offset(0, 1),
-                ),
-            ],
-          ),
-          child: TextFormField(
-            controller: widget.controller,
-            focusNode: _focusNode,
-            enabled: widget.enabled,
-            keyboardType: widget.keyboardType,
-            autofillHints: widget.autofillHints,
-            textInputAction: widget.textInputAction,
-            onFieldSubmitted: widget.onFieldSubmitted,
-            obscureText: widget.isPassword ? _obsecureText : false,
-            validator: widget.validator,
+    return SizedBox(
+      width: 322.w,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            widget.label,
             style: TextStyle(
               fontFamily: 'Inter',
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w500,
-              color: widget.enabled ? AppColors.textPrimary : AppColors.textTertiary,
+              fontSize: 13.sp,
+              fontWeight: isFocused ? FontWeight.w600 : FontWeight.w500,
+              color: isFocused
+                  ? AppColors.filterTealAccent
+                  : const Color(0xFF334155),
             ),
-            decoration: InputDecoration(
-              hintText: widget.hintText,
-              hintStyle: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 13.5.sp,
-                fontWeight: FontWeight.w400,
-                color: const Color(0xFF94A3B8),
+          ),
+          SizedBox(height: 8.h),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12.r),
+              color: widget.enabled
+                  ? (isFocused ? Colors.white : const Color(0xFFF8FAFC))
+                  : const Color(0xFFF1F5F9),
+              boxShadow: [
+                isFocused
+                    ? BoxShadow(
+                        color: AppColors.filterTealAccent.withValues(alpha: 0.18),
+                        spreadRadius: 3.5.w,
+                        blurRadius: 4,
+                        offset: const Offset(0, 0),
+                      )
+                    : const BoxShadow(color: Colors.transparent),
+              ],
+            ),
+            child: TextFormField(
+              key: widget.fieldKey,
+              controller: widget.controller,
+              focusNode: _focusNode,
+              enabled: widget.enabled,
+              keyboardType: widget.keyboardType,
+              autofillHints: widget.autofillHints,
+              textInputAction: widget.textInputAction,
+              onFieldSubmitted: widget.onFieldSubmitted,
+              obscureText: widget.isPassword ? _obsecureText : false,
+              validator: widget.validator,
+              cursorColor: AppColors.filterTealAccent,
+              cursorWidth: 1.8,
+              style: AppTextStyles.inputTextStyles.copyWith(
+                color: widget.enabled
+                    ? AppColors.textPrimary
+                    : AppColors.textTertiary,
               ),
-              prefixIcon: widget.prefixIcon != null
-                  ? Icon(
-                      widget.prefixIcon,
-                      size: 19.w,
-                      color: hasFocus ? AppColors.deepTeal : const Color(0xFF94A3B8),
-                    )
-                  : null,
-              suffixIcon: widget.isPassword
-                  ? IconButton(
-                      splashRadius: 20.r,
-                      onPressed: widget.enabled
-                          ? () => setState(() {
-                              _obsecureText = !_obsecureText;
-                            })
-                          : null,
-                      icon: Icon(
-                        _obsecureText
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
-                        size: 20.w,
-                        color: hasFocus
-                            ? AppColors.deepTeal
-                            : (widget.enabled
-                                ? const Color(0xFF94A3B8)
-                                : AppColors.textTertiary),
-                      ),
-                    )
-                  : null,
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 14.w,
-                vertical: 13.w,
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
-                borderSide: BorderSide(
-                  width: 1.2.w,
-                  color: const Color(0xFFE2E8F0),
+              decoration: InputDecoration(
+                prefixIcon: widget.prefixIcon,
+                hintText: widget.hintText,
+                hintStyle: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 13.sp,
+                  fontWeight: FontWeight.w400,
+                  color: const Color(0xFF94A3B8),
                 ),
-              ),
-              disabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
-                borderSide: BorderSide(
-                  width: 1.w,
-                  color: const Color(0xFFE2E8F0).withValues(alpha: 0.6),
+                suffixIcon: widget.isPassword
+                    ? IconButton(
+                        onPressed: widget.enabled
+                            ? () => setState(() {
+                                _obsecureText = !_obsecureText;
+                              })
+                            : null,
+                        icon: Icon(
+                          _obsecureText
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          size: 20.w,
+                          color: isFocused
+                              ? AppColors.filterTealAccent
+                              : (widget.enabled
+                                  ? AppColors.textSecondary
+                                  : AppColors.textTertiary),
+                        ),
+                      )
+                    : null,
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.w),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: const BorderSide(
+                    width: 1.2,
+                    color: Color(0xFFE2E8F0),
+                  ),
                 ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
-                borderSide: BorderSide(
-                  width: 1.5.w,
-                  color: AppColors.deepTeal,
+                disabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(
+                    width: 1.0,
+                    color: const Color(0xFFE2E8F0).withValues(alpha: 0.6),
+                  ),
                 ),
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: const BorderSide(
+                    width: 1.6,
+                    color: AppColors.filterTealAccent,
+                  ),
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: const BorderSide(
+                    width: 1.2,
+                    color: Color(0xFFE2E8F0),
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
