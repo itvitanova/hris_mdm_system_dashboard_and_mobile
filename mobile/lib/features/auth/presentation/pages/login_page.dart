@@ -93,6 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final bloc = _getBloc();
     if (bloc != null) {
+      if (bloc.state is AuthLoading) return;
       bloc.add(
         AuthLoginRequested(
           email: emailTextC.text.trim(),
@@ -498,6 +499,20 @@ class _LoginScreenState extends State<LoginScreen> {
           listener: (context, state) {
             if (state is Authenticated) {
               passwordTextC.clear();
+              if (busy || error != null) {
+                setState(() {
+                  busy = false;
+                  error = null;
+                });
+              }
+            } else if (state is Unauthenticated) {
+              passwordTextC.clear();
+              if (busy || error != null) {
+                setState(() {
+                  busy = false;
+                  error = null;
+                });
+              }
             } else if (state is AuthActionFailure) {
               setState(() {
                 busy = false;
@@ -512,7 +527,7 @@ class _LoginScreenState extends State<LoginScreen> {
             }
           },
           builder: (context, state) =>
-              _buildForm(context, busy || state is AuthLoading),
+              _buildForm(context, state is AuthLoading),
         );
       },
     );

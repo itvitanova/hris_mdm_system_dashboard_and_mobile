@@ -41,6 +41,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthLoginRequested event,
     Emitter<AuthState> emit,
   ) async {
+
     emit(const AuthLoading());
     final result = await loginUseCase(event.email, event.password);
     result.fold(
@@ -53,7 +54,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthLogoutRequested event,
     Emitter<AuthState> emit,
   ) async {
-    emit(const AuthLoading());
+
     await logoutUseCase();
     emit(const Unauthenticated());
   }
@@ -62,6 +63,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthPasswordChangeRequested event,
     Emitter<AuthState> emit,
   ) async {
+
     emit(const AuthLoading());
     final result = await changePasswordUseCase(
       event.currentPassword,
