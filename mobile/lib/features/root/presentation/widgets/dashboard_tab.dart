@@ -448,6 +448,42 @@ class _DashboardTabState extends State<DashboardTab> {
         .where((r) => r['status'] == 'Menunggu')
         .length;
 
+    final today = text(
+      w.data,
+      'attendanceDate',
+      dateOnly(DateTime.now()),
+    );
+    final currentMonthPrefix = today.length >= 7
+        ? today.substring(0, 7)
+        : dateOnly(DateTime.now()).substring(0, 7);
+
+    final monthlyAttendance = attendance.where((r) {
+      final d = text(r, 'date');
+      return d.startsWith(currentMonthPrefix);
+    }).toList();
+
+    final sudahAbsen = monthlyAttendance
+        .where((r) => text(r, 'checkIn', '').isNotEmpty)
+        .length;
+    final tepatWaktu = monthlyAttendance
+        .where((r) =>
+            text(r, 'checkIn', '').isNotEmpty &&
+            text(r, 'status') != 'Terlambat' &&
+            number(r, 'lateMinutes') == 0)
+        .length;
+    final terlambat = monthlyAttendance
+        .where((r) =>
+            text(r, 'status') == 'Terlambat' || number(r, 'lateMinutes') > 0)
+        .length;
+    final totalAbsen = monthlyAttendance
+        .where((r) {
+          final s = text(r, 'status').toLowerCase();
+          return s == 'alpha' ||
+              s == 'tidak hadir' ||
+              (text(r, 'checkIn', '').isEmpty && s.contains('absen'));
+        })
+        .length;
+
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: SafeArea(
@@ -565,6 +601,62 @@ class _DashboardTabState extends State<DashboardTab> {
                   ],
                 ),
               ),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final columns =
+                      MediaQuery.textScalerOf(context).scale(14) > 21 ? 1 : 2;
+                  final spacing = 12.w;
+                  final width =
+                      (constraints.maxWidth - (columns - 1) * spacing) / columns;
+                  return Wrap(
+                    spacing: spacing,
+                    runSpacing: spacing,
+                    children: [
+                      SizedBox(
+                        width: width,
+                        child: _AttendanceStatCard(
+                          icon: UIcons.regularRounded.calendar_check,
+                          title: 'Sudah Absen',
+                          subTitle: 'bulan ini',
+                          day: '$sudahAbsen',
+                          description: 'SUDAH ABSEN',
+                        ),
+                      ),
+                      SizedBox(
+                        width: width,
+                        child: _AttendanceStatCard(
+                          icon: UIcons.regularRounded.clock,
+                          title: 'Tepat Waktu',
+                          subTitle: 'bulan ini',
+                          day: '$tepatWaktu',
+                          description: 'TEPAT WAKTU',
+                        ),
+                      ),
+                      SizedBox(
+                        width: width,
+                        child: _AttendanceStatCard(
+                          icon: UIcons.regularRounded.alarm_exclamation,
+                          title: 'Terlambat',
+                          subTitle: 'bulan ini',
+                          day: '$terlambat',
+                          description: 'TERLAMBAT',
+                        ),
+                      ),
+                      SizedBox(
+                        width: width,
+                        child: _AttendanceStatCard(
+                          icon: UIcons.regularRounded.calendar_minus,
+                          title: 'Total Absen',
+                          subTitle: 'bulan ini',
+                          day: '$totalAbsen',
+                          description: 'TIDAK HADIR',
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
               if (w.data['approvalAccess'] == true)
                 Panel(
                   child: ListTile(
@@ -814,4 +906,116 @@ class _Summary extends StatelessWidget {
       Text(label, style: const TextStyle(color: muted)),
     ],
   );
+}
+
+class _AttendanceStatCard extends StatelessWidget {
+  const _AttendanceStatCard({
+    required this.icon,
+    required this.title,
+    required this.subTitle,
+    required this.day,
+    required this.description,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subTitle;
+  final String day;
+  final String description;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.only(
+        top: 14.w,
+        left: 14.w,
+        right: 12.w,
+        bottom: 14.w,
+      ),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10.w),
+        boxShadow: const [AppShadows.shadow094],
+        color: Colors.white,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 32.w,
+                height: 32.w,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(7.w),
+                ),
+                alignment: Alignment.center,
+                child: Icon(
+                  icon,
+                  size: 16.w,
+                  color: AppColors.filterGradientStart,
+                ),
+              ),
+              SizedBox(width: 10.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      subTitle,
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 10.sp,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF64748B),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 14.w),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '$day hari',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 17.sp,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+              SizedBox(height: 4.w),
+              Text(
+                description,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 10.sp,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF94A3B8),
+                  letterSpacing: 0.3,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }

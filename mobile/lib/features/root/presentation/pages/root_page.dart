@@ -107,6 +107,9 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
       onRefresh: widget.onRefresh,
       open: open,
     ),
+    ApprovalsScreen(
+      api: widget.api,
+    ),
     PayrollTab(
       api: widget.api,
       workspace: widget.workspace,
@@ -158,6 +161,11 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
         .where((r) => r['unread'] == true)
         .length;
 
+    final pendingApprovals = widget.workspace
+        .rows('requests')
+        .where((r) => r['canReview'] == true)
+        .length;
+
     return [
       PersistentBottomNavBarItem(
         icon: _tabIcon(
@@ -197,6 +205,31 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
           badgeCount: unreadCount,
         ),
         title: 'Pengajuan',
+        textStyle: AppTextStyles.inter12MediumDeepTeal,
+        activeColorPrimary: AppColors.deepTeal,
+        inactiveColorPrimary: Colors.grey,
+      ),
+      PersistentBottomNavBarItem(
+        icon: _tabIcon(
+          svg: SvgPicture.asset(
+            'assets/icon/message-time-active.svg',
+            width: 24,
+            height: 24,
+          ),
+          label: 'Persetujuan',
+          badgeCount: pendingApprovals,
+        ),
+        inactiveIcon: _tabIcon(
+          svg: SvgPicture.asset(
+            'assets/icon/message-time.svg',
+            width: 24,
+            height: 24,
+            colorFilter: const ColorFilter.mode(Colors.grey, BlendMode.srcIn),
+          ),
+          label: 'Persetujuan',
+          badgeCount: pendingApprovals,
+        ),
+        title: 'Persetujuan',
         textStyle: AppTextStyles.inter12MediumDeepTeal,
         activeColorPrimary: AppColors.deepTeal,
         inactiveColorPrimary: Colors.grey,

@@ -584,7 +584,9 @@ class _ApprovalsState extends State<ApprovalsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Persetujuan'),
-        leading: BackButton(onPressed: () => Navigator.pop(context, changed)),
+        leading: Navigator.of(context).canPop()
+            ? BackButton(onPressed: () => Navigator.pop(context, changed))
+            : null,
         actions: [
           IconButton(
             tooltip: 'Segarkan persetujuan',
