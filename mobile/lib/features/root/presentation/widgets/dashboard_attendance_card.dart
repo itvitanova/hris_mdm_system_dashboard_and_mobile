@@ -325,37 +325,34 @@ class DashboardAttendanceCard extends StatelessWidget {
 
               // 2. Center Column: Title + Badge & Date
               Expanded(
-                flex: 4,
+                flex: 5,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Flexible(
-                          flex: 1,
-                          child: Text(
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(
                             item.title,
                             maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontFamily: 'Inter',
-                              fontSize: 16.sp,
+                              fontSize: 15.sp,
                               fontWeight: FontWeight.w600,
                               color: isToday
                                   ? Colors.white
                                   : AppColors.textPrimary,
                             ),
                           ),
-                        ),
-                        SizedBox(width: 6.w),
-                        Flexible(
-                          flex: 2,
-                          fit: FlexFit.loose,
-                          child: _buildStatusBadge(isToday),
-                        ),
-                      ],
+                          SizedBox(width: 6.w),
+                          _buildStatusBadge(isToday),
+                        ],
+                      ),
                     ),
                     SizedBox(height: 5.w),
                     Row(
@@ -372,7 +369,7 @@ class DashboardAttendanceCard extends StatelessWidget {
                           ),
                         ),
                         SizedBox(width: 5.w),
-                        Flexible(
+                        Expanded(
                           child: Text(
                             item.dateText,
                             maxLines: 1,
@@ -396,39 +393,42 @@ class DashboardAttendanceCard extends StatelessWidget {
 
               // 3. Right Column: Time & Method
               Flexible(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      item.timeText,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.w600,
-                        color: isToday
-                            ? Colors.white
-                            : AppColors.textPrimary,
+                flex: 3,
+                fit: FlexFit.loose,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        item.timeText,
+                        maxLines: 1,
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 16.5.sp,
+                          fontWeight: FontWeight.w600,
+                          color: isToday
+                              ? Colors.white
+                              : AppColors.textPrimary,
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 5.w),
-                    Text(
-                      item.method,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 11.sp,
-                        fontWeight: FontWeight.w500,
-                        color: isToday
-                            ? Colors.white.withValues(alpha: 0.9)
-                            : const Color(0xFF64748B),
+                      SizedBox(height: 4.w),
+                      Text(
+                        item.method,
+                        maxLines: 1,
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w500,
+                          color: isToday
+                              ? Colors.white.withValues(alpha: 0.9)
+                              : const Color(0xFF64748B),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -614,19 +614,14 @@ class DashboardAttendanceCard extends StatelessWidget {
             ),
           ),
           SizedBox(width: 3.w),
-          Flexible(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                item.statusText,
-                maxLines: 1,
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 8.5.sp,
-                  fontWeight: FontWeight.w600,
-                  color: textColor,
-                ),
-              ),
+          Text(
+            item.statusText,
+            maxLines: 1,
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 8.5.sp,
+              fontWeight: FontWeight.w600,
+              color: textColor,
             ),
           ),
         ],
