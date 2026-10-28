@@ -190,7 +190,9 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
       PersistentBottomNavBarItem(
         icon: _tabIcon(
           svg: SvgPicture.asset(
-            'assets/icon/note-add.svg',
+            'assets/icon/note-add-active.svg',
+            width: 24,
+            height: 24,
             colorFilter: const ColorFilter.mode(AppColors.deepTeal, BlendMode.srcIn),
           ),
           label: 'Pengajuan',
@@ -237,7 +239,9 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
       PersistentBottomNavBarItem(
         icon: _tabIcon(
           svg: SvgPicture.asset(
-            'assets/icon/empty-wallet.svg',
+            'assets/icon/empty-wallet-active.svg',
+            width: 24,
+            height: 24,
             colorFilter: const ColorFilter.mode(AppColors.deepTeal, BlendMode.srcIn),
           ),
           label: 'Slip gaji',
