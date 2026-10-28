@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
 import 'package:uicons/uicons.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/workspace.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets.dart';
 import '../../../attendance/attendance_screen.dart';
 import '../../../attendance/daily_attendance.dart';
-import '../../../requests/request_form.dart';
 import '../../../requests/request_detail.dart';
 import '../../../requests/request_notifications.dart';
-import '../../../home/leave_calendar_screen.dart';
+import 'attendance_active_card_widget.dart';
+import 'attendance_not_active_card_widget.dart';
 import 'language_swap_button.dart';
 
 class DashboardTab extends StatefulWidget {
@@ -51,6 +53,53 @@ class _DashboardTabState extends State<DashboardTab> {
       return trimmed.substring(0, 2).toUpperCase();
     }
     return trimmed.toUpperCase();
+  }
+
+  String _formatAttendanceDate(String dateStr) {
+    final dt = DateTime.tryParse(dateStr);
+    if (dt == null) return dateStr;
+    const months = [
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
+    ];
+    const days = [
+      'Senin',
+      'Selasa',
+      'Rabu',
+      'Kamis',
+      'Jumat',
+      'Sabtu',
+      'Minggu',
+    ];
+    final dayName = days[dt.weekday - 1];
+    return '$dayName, ${dt.day} ${months[dt.month - 1]} ${dt.year}';
+  }
+
+  String _formatAttendanceTime(dynamic val) {
+    if (val == null) return '-';
+    final str = val.toString().trim();
+    if (str.isEmpty || str == '—') return '-';
+    final dt = DateTime.tryParse(str);
+    if (dt != null) {
+      return DateFormat('HH:mm').format(dt.toLocal());
+    }
+    final parts = str.split(':');
+    if (parts.length >= 2) {
+      final h = parts[0].padLeft(2, '0');
+      final m = parts[1].padLeft(2, '0');
+      return '$h:$m';
+    }
+    return str;
   }
 
   Widget _buildAvatar(String name) {
@@ -312,23 +361,6 @@ class _DashboardTabState extends State<DashboardTab> {
       final dayName = days[date.weekday - 1];
       final monthName = months[date.month - 1];
       return '$dayName, ${date.day} $monthName ${date.year}';
-    }
-  }
-
-  IconData _getUiconForKind(String kind) {
-    switch (kind) {
-      case 'Cuti':
-        return UIcons.regularRounded.calendar;
-      case 'Reimbursement':
-        return UIcons.regularRounded.receipt;
-      case 'Petty Cash':
-        return UIcons.regularRounded.wallet;
-      case 'General Affair':
-        return UIcons.regularRounded.briefcase;
-      case 'Lembur':
-        return UIcons.regularRounded.clock;
-      default:
-        return UIcons.regularRounded.document;
     }
   }
 
@@ -702,159 +734,111 @@ class _DashboardTabState extends State<DashboardTab> {
                   },
                 ),
               ),
-              const SizedBox(height: 12),
-              const SectionHeading(
-                'Pengajuan cepat',
-                subtitle: 'Pilih layanan yang Anda perlukan.',
-              ),
-              const SizedBox(height: 12),
-              for (final kind in requestKinds) ...[
-                Builder(
-                  builder: (context) {
-                    final count = w
-                        .mine('requests')
-                        .where((r) => r['kind'] == kind)
-                        .length;
-                    return Container(
-                      width: double.infinity,
+              const SizedBox(height: 16),
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: 14.w,
+                  vertical: 10.w,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(5.w),
+                  boxShadow: const [AppShadows.shadow094],
+                  color: AppColors.white,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Your activity',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.inter14MediumPrimary,
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                    Container(
+                      width: 96.w,
+                      constraints: BoxConstraints(minHeight: 27.w),
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10.w),
-                        boxShadow: const [AppShadows.shadow094],
-                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(5.w),
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFF0F766E),
+                            Color(0xFF14B8A6),
+                          ],
+                        ),
                       ),
                       child: Material(
                         color: Colors.transparent,
                         child: InkWell(
-                          borderRadius: BorderRadius.circular(10.w),
-                          onTap: () => open(
-                            RequestForm(
-                              api: api,
-                              initialKind: kind,
-                              workspace: w,
-                            ),
-                          ),
+                          borderRadius: BorderRadius.circular(5.w),
+                          canRequestFocus: false,
+                          onTap: () {
+                            // Button show all tanpa redirect dulu sesuai permintaan
+                          },
                           child: Padding(
                             padding: EdgeInsets.symmetric(
-                              horizontal: 14.w,
-                              vertical: 10.w,
+                              horizontal: 6.w,
+                              vertical: 4.w,
                             ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 34.w,
-                                  height: 34.w,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFF0FDFA),
-                                    borderRadius: BorderRadius.circular(8.r),
-                                    border: Border.all(
-                                      color: const Color(0xFFCCFBF1),
-                                      width: 1.0,
-                                    ),
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: Icon(
-                                    _getUiconForKind(kind),
-                                    size: 17.w,
-                                    color: const Color(0xFF0D9488),
-                                  ),
-                                ),
-                                SizedBox(width: 12.w),
-                                Expanded(
-                                  child: Text(
-                                    'Pengajuan $kind ($count)',
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontSize: 14.5.sp,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.textPrimary,
-                                    ),
-                                  ),
-                                ),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [
-                                        Color(0xFF0F766E),
-                                        Color(0xFF14B8A6),
-                                      ],
-                                    ),
-                                    borderRadius: BorderRadius.circular(8.r),
-                                    boxShadow: const [
-                                      BoxShadow(
-                                        color: Color(0x250F766E),
-                                        blurRadius: 6,
-                                        offset: Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  padding: EdgeInsets.all(6.w),
-                                  child: Icon(
-                                    UIcons.boldRounded.plus,
-                                    size: 16.w,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                'View all',
+                                maxLines: 1,
+                                style: AppTextStyles.inter12MediumWhite,
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                SizedBox(height: 10.w),
-              ],
-              const SizedBox(height: 12),
-              const SectionHeading(
-                'Riwayat kehadiran',
-                subtitle: 'Catatan masuk dan pulang Anda.',
-              ),
-              OutlinedButton.icon(
-                onPressed: () => open(LeaveCalendarScreen(api: api, workspace: w)),
-                icon: const Icon(Icons.calendar_month_outlined),
-                label: const Text('Kalender cuti rekan satu lokasi'),
-              ),
-              const SizedBox(height: 12),
-              if (attendance.isEmpty)
-                const Panel(child: EmptyState('Belum ada catatan kehadiran.'))
-              else
-                ...attendance
-                    .take(15)
-                    .map(
-                      (r) => Panel(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Wrap(
-                              spacing: 12,
-                              runSpacing: 8,
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              children: [
-                                Text(
-                                  text(r, 'date'),
-                                  style: const TextStyle(fontWeight: FontWeight.w600),
-                                ),
-                                StatusPill(text(r, 'status')),
-                              ],
-                            ),
-                            const Divider(),
-                            Wrap(
-                              spacing: 24,
-                              runSpacing: 8,
-                              children: [
-                                Text('Masuk  ${timeLabel(r['checkIn'])}'),
-                                Text('Pulang  ${timeLabel(r['checkOut'])}'),
-                                if (r['earlyDeparture'] == true)
-                                  Text(
-                                    'Pulang ${number(r, 'earlyMinutes').toInt()} menit lebih awal · ${text(r, 'earlyReason')}',
-                                    style: const TextStyle(color: Color(0xFFB42318)),
-                                  ),
-                              ],
-                            ),
-                          ],
                         ),
                       ),
                     ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 17.w),
+              if (attendance.isEmpty)
+                Container(
+                  padding: EdgeInsets.symmetric(vertical: 24.w),
+                  alignment: Alignment.center,
+                  child: Text(
+                    'Belum ada catatan kehadiran.',
+                    style: AppTextStyles.inter128RegularSecondary,
+                  ),
+                )
+              else ...[
+                for (int i = 0; i < attendance.take(2).length; i++) ...[
+                  Builder(
+                    builder: (context) {
+                      final r = attendance[i];
+                      final status = text(r, 'status', 'Hadir');
+                      final day = _formatAttendanceDate(text(r, 'date'));
+                      final inTime = _formatAttendanceTime(r['checkIn']);
+                      final outTime = _formatAttendanceTime(r['checkOut']);
+
+                      if (i == 0) {
+                        return AttendanceActiveCardWidget(
+                          status: status,
+                          day: day,
+                          checkIn: inTime,
+                          checkOut: outTime,
+                        );
+                      } else {
+                        return AttendanceNotActiveCardWidget(
+                          status: status,
+                          day: day,
+                          checkIn: inTime,
+                          checkOut: outTime,
+                        );
+                      }
+                    },
+                  ),
+                  if (i < attendance.take(2).length - 1) SizedBox(height: 10.w),
+                ],
+              ],
             ],
           ),
         ),
