@@ -76,6 +76,7 @@ class _HrisAppState extends State<HrisApp> {
     child: ScreenUtilInit(
       designSize: const Size(375, 812),
       minTextAdapt: true,
+      splitScreenMode: true,
       builder: (context, child) => MaterialApp(
       title: 'MDM HR',
       navigatorKey: navigator,

@@ -5,7 +5,7 @@ import '../../../../core/theme/app_shadows.dart';
 
 enum AppLanguage {
   id('id', 'ID', 'ID', '🇮🇩'),
-  en('en', 'EN', 'EN', '🇬🇧');
+  en('en', 'ENG', 'ENG', '🇬🇧');
 
   final String code;
   final String name;
@@ -44,6 +44,16 @@ class _LanguageSwapButtonState extends State<LanguageSwapButton> {
   }
 
   @override
+  void didUpdateWidget(covariant LanguageSwapButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialLanguage != widget.initialLanguage) {
+      setState(() {
+        currentLanguage = widget.initialLanguage;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Theme(
       data: Theme.of(context).copyWith(
@@ -54,20 +64,22 @@ class _LanguageSwapButtonState extends State<LanguageSwapButton> {
       child: PopupMenuButton<AppLanguage>(
         key: const Key('dashboard_language_swap_button'),
         tooltip: 'Pilih Bahasa',
-        elevation: 8,
-        shadowColor: Colors.black.withValues(alpha: 0.16),
+        elevation: 6,
+        shadowColor: Colors.black.withValues(alpha: 0.12),
         color: Colors.white,
+        menuPadding: EdgeInsets.symmetric(vertical: 4.w, horizontal: 4.w),
+        padding: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.r),
+          borderRadius: BorderRadius.circular(12.r),
           side: const BorderSide(
             color: Color(0xFFE2E8F0),
-            width: 1.2,
+            width: 1.0,
           ),
         ),
-        offset: Offset(0, 46.w),
+        offset: Offset(0, 42.w),
         constraints: BoxConstraints(
-          minWidth: 90.w,
-          maxWidth: 105.w
+          minWidth: 88.w,
+          maxWidth: 96.w,
         ),
         initialValue: currentLanguage,
         onSelected: (AppLanguage selectedLang) {
@@ -122,32 +134,33 @@ class _LanguageSwapButtonState extends State<LanguageSwapButton> {
 
             return PopupMenuItem<AppLanguage>(
               value: lang,
-              height: 44.w,
-              padding: EdgeInsets.symmetric(horizontal: 8.w),
+              height: 34.w,
+              padding: EdgeInsets.zero,
               child: Container(
+                width: double.infinity,
                 padding: EdgeInsets.symmetric(
-                  horizontal: 8.w,
-                  vertical: 6.w,
+                  horizontal: 6.w,
+                  vertical: 5.w,
                 ),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? const Color(0xFFF0FDFA)
                       : Colors.transparent,
-                  borderRadius: BorderRadius.circular(10.r),
+                  borderRadius: BorderRadius.circular(8.r),
                 ),
-                child: Row(
+                child:  Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       lang.flagEmoji,
-                      style: TextStyle(fontSize: 17.sp),
+                      style: TextStyle(fontSize: 14.sp),
                     ),
-                    SizedBox(width: 10.w),
+                    SizedBox(width: 6.w),
                     Text(
                       lang.name,
                       style: TextStyle(
                         fontFamily: 'Inter',
-                        fontSize: 13.sp,
+                        fontSize: 12.sp,
                         fontWeight: isSelected
                             ? FontWeight.w700
                             : FontWeight.w500,
@@ -156,14 +169,6 @@ class _LanguageSwapButtonState extends State<LanguageSwapButton> {
                             : AppColors.textPrimary,
                       ),
                     ),
-                    if (isSelected) ...[
-                      SizedBox(width: 8.w),
-                      Icon(
-                        Icons.check_rounded,
-                        size: 18.w,
-                        color: AppColors.filterTealAccent,
-                      ),
-                    ],
                   ],
                 ),
               ),
@@ -171,14 +176,14 @@ class _LanguageSwapButtonState extends State<LanguageSwapButton> {
           }).toList();
         },
         child: Container(
-          height: 40.w,
-          padding: EdgeInsets.symmetric(horizontal: 10.w),
+          height: 38.w,
+          padding: EdgeInsets.symmetric(horizontal: 9.w),
           decoration: BoxDecoration(
             color: const Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.circular(13.r),
+            borderRadius: BorderRadius.circular(12.r),
             border: Border.all(
               color: const Color(0xFFE2E8F0),
-              width: 1.w,
+              width: 1.0,
             ),
             boxShadow: const [AppShadows.shadow094],
           ),
@@ -187,17 +192,17 @@ class _LanguageSwapButtonState extends State<LanguageSwapButton> {
             children: [
               Text(
                 currentLanguage.flagEmoji,
-                style: TextStyle(fontSize: 15.sp),
+                style: TextStyle(fontSize: 14.sp),
               ),
-              SizedBox(width: 6.w),
+              SizedBox(width: 5.w),
               Text(
                 currentLanguage.shortLabel,
                 style: TextStyle(
                   fontFamily: 'Inter',
-                  fontSize: 12.5.sp,
+                  fontSize: 12.sp,
                   fontWeight: FontWeight.w700,
                   color: const Color(0xFF0F172A),
-                  letterSpacing: 0.3,
+                  letterSpacing: 0.2,
                 ),
               ),
               SizedBox(width: 2.w),

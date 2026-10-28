@@ -70,7 +70,7 @@ class _DashboardTabState extends State<DashboardTab> {
               borderRadius: BorderRadius.circular(14.r),
               border: Border.all(
                 color: Colors.white,
-                width: 1.5.w,
+                width: 1.5,
               ),
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
@@ -105,7 +105,7 @@ class _DashboardTabState extends State<DashboardTab> {
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: Colors.white,
-                  width: 1.8.w,
+                  width: 1.8,
                 ),
               ),
             ),
@@ -158,7 +158,7 @@ class _DashboardTabState extends State<DashboardTab> {
         borderRadius: BorderRadius.circular(13.r),
         border: Border.all(
           color: const Color(0xFFE2E8F0),
-          width: 1.w,
+          width: 1.0,
         ),
         boxShadow: const [AppShadows.shadow094],
       ),
@@ -189,8 +189,8 @@ class _DashboardTabState extends State<DashboardTab> {
                       color: const Color(0xFFED2736),
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: Colors.white,
-                        width: 1.5.w,
+                color: Colors.white,
+                width: 1.5,
                       ),
                     ),
                   ),
@@ -369,7 +369,7 @@ class _DashboardTabState extends State<DashboardTab> {
         borderRadius: BorderRadius.circular(20.w),
         border: Border.all(
           color: Colors.white.withValues(alpha: 0.35),
-          width: 1.w,
+          width: 1.0,
         ),
         boxShadow: [
           BoxShadow(
@@ -748,7 +748,7 @@ class _DashboardTabState extends State<DashboardTab> {
                                     borderRadius: BorderRadius.circular(8.r),
                                     border: Border.all(
                                       color: const Color(0xFFCCFBF1),
-                                      width: 1.w,
+                                      width: 1.0,
                                     ),
                                   ),
                                   alignment: Alignment.center,

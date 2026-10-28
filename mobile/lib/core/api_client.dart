@@ -110,10 +110,12 @@ class ApiClient {
   Future<Map<String, dynamic>> workspace() async =>
       jsonDecode((await _send('GET', '/workspace')).body)
           as Map<String, dynamic>;
+
   Future<List<Map<String, dynamic>>> getList(String path) async =>
       (jsonDecode((await _send('GET', path)).body) as List)
           .map((v) => Map<String, dynamic>.from(v as Map))
           .toList();
+
   Future<void> post(String path, Map<String, dynamic> body) async {
     await _send('POST', path, body);
   }

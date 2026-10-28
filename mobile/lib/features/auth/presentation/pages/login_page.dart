@@ -266,198 +266,195 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ),
                               SizedBox(height: 40.w),
-                              SizedBox(
-                                width: 322.w,
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "Welcome Back, 👋",
-                                      style: AppTextStyles.interExtraBold18,
-                                    ),
-                                    SizedBox(height: 5.h),
-                                    Text(
-                                      "Please enter your login details to access your account.",
-                                      style: AppTextStyles
-                                          .inter13RegularSecondary,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(height: 20.w),
-                              Column(
-                                children: [
-                                  InputAuth(
-                                    label: "E-Mail",
-                                    hintText: "Enter your email",
-                                    isPassword: false,
-                                    controller: emailTextC,
-                                    enabled: !isLoading,
-                                    keyboardType:
-                                        TextInputType.emailAddress,
-                                    autofillHints: const [
-                                      AutofillHints.username
-                                    ],
-                                    textInputAction: TextInputAction.next,
-                                    validator: (v) =>
-                                        v == null || !v.contains('@')
-                                            ? 'Masukkan email yang valid'
-                                            : null,
-                                  ),
-                                  SizedBox(height: 10.h),
-                                  InputAuth(
-                                    label: "Password",
-                                    hintText: "Enter your password",
-                                    isPassword: true,
-                                    controller: passwordTextC,
-                                    enabled: !isLoading,
-                                    autofillHints: const [
-                                      AutofillHints.password
-                                    ],
-                                    textInputAction: TextInputAction.done,
-                                    onFieldSubmitted: (_) => submit(),
-                                    validator: (v) =>
-                                        v == null || v.isEmpty
-                                            ? 'Masukkan kata sandi'
-                                            : null,
-                                  ),
-                                  SizedBox(height: 10.h),
-                                  SizedBox(
-                                    width: 322.w,
-                                    child: Row(
-                                      children: [
-                                        Checkbox(
-                                          value: isChecked,
-                                          visualDensity:
-                                              VisualDensity.compact,
-                                          materialTapTargetSize:
-                                              MaterialTapTargetSize
-                                                  .shrinkWrap,
-                                          onChanged: isLoading
-                                              ? null
-                                              : (bool? value) {
-                                                  setState(() {
-                                                    isChecked =
-                                                        value ?? false;
-                                                  });
-                                                },
-                                          activeColor:
-                                              AppColors.filterTealAccent,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(4.r),
-                                          ),
-                                          side: BorderSide(
-                                            color: const Color(0xFFCBD5E1),
-                                            width: 1.3.w,
-                                          ),
-                                        ),
-                                        SizedBox(width: 6.w),
-                                        Expanded(
-                                          child: Text(
-                                            "Remember me",
-                                            style: AppTextStyles
-                                                .inter128RegularPrimary,
-                                          ),
-                                        ),
-                                        GestureDetector(
-                                          onTap: () {},
-                                          child: Text(
-                                            "Forgot Password",
-                                            style: TextStyle(
-                                              fontFamily: 'Inter',
-                                              fontSize: 12.sp,
-                                              color: isLoading
-                                                  ? AppColors.textTertiary
-                                                  : AppColors
-                                                      .filterTealAccent,
-                                              fontWeight: FontWeight.w600,
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                                child: ConstrainedBox(
+                                  constraints:
+                                      const BoxConstraints(maxWidth: 400),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      Text(
+                                        "Welcome Back, 👋",
+                                        style: AppTextStyles.interExtraBold18,
+                                      ),
+                                      SizedBox(height: 5.h),
+                                      Text(
+                                        "Please enter your login details to access your account.",
+                                        style: AppTextStyles
+                                            .inter13RegularSecondary,
+                                      ),
+                                      SizedBox(height: 20.w),
+                                      InputAuth(
+                                        label: "E-Mail",
+                                        hintText: "Enter your email",
+                                        isPassword: false,
+                                        controller: emailTextC,
+                                        enabled: !isLoading,
+                                        keyboardType:
+                                            TextInputType.emailAddress,
+                                        autofillHints: const [
+                                          AutofillHints.username
+                                        ],
+                                        textInputAction: TextInputAction.next,
+                                        validator: (v) =>
+                                            v == null || !v.contains('@')
+                                                ? 'Masukkan email yang valid'
+                                                : null,
+                                      ),
+                                      SizedBox(height: 10.h),
+                                      InputAuth(
+                                        label: "Password",
+                                        hintText: "Enter your password",
+                                        isPassword: true,
+                                        controller: passwordTextC,
+                                        enabled: !isLoading,
+                                        autofillHints: const [
+                                          AutofillHints.password
+                                        ],
+                                        textInputAction: TextInputAction.done,
+                                        onFieldSubmitted: (_) => submit(),
+                                        validator: (v) =>
+                                            v == null || v.isEmpty
+                                                ? 'Masukkan kata sandi'
+                                                : null,
+                                      ),
+                                      SizedBox(height: 10.h),
+                                      Row(
+                                        children: [
+                                          Checkbox(
+                                            value: isChecked,
+                                            visualDensity:
+                                                VisualDensity.compact,
+                                            materialTapTargetSize:
+                                                MaterialTapTargetSize
+                                                    .shrinkWrap,
+                                            onChanged: isLoading
+                                                ? null
+                                                : (bool? value) {
+                                                    setState(() {
+                                                      isChecked =
+                                                          value ?? false;
+                                                    });
+                                                  },
+                                            activeColor:
+                                                AppColors.filterTealAccent,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(4.r),
+                                            ),
+                                            side: const BorderSide(
+                                              color: Color(0xFFCBD5E1),
+                                              width: 1.0,
                                             ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 30.w),
-                              // Gradient Sign In Button
-                              Container(
-                                width: 322.w,
-                                height: 48.w,
-                                decoration: BoxDecoration(
-                                  borderRadius:
-                                      BorderRadius.circular(12.r),
-                                  gradient: const LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [
-                                      AppColors.filterGradientStart,
-                                      AppColors.filterGradientEnd,
-                                    ],
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: const Color(0xFF0D9488)
-                                          .withValues(alpha: 0.32),
-                                      blurRadius: 14,
-                                      offset: const Offset(0, 5),
-                                    ),
-                                  ],
-                                ),
-                                child: Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    borderRadius:
-                                        BorderRadius.circular(12.r),
-                                    onTap: isLoading ? null : submit,
-                                    child: Center(
-                                      child: isLoading
-                                          ? Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              mainAxisSize:
-                                                  MainAxisSize.min,
-                                              children: [
-                                                SizedBox(
-                                                  width: 18.w,
-                                                  height: 18.w,
-                                                  child:
-                                                      const CircularProgressIndicator(
-                                                    strokeWidth: 2.2,
-                                                    valueColor:
-                                                        AlwaysStoppedAnimation<
-                                                            Color>(
-                                                      AppColors.white,
-                                                    ),
-                                                  ),
-                                                ),
-                                                SizedBox(width: 10.w),
-                                                Text(
-                                                  "Signing In...",
-                                                  style: TextStyle(
-                                                    fontFamily: 'Inter',
-                                                    color: AppColors.white,
-                                                    fontWeight:
-                                                        FontWeight.w600,
-                                                    fontSize: 14.sp,
-                                                  ),
-                                                ),
-                                              ],
-                                            )
-                                          : Text(
-                                              "Sign In",
+                                          SizedBox(width: 6.w),
+                                          Expanded(
+                                            child: Text(
+                                              "Remember me",
+                                              style: AppTextStyles
+                                                  .inter128RegularPrimary,
+                                            ),
+                                          ),
+                                          GestureDetector(
+                                            onTap: () {},
+                                            child: Text(
+                                              "Forgot Password",
                                               style: TextStyle(
                                                 fontFamily: 'Inter',
-                                                color: AppColors.white,
-                                                fontWeight:
-                                                    FontWeight.w600,
-                                                fontSize: 14.sp,
-                                                letterSpacing: 0.3,
+                                                fontSize: 12.sp,
+                                                color: isLoading
+                                                    ? AppColors.textTertiary
+                                                    : AppColors
+                                                        .filterTealAccent,
+                                                fontWeight: FontWeight.w600,
                                               ),
                                             ),
-                                    ),
+                                          ),
+                                        ],
+                                      ),
+                                      SizedBox(height: 30.w),
+                                      // Gradient Sign In Button
+                                      Container(
+                                        width: double.infinity,
+                                        height: 48.w,
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(12.r),
+                                          gradient: const LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: [
+                                              AppColors.filterGradientStart,
+                                              AppColors.filterGradientEnd,
+                                            ],
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: const Color(0xFF0D9488)
+                                                  .withValues(alpha: 0.32),
+                                              blurRadius: 14,
+                                              offset: const Offset(0, 5),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Material(
+                                          color: Colors.transparent,
+                                          child: InkWell(
+                                            borderRadius:
+                                                BorderRadius.circular(12.r),
+                                            onTap: isLoading ? null : submit,
+                                            child: Center(
+                                              child: isLoading
+                                                  ? Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment.center,
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: [
+                                                        SizedBox(
+                                                          width: 18.w,
+                                                          height: 18.w,
+                                                          child:
+                                                              const CircularProgressIndicator(
+                                                            strokeWidth: 2.2,
+                                                            valueColor:
+                                                                AlwaysStoppedAnimation<
+                                                                    Color>(
+                                                              AppColors.white,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        SizedBox(width: 10.w),
+                                                        Text(
+                                                          "Signing In...",
+                                                          style: TextStyle(
+                                                            fontFamily: 'Inter',
+                                                            color: AppColors.white,
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                            fontSize: 14.sp,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    )
+                                                  : Text(
+                                                      "Sign In",
+                                                      style: TextStyle(
+                                                        fontFamily: 'Inter',
+                                                        color: AppColors.white,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        fontSize: 14.sp,
+                                                        letterSpacing: 0.3,
+                                                      ),
+                                                    ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),

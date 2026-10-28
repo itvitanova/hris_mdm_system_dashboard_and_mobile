@@ -73,7 +73,7 @@ class _InputAuthState extends State<InputAuth> {
         final String? errorText = field.errorText;
 
         return SizedBox(
-          width: 322.w,
+          width: double.infinity,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
