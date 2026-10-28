@@ -325,7 +325,7 @@ class DashboardAttendanceCard extends StatelessWidget {
 
               // 2. Center Column: Title + Badge & Date
               Expanded(
-                flex: 3,
+                flex: 4,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
@@ -334,7 +334,7 @@ class DashboardAttendanceCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Flexible(
-                          flex: 3,
+                          flex: 1,
                           child: Text(
                             item.title,
                             maxLines: 1,
@@ -352,6 +352,7 @@ class DashboardAttendanceCard extends StatelessWidget {
                         SizedBox(width: 6.w),
                         Flexible(
                           flex: 2,
+                          fit: FlexFit.loose,
                           child: _buildStatusBadge(isToday),
                         ),
                       ],
@@ -553,80 +554,48 @@ class DashboardAttendanceCard extends StatelessWidget {
   }
 
   Widget _buildStatusBadge(bool isToday) {
-    if (isToday) {
-      return Container(
-        padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 1.5.w),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.20),
-          borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.45),
-            width: 0.8.w,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 3.w,
-              height: 3.w,
-              decoration: BoxDecoration(
-                color: item.isLate
-                    ? const Color(0xFFF87171)
-                    : const Color(0xFF34D399),
-                shape: BoxShape.circle,
-              ),
-            ),
-            SizedBox(width: 2.5.w),
-            Flexible(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  item.statusText,
-                  maxLines: 1,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 8.sp,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
+    final textColor = isToday
+        ? Colors.white
+        : (item.type == DashboardAttendanceType.pulang
+            ? const Color(0xFF0284C7)
+            : (item.isLate
+                ? const Color(0xFFB91C1C)
+                : (item.type == DashboardAttendanceType.masuk
+                    ? const Color(0xFF047857)
+                    : const Color(0xFF475569))));
 
-    Color bgColor;
-    Color borderColor;
-    Color dotColor;
-    Color textColor;
+    final bgColor = isToday
+        ? Colors.white.withValues(alpha: 0.20)
+        : (item.type == DashboardAttendanceType.pulang
+            ? const Color(0xFFE0F2FE)
+            : (item.isLate
+                ? const Color(0xFFFEECEC)
+                : (item.type == DashboardAttendanceType.masuk
+                    ? const Color(0xFFE8FAF3)
+                    : const Color(0xFFF1F5F9))));
 
-    if (item.type == DashboardAttendanceType.pulang) {
-      bgColor = const Color(0xFFE0F2FE);
-      borderColor = const Color(0xFFBAE6FD);
-      dotColor = const Color(0xFF0284C7);
-      textColor = const Color(0xFF0284C7);
-    } else if (item.isLate) {
-      bgColor = const Color(0xFFFEECEC);
-      borderColor = const Color(0xFFFECACA);
-      dotColor = const Color(0xFFDC2626);
-      textColor = const Color(0xFFB91C1C);
-    } else if (item.type == DashboardAttendanceType.masuk) {
-      bgColor = const Color(0xFFE8FAF3);
-      borderColor = const Color(0xFFA7F3D0);
-      dotColor = const Color(0xFF059669);
-      textColor = const Color(0xFF047857);
-    } else {
-      bgColor = const Color(0xFFF1F5F9);
-      borderColor = const Color(0xFFE2E8F0);
-      dotColor = const Color(0xFF64748B);
-      textColor = const Color(0xFF475569);
-    }
+    final borderColor = isToday
+        ? Colors.white.withValues(alpha: 0.45)
+        : (item.type == DashboardAttendanceType.pulang
+            ? const Color(0xFFBAE6FD)
+            : (item.isLate
+                ? const Color(0xFFFECACA)
+                : (item.type == DashboardAttendanceType.masuk
+                    ? const Color(0xFFA7F3D0)
+                    : const Color(0xFFE2E8F0))));
+
+    final dotColor = isToday
+        ? (item.isLate ? const Color(0xFFF87171) : const Color(0xFF34D399))
+        : (item.type == DashboardAttendanceType.pulang
+            ? const Color(0xFF0284C7)
+            : (item.isLate
+                ? const Color(0xFFDC2626)
+                : (item.type == DashboardAttendanceType.masuk
+                    ? const Color(0xFF059669)
+                    : const Color(0xFF64748B))));
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 1.5.w),
+      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.w),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(12.r),
@@ -634,16 +603,17 @@ class DashboardAttendanceCard extends StatelessWidget {
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            width: 3.w,
-            height: 3.w,
+            width: 3.5.w,
+            height: 3.5.w,
             decoration: BoxDecoration(
               color: dotColor,
               shape: BoxShape.circle,
             ),
           ),
-          SizedBox(width: 2.5.w),
+          SizedBox(width: 3.w),
           Flexible(
             child: FittedBox(
               fit: BoxFit.scaleDown,
@@ -652,7 +622,7 @@ class DashboardAttendanceCard extends StatelessWidget {
                 maxLines: 1,
                 style: TextStyle(
                   fontFamily: 'Inter',
-                  fontSize: 8.sp,
+                  fontSize: 8.5.sp,
                   fontWeight: FontWeight.w600,
                   color: textColor,
                 ),
