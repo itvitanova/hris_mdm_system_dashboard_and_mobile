@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import 'package:uicons/uicons.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/workspace.dart';
@@ -12,8 +11,7 @@ import '../../../attendance/attendance_screen.dart';
 import '../../../attendance/daily_attendance.dart';
 import '../../../requests/request_detail.dart';
 import '../../../requests/request_notifications.dart';
-import '../widgets/attendance_active_card_widget.dart';
-import '../widgets/attendance_not_active_card_widget.dart';
+import '../widgets/dashboard_attendance_card.dart';
 import '../widgets/language_swap_button.dart';
 
 class DashboardTab extends StatefulWidget {
@@ -53,53 +51,6 @@ class _DashboardTabState extends State<DashboardTab> {
       return trimmed.substring(0, 2).toUpperCase();
     }
     return trimmed.toUpperCase();
-  }
-
-  String _formatAttendanceDate(String dateStr) {
-    final dt = DateTime.tryParse(dateStr);
-    if (dt == null) return dateStr;
-    const months = [
-      'Januari',
-      'Februari',
-      'Maret',
-      'April',
-      'Mei',
-      'Juni',
-      'Juli',
-      'Agustus',
-      'September',
-      'Oktober',
-      'November',
-      'Desember',
-    ];
-    const days = [
-      'Senin',
-      'Selasa',
-      'Rabu',
-      'Kamis',
-      'Jumat',
-      'Sabtu',
-      'Minggu',
-    ];
-    final dayName = days[dt.weekday - 1];
-    return '$dayName, ${dt.day} ${months[dt.month - 1]} ${dt.year}';
-  }
-
-  String _formatAttendanceTime(dynamic val) {
-    if (val == null) return '-';
-    final str = val.toString().trim();
-    if (str.isEmpty || str == '—') return '-';
-    final dt = DateTime.tryParse(str);
-    if (dt != null) {
-      return DateFormat('HH:mm').format(dt.toLocal());
-    }
-    final parts = str.split(':');
-    if (parts.length >= 2) {
-      final h = parts[0].padLeft(2, '0');
-      final m = parts[1].padLeft(2, '0');
-      return '$h:$m';
-    }
-    return str;
   }
 
   Widget _buildAvatar(String name) {
@@ -800,45 +751,41 @@ class _DashboardTabState extends State<DashboardTab> {
                 ),
               ),
               SizedBox(height: 17.w),
-              if (attendance.isEmpty)
-                Container(
-                  padding: EdgeInsets.symmetric(vertical: 24.w),
-                  alignment: Alignment.center,
-                  child: Text(
-                    'Belum ada catatan kehadiran.',
-                    style: AppTextStyles.inter128RegularSecondary,
-                  ),
-                )
-              else ...[
-                for (int i = 0; i < attendance.take(2).length; i++) ...[
-                  Builder(
-                    builder: (context) {
-                      final r = attendance[i];
-                      final status = text(r, 'status', 'Hadir');
-                      final day = _formatAttendanceDate(text(r, 'date'));
-                      final inTime = _formatAttendanceTime(r['checkIn']);
-                      final outTime = _formatAttendanceTime(r['checkOut']);
+              Builder(
+                builder: (context) {
+                  final recentAttendanceItems =
+                      DashboardAttendanceItem.fromAttendanceList(
+                    attendance,
+                    limit: 2,
+                    language: _currentLanguage,
+                  );
 
-                      if (i == 0) {
-                        return AttendanceActiveCardWidget(
-                          status: status,
-                          day: day,
-                          checkIn: inTime,
-                          checkOut: outTime,
-                        );
-                      } else {
-                        return AttendanceNotActiveCardWidget(
-                          status: status,
-                          day: day,
-                          checkIn: inTime,
-                          checkOut: outTime,
-                        );
-                      }
-                    },
-                  ),
-                  if (i < attendance.take(2).length - 1) SizedBox(height: 10.w),
-                ],
-              ],
+                  if (recentAttendanceItems.isEmpty) {
+                    return Container(
+                      padding: EdgeInsets.symmetric(vertical: 24.w),
+                      alignment: Alignment.center,
+                      child: Text(
+                        'Belum ada catatan kehadiran.',
+                        style: AppTextStyles.inter128RegularSecondary,
+                      ),
+                    );
+                  }
+
+                  return Column(
+                    children: [
+                      for (int i = 0; i < recentAttendanceItems.length; i++) ...[
+                        DashboardAttendanceCard(
+                          key: ValueKey('dash_$i'),
+                          item: recentAttendanceItems[i],
+                          onTap: () {},
+                        ),
+                        if (i < recentAttendanceItems.length - 1)
+                          SizedBox(height: 10.w),
+                      ],
+                    ],
+                  );
+                },
+              ),
             ],
           ),
         ),
