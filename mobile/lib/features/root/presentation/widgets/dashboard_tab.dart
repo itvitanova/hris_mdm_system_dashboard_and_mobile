@@ -9,6 +9,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../attendance/attendance_screen.dart';
 import '../../../attendance/daily_attendance.dart';
 import '../../../requests/request_notifications.dart';
+import 'compact_attendance_card.dart';
 import 'dashboard_attendance_card.dart';
 import 'language_swap_button.dart';
 
@@ -471,112 +472,16 @@ class _DashboardTabState extends State<DashboardTab> {
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
             children: [
               _buildHeaderTop(context),
-              SizedBox(height: 22.w),
+              SizedBox(height: 14.w),
               _buildSubHeader(context),
-              SizedBox(height: 17.w),
-              Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      AppColors.filterGradientStart,
-                      AppColors.filterGradientEnd,
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.filterGradientStart.withValues(alpha: 0.25),
-                      blurRadius: 16,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.schedule_outlined,
-                          color: Color(0xFFB2EBF2),
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        const Expanded(
-                          child: Text(
-                            'Kehadiran hari ini',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        if (daily.completed)
-                          const Icon(
-                            Icons.check_circle_outline,
-                            color: Color(0xFFB2EBF2),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      daily.completed
-                          ? 'Sampai jumpa besok'
-                          : daily.checkedIn
-                          ? 'Selamat bekerja'
-                          : 'Mulai hari kerja Anda',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      daily.description,
-                      style: const TextStyle(color: Color(0xFFE0F7FA)),
-                    ),
-                    const SizedBox(height: 20),
-                    Wrap(
-                      spacing: 32,
-                      runSpacing: 12,
-                      children: [
-                        _AttendanceTime(
-                          label: 'Masuk',
-                          value: timeLabel(daily.record['checkIn']),
-                        ),
-                        _AttendanceTime(
-                          label: 'Pulang',
-                          value: timeLabel(daily.record['checkOut']),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    FilledButton.icon(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: AppColors.filterGradientStart,
-                        disabledBackgroundColor: const Color(0xFF0F766E),
-                        disabledForegroundColor: const Color(0xFFB2EBF2),
-                      ),
-                      onPressed: daily.completed
-                          ? null
-                          : () => open(AttendanceScreen(api: api, workspace: w)),
-                      icon: Icon(
-                        daily.completed
-                            ? Icons.check_circle_outline
-                            : daily.checkedIn
-                            ? Icons.logout
-                            : Icons.login,
-                      ),
-                      label: Text(daily.label, textAlign: TextAlign.center),
-                    ),
-                  ],
-                ),
+              SizedBox(height: 12.w),
+              CompactAttendanceCard(
+                workspace: w,
+                daily: daily,
+                language: _currentLanguage,
+                onActionPressed: daily.completed
+                    ? null
+                    : () => open(AttendanceScreen(api: api, workspace: w)),
               ),
               LayoutBuilder(
                 builder: (context, constraints) {
@@ -740,27 +645,6 @@ class _DashboardTabState extends State<DashboardTab> {
       ),
     );
   }
-}
-
-class _AttendanceTime extends StatelessWidget {
-  const _AttendanceTime({required this.label, required this.value});
-  final String label, value;
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(label, style: const TextStyle(color: Color(0xFFE0F7FA))),
-      const SizedBox(height: 4),
-      Text(
-        value,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    ],
-  );
 }
 
 class _AttendanceStatCard extends StatelessWidget {
