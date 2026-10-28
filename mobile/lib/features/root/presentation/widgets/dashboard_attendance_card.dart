@@ -318,13 +318,14 @@ class DashboardAttendanceCard extends StatelessWidget {
                   color: AppColors.white,
                 ),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               // 1. Icon Container
               _buildLeadingIcon(isToday),
-              SizedBox(width: 12.w),
 
               // 2. Center Column: Title + Badge & Date
               Expanded(
+                flex: 3,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
@@ -333,6 +334,7 @@ class DashboardAttendanceCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Flexible(
+                          flex: 3,
                           child: Text(
                             item.title,
                             maxLines: 1,
@@ -349,6 +351,7 @@ class DashboardAttendanceCard extends StatelessWidget {
                         ),
                         SizedBox(width: 6.w),
                         Flexible(
+                          flex: 2,
                           child: _buildStatusBadge(isToday),
                         ),
                       ],
@@ -392,6 +395,7 @@ class DashboardAttendanceCard extends StatelessWidget {
 
               // 3. Right Column: Time & Method
               Flexible(
+                flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   mainAxisSize: MainAxisSize.min,
@@ -575,15 +579,17 @@ class DashboardAttendanceCard extends StatelessWidget {
             ),
             SizedBox(width: 2.5.w),
             Flexible(
-              child: Text(
-                item.statusText,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 8.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  item.statusText,
+                  maxLines: 1,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 8.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
@@ -639,15 +645,17 @@ class DashboardAttendanceCard extends StatelessWidget {
           ),
           SizedBox(width: 2.5.w),
           Flexible(
-            child: Text(
-              item.statusText,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 8.sp,
-                fontWeight: FontWeight.w600,
-                color: textColor,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                item.statusText,
+                maxLines: 1,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 8.sp,
+                  fontWeight: FontWeight.w600,
+                  color: textColor,
+                ),
               ),
             ),
           ),

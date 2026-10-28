@@ -6,10 +6,8 @@ import '../../../../core/workspace.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../shared/widgets.dart';
 import '../../../attendance/attendance_screen.dart';
 import '../../../attendance/daily_attendance.dart';
-import '../../../requests/request_detail.dart';
 import '../../../requests/request_notifications.dart';
 import 'dashboard_attendance_card.dart';
 import 'language_swap_button.dart';
@@ -426,10 +424,6 @@ class _DashboardTabState extends State<DashboardTab> {
     final daily = DailyAttendance(w);
     final attendance = w.mine('attendance')
       ..sort((a, b) => text(b, 'date').compareTo(text(a, 'date')));
-    final pending = w
-        .mine('requests')
-        .where((r) => r['status'] == 'Menunggu')
-        .length;
 
     final today = text(
       w.data,
@@ -640,59 +634,13 @@ class _DashboardTabState extends State<DashboardTab> {
                 },
               ),
               const SizedBox(height: 16),
-              if (w.data['approvalAccess'] == true)
-                Panel(
-                  child: ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.fact_check_outlined, color: AppColors.deepTeal),
-                    title: const Text('Persetujuan'),
-                    subtitle: Text(
-                      '${w.rows("requests").where((r) => r["canReview"] == true).length} pengajuan menunggu tindakan Anda',
-                    ),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => open(ApprovalsScreen(api: api)),
-                  ),
-                ),
-              Panel(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final stacked = MediaQuery.textScalerOf(context).scale(14) > 22;
-                    final children = [
-                      _Summary(
-                        label: 'Sisa cuti',
-                        value: '${number(w.employee, 'leaveBalance').toInt()} hari',
-                        icon: Icons.event_available_outlined,
-                      ),
-                      _Summary(
-                        label: 'Pengajuan menunggu',
-                        value: '$pending',
-                        icon: Icons.schedule_outlined,
-                      ),
-                    ];
-                    return stacked
-                        ? Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [children[0], const Divider(), children[1]],
-                          )
-                        : Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(child: children[0]),
-                              const SizedBox(width: 16),
-                              Expanded(child: children[1]),
-                            ],
-                          );
-                  },
-                ),
-              ),
-              const SizedBox(height: 16),
               Container(
                 padding: EdgeInsets.symmetric(
                   horizontal: 14.w,
                   vertical: 10.w,
                 ),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(5.w),
+                  borderRadius: BorderRadius.circular(10.w),
                   boxShadow: const [AppShadows.shadow094],
                   color: AppColors.white,
                 ),
@@ -811,30 +759,6 @@ class _AttendanceTime extends StatelessWidget {
           fontWeight: FontWeight.w600,
         ),
       ),
-    ],
-  );
-}
-
-class _Summary extends StatelessWidget {
-  const _Summary({
-    required this.label,
-    required this.value,
-    required this.icon,
-  });
-  final String label, value;
-  final IconData icon;
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Icon(icon, color: AppColors.deepTeal, size: 22),
-      const SizedBox(height: 12),
-      Text(
-        value,
-        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-      ),
-      const SizedBox(height: 4),
-      Text(label, style: const TextStyle(color: muted)),
     ],
   );
 }
