@@ -465,11 +465,12 @@ class _DashboardTabState extends State<DashboardTab> {
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: SafeArea(
+        bottom: false,
         child: RefreshIndicator(
           onRefresh: widget.onRefresh,
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
             children: [
               _buildHeaderTop(context),
               SizedBox(height: 14.w),
