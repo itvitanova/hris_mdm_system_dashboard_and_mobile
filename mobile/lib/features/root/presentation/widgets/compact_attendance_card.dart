@@ -48,20 +48,6 @@ class CompactAttendanceCard extends StatelessWidget {
     final workEnd = text(workspace.attendancePolicy, 'workEnd', '17:30');
     final shiftSubtitle = '$formattedDate • $workStart - $workEnd';
 
-    // Status Badge Details
-    final Color badgeDotColor;
-    final String badgeText;
-    if (daily.completed) {
-      badgeDotColor = const Color(0xFF34D399); // Emerald
-      badgeText = isEn ? 'Completed' : 'Selesai';
-    } else if (daily.checkedIn) {
-      badgeDotColor = const Color(0xFF34D399);
-      badgeText = isEn ? 'Active' : 'Sedang Aktif';
-    } else {
-      badgeDotColor = const Color(0xFFFBBF24); // Amber
-      badgeText = isEn ? 'Not Checked In' : 'Belum Absen';
-    }
-
     // Check-In Tile Data
     final bool hasCheckIn = daily.checkedIn;
     final String inTime = hasCheckIn
@@ -128,8 +114,8 @@ class CompactAttendanceCard extends StatelessWidget {
             : (isEn ? 'Shift: $workEnd' : 'Jadwal: $workEnd WIB'));
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
+      margin: EdgeInsets.only(bottom: 16.h),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
@@ -140,37 +126,38 @@ class CompactAttendanceCard extends StatelessWidget {
             Color(0xFF115E59), // Teal 800
           ],
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18.r),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF0F766E).withValues(alpha: 0.25),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
+            blurRadius: 16.r,
+            offset: Offset(0, 6.h),
           ),
         ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // 1. Header
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
-                width: 28,
-                height: 28,
+                width: 28.w,
+                height: 28.w,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.white.withValues(alpha: 0.15),
                 ),
                 alignment: Alignment.center,
-                child: const Icon(
+                child: Icon(
                   Icons.schedule_rounded,
-                  size: 15,
-                  color: Color(0xFFCCFBF1),
+                  size: 15.sp,
+                  color: const Color(0xFFCCFBF1),
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8.w),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -188,7 +175,7 @@ class CompactAttendanceCard extends StatelessWidget {
                         color: const Color(0xFFCCFBF1),
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2.h),
                     Text(
                       shiftSubtitle,
                       maxLines: 1,
@@ -203,99 +190,73 @@ class CompactAttendanceCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.18),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 6,
-                          height: 6,
-                          decoration: BoxDecoration(
-                            color: badgeDotColor,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 5),
-                        Text(
-                          badgeText,
-                          maxLines: 1,
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 10.sp,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFFF0FDFA),
-                          ),
-                        ),
-                      ],
-                    ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+
+          // 2. Dual Tiles (Equally Balanced via IntrinsicHeight & Stretch)
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: _buildTile(
+                    label: isEn ? 'Check In' : 'Jam Masuk',
+                    chipText: inChipText,
+                    chipBg: inChipBg,
+                    chipTextColor: inChipTextColor,
+                    timeText: inTime,
+                    isPendingTime: !hasCheckIn,
+                    sublabel: inSublabel,
+                    leadingIcon: hasCheckIn
+                        ? Icon(
+                            Icons.check_circle_rounded,
+                            size: 12.sp,
+                            color: const Color(0xFF34D399),
+                          )
+                        : null,
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // 2. Dual Tiles
-          Row(
-            children: [
-              Expanded(
-                child: _buildTile(
-                  label: isEn ? 'Check In' : 'Jam Masuk',
-                  chipText: inChipText,
-                  chipBg: inChipBg,
-                  chipTextColor: inChipTextColor,
-                  timeText: inTime,
-                  isPendingTime: !hasCheckIn,
-                  sublabel: inSublabel,
-                  leadingIcon: hasCheckIn
-                      ? const Icon(
-                          Icons.check_circle_rounded,
-                          size: 12,
-                          color: Color(0xFF34D399),
-                        )
-                      : null,
+                SizedBox(width: 10.w),
+                Expanded(
+                  child: _buildTile(
+                    label: isEn ? 'Check Out' : 'Jam Pulang',
+                    chipText: outChipText,
+                    chipBg: outChipBg,
+                    chipTextColor: outChipTextColor,
+                    timeText: outTime,
+                    isPendingTime: !hasCheckOut,
+                    sublabel: outSublabel,
+                    leadingIcon: hasCheckOut
+                        ? Icon(
+                            Icons.check_circle_rounded,
+                            size: 12.sp,
+                            color: const Color(0xFF34D399),
+                          )
+                        : null,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _buildTile(
-                  label: isEn ? 'Check Out' : 'Jam Pulang',
-                  chipText: outChipText,
-                  chipBg: outChipBg,
-                  chipTextColor: outChipTextColor,
-                  timeText: outTime,
-                  isPendingTime: !hasCheckOut,
-                  sublabel: outSublabel,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12.h),
 
           // 3. Action Button
           SizedBox(
             width: double.infinity,
-            height: 44,
+            height: 44.h,
             child: FilledButton.icon(
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: const Color(0xFF0F766E),
-                disabledBackgroundColor: const Color(0xFF0F766E).withValues(alpha: 0.6),
+                disabledBackgroundColor:
+                    const Color(0xFF0F766E).withValues(alpha: 0.6),
                 disabledForegroundColor: const Color(0xFFB2EBF2),
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(12.r),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
               ),
               onPressed: daily.completed ? null : onActionPressed,
               icon: Icon(
@@ -304,7 +265,7 @@ class CompactAttendanceCard extends StatelessWidget {
                     : daily.checkedIn
                         ? Icons.logout_rounded
                         : Icons.login_rounded,
-                size: 18,
+                size: 18.sp,
               ),
               label: FittedBox(
                 fit: BoxFit.scaleDown,
@@ -336,19 +297,20 @@ class CompactAttendanceCard extends StatelessWidget {
     Widget? leadingIcon,
   }) {
     return Container(
-      padding: const EdgeInsets.all(10),
+      padding: EdgeInsets.symmetric(horizontal: 11.w, vertical: 10.h),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
         border: Border.all(
           color: Colors.white.withValues(alpha: 0.18),
-          width: 0.8,
+          width: 1.0,
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          // Row 1: Label & Chip
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -370,17 +332,18 @@ class CompactAttendanceCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 4),
+              SizedBox(width: 4.w),
               Flexible(
                 flex: 2,
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerRight,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                     decoration: BoxDecoration(
                       color: chipBg,
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(4.r),
                     ),
                     child: Text(
                       chipText,
@@ -397,7 +360,9 @@ class CompactAttendanceCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 6.h),
+
+          // Row 2: Time
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
@@ -415,30 +380,36 @@ class CompactAttendanceCard extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              if (leadingIcon != null) ...[
-                leadingIcon,
-                const SizedBox(width: 3.5),
-              ],
-              Expanded(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    sublabel,
-                    maxLines: 1,
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 9.5.sp,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF99F6E4).withValues(alpha: 0.9),
+          SizedBox(height: 6.h),
+
+          // Row 3: Sublabel with optional status icon
+          SizedBox(
+            height: 14.h,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                if (leadingIcon != null) ...[
+                  leadingIcon,
+                  SizedBox(width: 4.w),
+                ],
+                Expanded(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      sublabel,
+                      maxLines: 1,
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 9.5.sp,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF99F6E4).withValues(alpha: 0.9),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),

@@ -6,8 +6,8 @@ import '../../../../core/workspace.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../attendance/attendance_screen.dart';
 import '../../../attendance/daily_attendance.dart';
+import '../../../attendance/presentation/widgets/attendance_modal_bottom_sheet.dart';
 import '../../../requests/request_notifications.dart';
 import 'compact_attendance_card.dart';
 import 'dashboard_attendance_card.dart';
@@ -37,6 +37,23 @@ class _DashboardTabState extends State<DashboardTab> {
   ApiClient get api => widget.api;
   Workspace get w => widget.workspace;
   Future<void> Function(Widget) get open => widget.open;
+
+  Future<void> _openAttendanceModal(BuildContext context) async {
+    await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.5),
+      builder: (ctx) => AttendanceModalBottomSheet(
+        api: api,
+        workspace: w,
+      ),
+    );
+    if (mounted) {
+      await widget.onRefresh();
+    }
+  }
 
   String _getInitials(String name) {
     final trimmed = name.trim();
@@ -482,7 +499,7 @@ class _DashboardTabState extends State<DashboardTab> {
                 language: _currentLanguage,
                 onActionPressed: daily.completed
                     ? null
-                    : () => open(AttendanceScreen(api: api, workspace: w)),
+                    : () => _openAttendanceModal(context),
               ),
               LayoutBuilder(
                 builder: (context, constraints) {
