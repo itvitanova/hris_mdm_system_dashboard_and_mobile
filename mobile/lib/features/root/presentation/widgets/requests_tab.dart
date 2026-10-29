@@ -6,6 +6,8 @@ import '../../../home/leave_calendar_screen.dart';
 import '../../../requests/request_form.dart';
 import '../../../requests/request_detail.dart';
 import '../../../requests/request_notifications.dart';
+import '../../../requests/presentation/widgets/universal_request_card/universal_request_card.dart';
+import '../../../requests/presentation/models/mock_universal_requests.dart';
 
 class RequestsTab extends StatelessWidget {
   const RequestsTab({
@@ -87,101 +89,59 @@ class RequestsTab extends StatelessWidget {
                 label: const Text('Buat pengajuan'),
               ),
               const SizedBox(height: 20),
-              if (rows.isEmpty)
+              if (rows.isEmpty && mockUniversalRequests.isEmpty)
                 const EmptyState('Pengajuan Anda akan tampil di sini.')
-              else
-                ...rows.map(
-                  (r) => Panel(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Wrap(
-                          spacing: 12,
-                          runSpacing: 8,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            Text(
-                              text(r, 'kind'),
-                              style: const TextStyle(
-                                color: brand,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            StatusPill(text(r, 'status')),
-                            if (r['unread'] == true)
-                              const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.circle,
-                                    color: Color(0xFFB42318),
-                                    size: 8,
-                                  ),
-                                  SizedBox(width: 6),
-                                  Text(
-                                    'Ada pembaruan',
-                                    style: TextStyle(
-                                      color: Color(0xFFB42318),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                          ],
+              else ...[
+                ...rows.map((r) {
+                  final model = UniversalRequestModel.fromMap(r);
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: UniversalRequestCard(
+                      data: model,
+                      onDetailPressed: () => open(
+                        RequestDetailScreen(
+                          api: api,
+                          request: r,
+                          own: true,
                         ),
-                        const SizedBox(height: 12),
-                        Text(
-                          text(r, 'title'),
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                          ),
+                      ),
+                      onRevisePressed: () => open(
+                        RequestForm(
+                          api: api,
+                          workspace: w,
+                          initialKind: model.kind.displayName,
+                          initialRequest: r,
                         ),
-                        const SizedBox(height: 6),
-                        Text(
-                          text(r, 'description'),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(color: muted),
-                        ),
-                        if (text(r, 'pendingWith', '').isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Text(
-                              text(r, 'pendingWith'),
-                              style: const TextStyle(
-                                color: brand,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        const SizedBox(height: 12),
-                        Text(
-                          '${text(r, 'startDate')} s.d. ${text(r, 'endDate')}',
-                          style: const TextStyle(color: Color(0xFF52637A)),
-                        ),
-                        if (number(r, 'amount') > 0)
-                          DetailLine('Nominal', rupiah(number(r, 'amount'))),
-                        if (r['kind'] == 'Lembur')
-                          DetailLine('Durasi', '${number(r, 'hours')} jam'),
-                        OutlinedButton.icon(
-                          onPressed: () => open(
-                            RequestDetailScreen(
-                              api: api,
-                              request: r,
-                              own: true,
-                            ),
-                          ),
-                          icon: const Icon(Icons.article_outlined),
-                          label: const Text('Rincian dan dokumen'),
-                        ),
-                        if (text(r, 'reviewNote', '').isNotEmpty)
-                          DetailLine('Catatan HR', text(r, 'reviewNote')),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                }),
+                ...mockUniversalRequests
+                    .where((m) => !rows.any((r) => text(r, 'title') == m.title))
+                    .map((mockItem) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: UniversalRequestCard(
+                      data: mockItem,
+                      onDetailPressed: () => open(
+                        RequestDetailScreen(
+                          api: api,
+                          request: mockItem.toMap(),
+                          own: true,
+                        ),
+                      ),
+                      onRevisePressed: () => open(
+                        RequestForm(
+                          api: api,
+                          workspace: w,
+                          initialKind: mockItem.kind.displayName,
+                          initialRequest: mockItem.toMap(),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ],
             ],
           ),
         ),

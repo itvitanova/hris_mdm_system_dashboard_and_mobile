@@ -32,6 +32,32 @@ class DashboardAttendanceItem {
     this.rawData,
   });
 
+  DashboardAttendanceItem copyWith({
+    DashboardAttendanceType? type,
+    String? title,
+    String? statusText,
+    bool? isLate,
+    int? lateMinutes,
+    String? dateText,
+    String? timeText,
+    String? method,
+    bool? isToday,
+    dynamic rawData,
+  }) {
+    return DashboardAttendanceItem(
+      type: type ?? this.type,
+      title: title ?? this.title,
+      statusText: statusText ?? this.statusText,
+      isLate: isLate ?? this.isLate,
+      lateMinutes: lateMinutes ?? this.lateMinutes,
+      dateText: dateText ?? this.dateText,
+      timeText: timeText ?? this.timeText,
+      method: method ?? this.method,
+      isToday: isToday ?? this.isToday,
+      rawData: rawData ?? this.rawData,
+    );
+  }
+
   /// Ekstraksi item absensi menjadi deretan kartu aktivitas masuk/pulang.
   /// Event untuk hari ini (today) ditandai dengan [isToday] = true agar menggunakan
   /// kartu teal gradient.
@@ -142,10 +168,16 @@ class DashboardAttendanceItem {
       }
     }
 
-    if (limit != null) {
-      return items.take(limit).toList();
+    final result = limit != null ? items.take(limit).toList() : items;
+    // Hanya kartu paling atas (index 0) yang menggunakan warna hijau dominan,
+    // sedangkan kartu kedua dan seterusnya menggunakan kartu putih netral.
+    if (result.length > 1) {
+      return [
+        result[0],
+        ...result.skip(1).map((item) => item.copyWith(isToday: false)),
+      ];
     }
-    return items;
+    return result;
   }
 
   static String _extractDate(dynamic att) {
@@ -268,16 +300,18 @@ class DashboardAttendanceItem {
 class DashboardAttendanceCard extends StatelessWidget {
   final DashboardAttendanceItem item;
   final VoidCallback? onTap;
+  final bool? isHighlighted;
 
   const DashboardAttendanceCard({
     super.key,
     required this.item,
     this.onTap,
+    this.isHighlighted,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isToday = item.isToday;
+    final isToday = isHighlighted ?? item.isToday;
 
     return Material(
       color: Colors.transparent,

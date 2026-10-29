@@ -648,6 +648,7 @@ class _DashboardTabState extends State<DashboardTab> {
                         DashboardAttendanceCard(
                           key: ValueKey('dash_$i'),
                           item: recentAttendanceItems[i],
+                          isHighlighted: i == 0 && recentAttendanceItems[i].isToday,
                           onTap: () {},
                         ),
                         if (i < recentAttendanceItems.length - 1)
