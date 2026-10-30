@@ -133,8 +133,6 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                       label: 'DISETUJUI',
                       value: '$approvedCount',
                       icon: Icons.check_circle_outline_rounded,
-                      isSelected:
-                          _selectedStatusFilter == SubmissionStatus.disetujui,
                       onTap: () => setState(() {
                         _selectedStatusFilter = _selectedStatusFilter ==
                                 SubmissionStatus.disetujui
@@ -149,8 +147,6 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                       label: 'MENUNGGU',
                       value: '$pendingCount',
                       icon: Icons.access_time_rounded,
-                      isSelected:
-                          _selectedStatusFilter == SubmissionStatus.menunggu,
                       onTap: () => setState(() {
                         _selectedStatusFilter =
                             _selectedStatusFilter == SubmissionStatus.menunggu
@@ -169,10 +165,6 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                       label: 'DITOLAK / REVISI',
                       value: '$rejectedCount',
                       icon: Icons.highlight_off_rounded,
-                      isSelected:
-                          _selectedStatusFilter == SubmissionStatus.ditolak ||
-                              _selectedStatusFilter ==
-                                  SubmissionStatus.perluRevisi,
                       onTap: () => setState(() {
                         _selectedStatusFilter =
                             _selectedStatusFilter == SubmissionStatus.ditolak
@@ -187,7 +179,6 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                       label: widget.keyMetricLabel,
                       value: widget.keyMetricValue,
                       icon: widget.keyMetricIcon,
-                      isSelected: false,
                     ),
                   ),
                 ],
