@@ -45,6 +45,11 @@ void main() {
         expect(find.text('General Affair'), findsOneWidget);
 
         // 2. Verify Pengajuan Terkini section
+        await tester.scrollUntilVisible(
+          find.text('Pengajuan Terkini'),
+          150,
+          scrollable: find.byType(Scrollable),
+        );
         expect(find.text('Pengajuan Terkini'), findsOneWidget);
 
         // 3. Tap Cuti & Izin card -> routes to DedicatedModuleScreen

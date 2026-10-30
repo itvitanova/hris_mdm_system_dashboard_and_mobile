@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// Card Modul Layanan pada Katalog Hub Layanan Mandiri
+/// Dirancang seragam, simetris, dan tanpa elipsis (overflow visible).
 class ServiceModuleCard extends StatelessWidget {
   final String title;
   final String metricTag;
@@ -89,21 +90,23 @@ class ServiceModuleCard extends StatelessWidget {
                           color: accentColor,
                           letterSpacing: -0.2,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        softWrap: false,
+                        overflow: TextOverflow.visible,
                       ),
                     ),
                   ),
                 ],
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
 
               // Baris Bawah: Judul Modul & Deskripsi Singkat
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Expanded(
                         child: Text(
@@ -113,11 +116,13 @@ class ServiceModuleCard extends StatelessWidget {
                             fontWeight: FontWeight.w700,
                             color: Color(0xFF0F172A),
                             letterSpacing: -0.2,
+                            height: 1.2,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          softWrap: true,
+                          overflow: TextOverflow.visible,
                         ),
                       ),
+                      const SizedBox(width: 4),
                       const Icon(
                         Icons.chevron_right_rounded,
                         size: 16,
@@ -125,17 +130,21 @@ class ServiceModuleCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 3),
-                  Text(
-                    description,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w400,
-                      color: Color(0xFF64748B),
-                      height: 1.25,
+                  const SizedBox(height: 4),
+                  SizedBox(
+                    height: 28,
+                    child: Text(
+                      description,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w400,
+                        color: Color(0xFF64748B),
+                        height: 1.25,
+                      ),
+                      maxLines: 2,
+                      softWrap: true,
+                      overflow: TextOverflow.visible,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),

@@ -148,13 +148,15 @@ class RequestsTab extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Katalog Pengajuan',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF0F172A),
-                      letterSpacing: -0.2,
+                  const Expanded(
+                    child: Text(
+                      'Katalog Pengajuan',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF0F172A),
+                        letterSpacing: -0.2,
+                      ),
                     ),
                   ),
                   TextButton.icon(
@@ -172,6 +174,7 @@ class RequestsTab extends StatelessWidget {
                 builder: (context, constraints) {
                   const spacing = 12.0;
                   final itemWidth = (constraints.maxWidth - spacing) / 2;
+                  const itemHeight = 142.0;
                   return Wrap(
                     spacing: spacing,
                     runSpacing: spacing,
@@ -179,6 +182,7 @@ class RequestsTab extends StatelessWidget {
                       // 1. Cuti & Izin
                       SizedBox(
                         width: itemWidth,
+                        height: itemHeight,
                         child: ServiceModuleCard(
                           title: 'Cuti & Izin',
                           metricTag: 'Sisa 10 Hari',
@@ -211,6 +215,7 @@ class RequestsTab extends StatelessWidget {
                       // 2. Lembur
                       SizedBox(
                         width: itemWidth,
+                        height: itemHeight,
                         child: ServiceModuleCard(
                           title: 'Lembur',
                           metricTag: 'Total 4 Jam',
@@ -234,6 +239,7 @@ class RequestsTab extends StatelessWidget {
                       // 3. Reimbursement
                       SizedBox(
                         width: itemWidth,
+                        height: itemHeight,
                         child: ServiceModuleCard(
                           title: 'Reimbursement',
                           metricTag: 'Klaim Biaya',
@@ -257,6 +263,7 @@ class RequestsTab extends StatelessWidget {
                       // 4. Petty Cash
                       SizedBox(
                         width: itemWidth,
+                        height: itemHeight,
                         child: ServiceModuleCard(
                           title: 'Petty Cash',
                           metricTag: 'Kas Kecil',
@@ -280,6 +287,7 @@ class RequestsTab extends StatelessWidget {
                       // 5. General Affair
                       SizedBox(
                         width: itemWidth,
+                        height: itemHeight,
                         child: ServiceModuleCard(
                           title: 'General Affair',
                           metricTag: 'Fasilitas & GA',
@@ -312,13 +320,15 @@ class RequestsTab extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Pengajuan Terkini',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF0F172A),
-                      letterSpacing: -0.2,
+                  const Expanded(
+                    child: Text(
+                      'Pengajuan Terkini',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF0F172A),
+                        letterSpacing: -0.2,
+                      ),
                     ),
                   ),
                   Text(

@@ -182,6 +182,11 @@ void main() {
       expect(find.text('General Affair'), findsOneWidget);
 
       // Recent Requests section
+      await tester.scrollUntilVisible(
+        find.text('Pengajuan Terkini'),
+        150,
+        scrollable: find.byType(Scrollable),
+      );
       expect(find.text('Pengajuan Terkini'), findsOneWidget);
 
       // Scroll to reveal recent request cards
