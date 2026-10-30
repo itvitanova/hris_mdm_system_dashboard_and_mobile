@@ -44,15 +44,7 @@ void main() {
         expect(find.text('Petty Cash'), findsOneWidget);
         expect(find.text('General Affair'), findsOneWidget);
 
-        // 2. Verify Pengajuan Terkini section
-        await tester.scrollUntilVisible(
-          find.text('Pengajuan Terkini'),
-          150,
-          scrollable: find.byType(Scrollable),
-        );
-        expect(find.text('Pengajuan Terkini'), findsOneWidget);
-
-        // 3. Tap Cuti & Izin card -> routes to DedicatedModuleScreen
+        // 2. Tap Cuti & Izin card -> routes to DedicatedModuleScreen
         await tester.tap(find.text('Cuti & Izin'));
         await tester.pumpAndSettle();
 
@@ -60,6 +52,14 @@ void main() {
         final screen = openedWidget as DedicatedModuleScreen;
         expect(screen.moduleTitle, 'Pengajuan Cuti & Izin');
         expect(screen.keyMetricLabel, 'SISA KUOTA');
+
+        // 3. Verify Pengajuan Terkini section by scrolling down
+        await tester.scrollUntilVisible(
+          find.text('Pengajuan Terkini'),
+          150,
+          scrollable: find.byType(Scrollable),
+        );
+        expect(find.text('Pengajuan Terkini'), findsOneWidget);
       },
     );
   });
