@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 /// Card Modul Layanan pada Katalog Hub Layanan Mandiri
 /// Dirancang seragam, simetris, dan tanpa elipsis (overflow visible).
@@ -98,7 +99,7 @@ class ServiceModuleCard extends StatelessWidget {
                 ],
               ),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: 5),
 
               // Baris Bawah: Judul Modul & Deskripsi Singkat
               Column(
@@ -122,29 +123,36 @@ class ServiceModuleCard extends StatelessWidget {
                           overflow: TextOverflow.visible,
                         ),
                       ),
-                      const SizedBox(width: 4),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      SizedBox(
+                        width: 90.w,
+                        height: 28,
+                        child: Text(
+                          description,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w400,
+                            color: Color(0xFF64748B),
+                            height: 1.25,
+                          ),
+                          maxLines: 2,
+                          softWrap: true,
+                          overflow: TextOverflow.visible,
+                        ),
+                      ),
+                      Spacer(),
                       const Icon(
                         Icons.chevron_right_rounded,
                         size: 16,
                         color: Color(0xFF94A3B8),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 4),
-                  SizedBox(
-                    height: 28,
-                    child: Text(
-                      description,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w400,
-                        color: Color(0xFF64748B),
-                        height: 1.25,
-                      ),
-                      maxLines: 2,
-                      softWrap: true,
-                      overflow: TextOverflow.visible,
-                    ),
                   ),
                 ],
               ),
