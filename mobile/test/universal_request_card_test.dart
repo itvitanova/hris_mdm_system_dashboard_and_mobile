@@ -168,7 +168,14 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Pengajuan Anda'), findsOneWidget);
+      expect(find.text('Katalog Layanan'), findsOneWidget);
+      expect(find.text('Pengajuan Terkini'), findsOneWidget);
+      expect(find.text('Cuti & Izin'), findsOneWidget);
+      expect(find.text('Lembur'), findsOneWidget);
+      expect(find.text('Reimbursement'), findsOneWidget);
+      expect(find.text('Petty Cash'), findsOneWidget);
+      expect(find.text('General Affair'), findsOneWidget);
+      expect(find.text('Slip Gaji'), findsOneWidget);
       expect(find.byType(UniversalRequestCard), findsWidgets);
       expect(find.text('Cuti tahunan'), findsOneWidget);
     });
