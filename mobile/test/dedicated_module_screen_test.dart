@@ -5,12 +5,13 @@ import 'package:mdm_hris/core/api_client.dart';
 import 'package:mdm_hris/core/workspace.dart';
 import 'package:mdm_hris/features/requests/domain/entities/submission_kind.dart';
 import 'package:mdm_hris/features/requests/presentation/pages/modules/dedicated_module_screen.dart';
+import 'package:mdm_hris/features/requests/presentation/widgets/services_hub/submission_status_filter_dropdown.dart';
 import 'package:mdm_hris/features/requests/request_form.dart';
 
 void main() {
   group('DedicatedModuleScreen Tests', () {
     testWidgets(
-      'renders dedicated cuti module with 2x2 stats and header (+) action',
+      'renders dedicated cuti module with 2x2 stats, dropdown filter, and header (+) action',
       (tester) async {
         final workspace = Workspace({
           'requests': [],
@@ -47,12 +48,16 @@ void main() {
         expect(find.text('SISA KUOTA'), findsOneWidget);
         expect(find.text('10 Hari'), findsOneWidget);
 
-        // 2. Verify strict isolation: Only cuti items appear
+        // 2. Check dropdown filter exists
+        expect(find.byType(SubmissionStatusFilterDropdown), findsOneWidget);
+        expect(find.text('Semua Status Pengajuan'), findsOneWidget);
+
+        // 3. Verify strict isolation: Only cuti items appear
         expect(find.text('Cuti tahunan'), findsOneWidget);
         expect(find.text('Biaya Transport & Akomodasi Klien'), findsNothing);
         expect(find.text('Lembur Maintenance & Backup Server'), findsNothing);
 
-        // 3. Tap (+) icon button in riwayat header -> opens RequestForm locked to Cuti
+        // 4. Tap (+) icon button in riwayat header -> opens RequestForm locked to Cuti
         await tester.tap(find.byIcon(Icons.add_rounded));
         await tester.pumpAndSettle();
         expect(openedWidget, isA<RequestForm>());
@@ -63,7 +68,7 @@ void main() {
     );
 
     testWidgets(
-      'filters requests by status chips and stat card taps',
+      'filters requests by dropdown filter and stat card taps',
       (tester) async {
         final workspace = Workspace({
           'requests': [
@@ -112,18 +117,30 @@ void main() {
         expect(find.text('Cuti Sakit Rawat Inap'), findsOneWidget);
         expect(find.text('Cuti Menikah'), findsOneWidget);
 
-        // Tap 'Disetujui' chip
-        await tester.tap(find.text('Disetujui').first);
+        // Tap stat card 'DISETUJUI'
+        await tester.tap(find.text('DISETUJUI'));
         await tester.pumpAndSettle();
 
         expect(find.text('Cuti Sakit Rawat Inap'), findsOneWidget);
         expect(find.text('Cuti Menikah'), findsNothing);
 
-        // Tap 'Menunggu' chip
-        await tester.tap(find.text('Menunggu').first);
+        // Tap stat card 'MENUNGGU'
+        await tester.tap(find.text('MENUNGGU'));
         await tester.pumpAndSettle();
 
         expect(find.text('Cuti Sakit Rawat Inap'), findsNothing);
+        expect(find.text('Cuti Menikah'), findsOneWidget);
+
+        // Open dropdown trigger to select 'Semua Status Pengajuan'
+        await tester.tap(find.byType(SubmissionStatusFilterDropdown));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Semua Status Pengajuan'), findsWidgets);
+        await tester.tap(find.text('Semua Status Pengajuan').last);
+        await tester.pumpAndSettle();
+
+        // Both items appear again
+        expect(find.text('Cuti Sakit Rawat Inap'), findsOneWidget);
         expect(find.text('Cuti Menikah'), findsOneWidget);
       },
     );

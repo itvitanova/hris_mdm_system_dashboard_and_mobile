@@ -7,6 +7,7 @@ import 'package:mdm_hris/features/requests/request_form.dart';
 import 'package:mdm_hris/features/requests/presentation/models/mock_universal_requests.dart';
 import 'package:mdm_hris/features/requests/presentation/widgets/universal_request_card/universal_request_card.dart';
 import 'package:mdm_hris/features/requests/presentation/widgets/services_hub/module_stat_card.dart';
+import 'package:mdm_hris/features/requests/presentation/widgets/services_hub/submission_status_filter_dropdown.dart';
 
 /// Halaman Khusus (Dedicated Screen) untuk Setiap Modul Pengajuan Mandiri
 /// Dilengkapi rekap statistik 2x2, filter status, dan header riwayat dengan tombol (+) tanpa FAB dan tanpa banner.
@@ -74,44 +75,6 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
         workspace: widget.workspace,
         initialKind: widget.kind.displayName,
         lockKindSelection: true,
-      ),
-    );
-  }
-
-  Widget _filterChip(SubmissionStatus? status, String label) {
-    final isSelected = _selectedStatusFilter == status;
-    return InkWell(
-      onTap: () => setState(() => _selectedStatusFilter = status),
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0F766E) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected
-                ? const Color(0xFF0F766E)
-                : const Color(0xFFE2E8F0),
-            width: 1.2,
-          ),
-          boxShadow: isSelected
-              ? const [
-                  BoxShadow(
-                    color: Color(0x200F766E),
-                    blurRadius: 6,
-                    offset: Offset(0, 2),
-                  ),
-                ]
-              : null,
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected ? Colors.white : const Color(0xFF64748B),
-          ),
-        ),
       ),
     );
   }
@@ -232,22 +195,23 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
 
               const SizedBox(height: 16),
 
-              // ==================== 2. FILTER STATUS INLINE ====================
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _filterChip(null, 'Semua'),
-                    const SizedBox(width: 6),
-                    _filterChip(SubmissionStatus.menunggu, 'Menunggu'),
-                    const SizedBox(width: 6),
-                    _filterChip(SubmissionStatus.disetujui, 'Disetujui'),
-                    const SizedBox(width: 6),
-                    _filterChip(SubmissionStatus.perluRevisi, 'Perlu Revisi'),
-                    const SizedBox(width: 6),
-                    _filterChip(SubmissionStatus.ditolak, 'Ditolak'),
-                  ],
-                ),
+              // ==================== 2. FILTER STATUS DROPDOWN & RELOAD ====================
+              Row(
+                children: [
+                  Expanded(
+                    child: SubmissionStatusFilterDropdown(
+                      selected: _selectedStatusFilter,
+                      onChanged: (status) {
+                        setState(() => _selectedStatusFilter = status);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  _FilterIconButton(
+                    icon: Icons.refresh_rounded,
+                    onTap: widget.onRefresh,
+                  ),
+                ],
               ),
 
               const SizedBox(height: 14),
@@ -393,6 +357,55 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                   ),
                 ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FilterIconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback? onTap;
+
+  const _FilterIconButton({
+    required this.icon,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x080F172A),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+        color: Colors.white,
+        border: Border.all(
+          color: const Color(0xFFE2E8F0),
+          width: 1,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(10),
+          splashColor: const Color(0xFF0D9488).withValues(alpha: 0.12),
+          highlightColor: const Color(0xFF0D9488).withValues(alpha: 0.05),
+          child: Center(
+            child: Icon(
+              icon,
+              size: 20,
+              color: const Color(0xFF0D9488),
+            ),
           ),
         ),
       ),
