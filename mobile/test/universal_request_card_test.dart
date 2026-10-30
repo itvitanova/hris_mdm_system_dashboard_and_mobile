@@ -67,6 +67,20 @@ void main() {
       );
       expect(find.text('Perbaiki pengajuan'), findsOneWidget);
 
+      final buttonFinder = find.text('Perbaiki pengajuan');
+      final containerFinder = find.ancestor(
+        of: buttonFinder,
+        matching: find.byType(Container),
+      );
+      final containerWidget = tester.widget<Container>(containerFinder.first);
+      final decoration = containerWidget.decoration as BoxDecoration?;
+      expect(decoration?.gradient, isA<LinearGradient>());
+      final gradient = decoration!.gradient as LinearGradient;
+      expect(gradient.colors, [
+        const Color(0xFFE11D48),
+        const Color(0xFFBE123C),
+      ]);
+
       await tester.tap(find.text('Perbaiki pengajuan'));
       await tester.pumpAndSettle();
       expect(reviseClicked, isTrue);
@@ -90,6 +104,48 @@ void main() {
       expect(find.text('Finance (Alicia)'), findsOneWidget);
       expect(find.text('Tahap 2 dari 2'), findsOneWidget);
     });
+
+    testWidgets(
+      'renders solid teal button for "Rincian dan dokumen" when not in revision',
+      (tester) async {
+        final standardItem = mockUniversalRequests.firstWhere(
+          (m) => m.status != SubmissionStatus.perluRevisi,
+        );
+
+        bool detailClicked = false;
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: UniversalRequestCard(
+                data: standardItem,
+                onDetailPressed: () => detailClicked = true,
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final buttonFinder = find.text('Rincian dan dokumen');
+        expect(buttonFinder, findsOneWidget);
+
+        final containerFinder = find.ancestor(
+          of: buttonFinder,
+          matching: find.byType(Container),
+        );
+        final containerWidget = tester.widget<Container>(containerFinder.first);
+        final decoration = containerWidget.decoration as BoxDecoration?;
+        expect(decoration?.gradient, isA<LinearGradient>());
+        final gradient = decoration!.gradient as LinearGradient;
+        expect(gradient.colors, [
+          const Color(0xFF0F766E),
+          const Color(0xFF14B8A6),
+        ]);
+
+        await tester.tap(buttonFinder);
+        await tester.pumpAndSettle();
+        expect(detailClicked, isTrue);
+      },
+    );
 
     testWidgets('RequestsTab displays mock cards when accessed', (
       tester,

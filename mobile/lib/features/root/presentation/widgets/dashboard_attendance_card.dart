@@ -356,7 +356,7 @@ class DashboardAttendanceCard extends StatelessWidget {
             children: [
               // 1. Icon Container
               _buildLeadingIcon(isToday),
-
+              SizedBox(width: 10.w,),
               // 2. Center Column: Title + Badge & Date
               Expanded(
                 flex: 5,

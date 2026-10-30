@@ -143,7 +143,7 @@ class RequestCardHelper {
       case SubmissionStatus.disetujui:
         return const RequestStatusConfig(
           label: 'Disetujui',
-          barColor: Color(0xFF059669),
+          barColor: Color(0xFF0F766E),
           badgeBg: Color(0xFFECFDF5),
           badgeBorder: Color(0xFFA7F3D0),
           textColor: Color(0xFF047857),
@@ -162,7 +162,7 @@ class RequestCardHelper {
       case SubmissionStatus.perluRevisi:
         return const RequestStatusConfig(
           label: 'Perlu Revisi',
-          barColor: Color(0xFFE11D48),
+          barColor: Color(0xFF0F766E),
           badgeBg: Color(0xFFFFF1F2),
           badgeBorder: Color(0xFFFECDD3),
           textColor: Color(0xFFBE123C),
@@ -170,7 +170,7 @@ class RequestCardHelper {
       case SubmissionStatus.ditolak:
         return const RequestStatusConfig(
           label: 'Ditolak',
-          barColor: Color(0xFF64748B),
+          barColor: Color(0xFF0F766E),
           badgeBg: Color(0xFFF1F5F9),
           badgeBorder: Color(0xFFCBD5E1),
           textColor: Color(0xFF475569),
