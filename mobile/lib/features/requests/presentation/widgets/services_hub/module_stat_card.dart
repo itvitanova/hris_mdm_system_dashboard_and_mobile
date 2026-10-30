@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Kartu Statistik Modul Pengajuan (2x2 Grid)
+/// Widget Kartu Statistik Modul (2x2 Grid Korporat)
 class ModuleStatCard extends StatelessWidget {
   final String label;
   final String value;
@@ -21,36 +21,31 @@ class ModuleStatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final content = Padding(
+    final cardContent = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // 1. Squircle Icon Container
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: 40,
-            height: 40,
+          // 1. Corporate Teal Squircle + Clean Vector Outline Icon
+          Container(
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
-              color: isSelected
-                  ? const Color(0xFF0F766E)
-                  : const Color(0xFFF0FDFA),
-              borderRadius: BorderRadius.circular(10),
+              color: const Color(0xFFF0FDFA), // Frosted Soft Mint Teal
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isSelected
-                    ? const Color(0xFF0F766E)
-                    : const Color(0xFFCCFBF1),
-                width: 1,
+                color: const Color(0xFFCCFBF1),
+                width: 1.2,
               ),
             ),
             alignment: Alignment.center,
             child: Icon(
               icon,
-              size: 20,
-              color: isSelected ? Colors.white : accentColor,
+              size: 22,
+              color: accentColor,
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 9),
 
           // 2. Numeric Value & Label
           Expanded(
@@ -60,27 +55,26 @@ class ModuleStatCard extends StatelessWidget {
               children: [
                 Text(
                   value,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: isSelected
-                        ? const Color(0xFF0F766E)
-                        : const Color(0xFF0F172A),
-                    letterSpacing: -0.4,
+                  style: const TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 22,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF0F172A),
+                    letterSpacing: -0.5,
                     height: 1.1,
+                    fontFeatures: [FontFeature.tabularFigures()],
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
                 Text(
                   label,
-                  style: TextStyle(
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w700,
-                    color: isSelected
-                        ? const Color(0xFF0D9488)
-                        : const Color(0xFF64748B),
+                  style: const TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 9.8,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF64748B),
                     letterSpacing: 0.3,
                   ),
                   maxLines: 1,
@@ -93,32 +87,22 @@ class ModuleStatCard extends StatelessWidget {
       ),
     );
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      constraints: const BoxConstraints(minHeight: 64),
+    return Container(
+      constraints: const BoxConstraints(minHeight: 72),
       decoration: BoxDecoration(
-        color: isSelected ? const Color(0xFFF0FDFA) : Colors.white,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color:
-              isSelected ? const Color(0xFF0D9488) : const Color(0xFFE2E8F0),
-          width: isSelected ? 1.4 : 1,
+          color: const Color(0xFFE2E8F0),
+          width: 1,
         ),
-        boxShadow: isSelected
-            ? const [
-                BoxShadow(
-                  color: Color(0x180F766E),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ]
-            : const [
-                BoxShadow(
-                  color: Color(0x060F172A),
-                  blurRadius: 6,
-                  offset: Offset(0, 2),
-                ),
-              ],
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x080F172A),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
       child: onTap != null
           ? Material(
@@ -126,10 +110,12 @@ class ModuleStatCard extends StatelessWidget {
               child: InkWell(
                 onTap: onTap,
                 borderRadius: BorderRadius.circular(10),
-                child: content,
+                splashColor: const Color(0xFF0D9488).withValues(alpha: 0.12),
+                highlightColor: const Color(0xFF0D9488).withValues(alpha: 0.05),
+                child: cardContent,
               ),
             )
-          : content,
+          : cardContent,
     );
   }
 }

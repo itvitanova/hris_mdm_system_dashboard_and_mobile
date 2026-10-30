@@ -10,7 +10,7 @@ import 'package:mdm_hris/features/requests/presentation/widgets/services_hub/mod
 import 'package:mdm_hris/features/requests/presentation/widgets/services_hub/submission_status_filter_dropdown.dart';
 
 /// Halaman Khusus (Dedicated Screen) untuk Setiap Modul Pengajuan Mandiri
-/// Dilengkapi rekap statistik 2x2, filter status, dan header riwayat dengan tombol (+) tanpa FAB dan tanpa banner.
+/// Dilengkapi rekap statistik 2x2 korporat, filter status dropdown, dan header riwayat dengan tombol (+) tanpa FAB dan tanpa banner.
 class DedicatedModuleScreen extends StatefulWidget {
   final SubmissionKind kind;
   final String moduleTitle;
@@ -106,7 +106,10 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
       appBar: AppBar(
         title: Text(
           widget.moduleTitle,
-          style: const TextStyle(fontWeight: FontWeight.w700),
+          style: const TextStyle(
+            fontFamily: 'Inter',
+            fontWeight: FontWeight.w700,
+          ),
         ),
         actions: [
           if (widget.customActions != null) ...widget.customActions!,
@@ -123,7 +126,7 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
           onRefresh: widget.onRefresh,
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(18, 14, 18, 32),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             children: [
               // ==================== 1. REKAP STATISTIK 2X2 ====================
               Row(
@@ -184,7 +187,7 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                 ],
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 18),
 
               // ==================== 2. FILTER STATUS DROPDOWN & RELOAD ====================
               Row(
@@ -205,7 +208,7 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                 ],
               ),
 
-              const SizedBox(height: 14),
+              const SizedBox(height: 18),
 
               // ==================== 3. HEADER RIWAYAT DENGAN TOMBOL (+) ====================
               Container(
@@ -235,8 +238,9 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                       child: Text(
                         'Riwayat Pengajuan ${widget.kind.displayName} (${filteredRequests.length})',
                         style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
+                          fontFamily: 'Inter',
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w600,
                           color: Color(0xFF0F172A),
                         ),
                       ),
@@ -264,7 +268,7 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                           onTap: _openCreateForm,
                           borderRadius: BorderRadius.circular(8),
                           child: const Padding(
-                            padding: EdgeInsets.all(7),
+                            padding: EdgeInsets.all(6),
                             child: Icon(
                               Icons.add_rounded,
                               size: 18,
@@ -283,26 +287,29 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
               // ==================== 4. DAFTAR KARTU PENGAJUAN ====================
               if (filteredRequests.isEmpty)
                 Container(
-                  padding: const EdgeInsets.symmetric(vertical: 40),
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 36),
                   alignment: Alignment.center,
                   child: Column(
                     children: [
-                      Icon(
-                        Icons.assignment_outlined,
+                      const Icon(
+                        Icons.inbox_rounded,
                         size: 40,
-                        color: Colors.grey.shade400,
+                        color: Color(0xFF94A3B8),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 8),
                       Text(
                         _selectedStatusFilter != null
-                            ? 'Tidak ada pengajuan dengan status ini.'
-                            : 'Belum ada riwayat pengajuan ${widget.kind.displayName}.',
-                        style: TextStyle(
+                            ? 'Tidak ada pengajuan berstatus "${_selectedStatusFilter!.displayName}"'
+                            : 'Belum ada riwayat pengajuan ${widget.kind.displayName.toLowerCase()}',
+                        style: const TextStyle(
+                          fontFamily: 'Inter',
                           fontSize: 13,
-                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF94A3B8),
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 10),
                       TextButton.icon(
                         onPressed: _openCreateForm,
                         icon: const Icon(
@@ -313,6 +320,7 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                         label: const Text(
                           'Buat Pengajuan Baru',
                           style: TextStyle(
+                            fontFamily: 'Inter',
                             fontSize: 12.5,
                             fontWeight: FontWeight.w600,
                             color: Color(0xFF0D9488),
@@ -325,7 +333,7 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
               else
                 ...filteredRequests.map(
                   (model) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.only(bottom: 10),
                     child: UniversalRequestCard(
                       data: model,
                       onDetailPressed: () => widget.open(
