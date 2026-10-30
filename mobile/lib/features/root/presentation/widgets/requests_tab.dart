@@ -9,6 +9,7 @@ import '../../../requests/request_notifications.dart';
 import '../../../requests/presentation/widgets/universal_request_card/universal_request_card.dart';
 import '../../../requests/presentation/widgets/services_hub/service_module_card.dart';
 import '../../../requests/presentation/models/mock_universal_requests.dart';
+import '../../../requests/presentation/pages/modules/dedicated_module_screen.dart';
 import 'payroll_tab.dart';
 
 class RequestsTab extends StatelessWidget {
@@ -173,10 +174,26 @@ class RequestsTab extends StatelessWidget {
                           description: 'Tahunan, sakit & izin kerja',
                           icon: Icons.event_available_outlined,
                           onTap: () => open(
-                            RequestForm(
+                            DedicatedModuleScreen(
+                              kind: SubmissionKind.cuti,
+                              moduleTitle: 'Pengajuan Cuti & Izin',
+                              heroTitle: 'Kuota Cuti: 10 Hari',
+                              heroSubtitle: 'Sisa cuti tahunan dan hak istirahat kerja Anda',
+                              moduleIcon: Icons.event_available_outlined,
+                              actionButtonText: 'Ajukan Cuti Baru',
                               api: api,
                               workspace: w,
-                              initialKind: 'Cuti',
+                              open: open,
+                              onRefresh: onRefresh,
+                              customActions: [
+                                IconButton(
+                                  tooltip: 'Kalender cuti',
+                                  onPressed: () => open(
+                                    LeaveCalendarScreen(api: api, workspace: w),
+                                  ),
+                                  icon: const Icon(Icons.calendar_month_outlined),
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -189,10 +206,17 @@ class RequestsTab extends StatelessWidget {
                           description: 'Tugas lembur & kompensasi',
                           icon: Icons.access_time_rounded,
                           onTap: () => open(
-                            RequestForm(
+                            DedicatedModuleScreen(
+                              kind: SubmissionKind.lembur,
+                              moduleTitle: 'Pengajuan Lembur',
+                              heroTitle: 'Total Lembur: 4 Jam',
+                              heroSubtitle: 'Akumulasi jam kerja lembur bulan berjalan',
+                              moduleIcon: Icons.access_time_rounded,
+                              actionButtonText: 'Ajukan Lembur Baru',
                               api: api,
                               workspace: w,
-                              initialKind: 'Lembur',
+                              open: open,
+                              onRefresh: onRefresh,
                             ),
                           ),
                         ),
@@ -205,10 +229,17 @@ class RequestsTab extends StatelessWidget {
                           description: 'Transport, makan & klien',
                           icon: Icons.receipt_long_rounded,
                           onTap: () => open(
-                            RequestForm(
+                            DedicatedModuleScreen(
+                              kind: SubmissionKind.reimbursement,
+                              moduleTitle: 'Klaim Reimbursement',
+                              heroTitle: 'Total Klaim: Rp 850.000',
+                              heroSubtitle: 'Penggantian biaya dinas, transport & makan klien',
+                              moduleIcon: Icons.receipt_long_rounded,
+                              actionButtonText: 'Buat Klaim Baru',
                               api: api,
                               workspace: w,
-                              initialKind: 'Reimbursement',
+                              open: open,
+                              onRefresh: onRefresh,
                             ),
                           ),
                         ),
@@ -221,10 +252,17 @@ class RequestsTab extends StatelessWidget {
                           description: 'Permohonan dana operasional',
                           icon: Icons.payments_outlined,
                           onTap: () => open(
-                            RequestForm(
+                            DedicatedModuleScreen(
+                              kind: SubmissionKind.pettyCash,
+                              moduleTitle: 'Pengajuan Petty Cash',
+                              heroTitle: 'Kas Kecil: Rp 375.000',
+                              heroSubtitle: 'Permohonan uang kas operasional harian divisi',
+                              moduleIcon: Icons.payments_outlined,
+                              actionButtonText: 'Ajukan Kas Kecil Baru',
                               api: api,
                               workspace: w,
-                              initialKind: 'Petty Cash',
+                              open: open,
+                              onRefresh: onRefresh,
                             ),
                           ),
                         ),
@@ -237,10 +275,17 @@ class RequestsTab extends StatelessWidget {
                           description: 'Pengadaan barang & sarana',
                           icon: Icons.inventory_2_outlined,
                           onTap: () => open(
-                            RequestForm(
+                            DedicatedModuleScreen(
+                              kind: SubmissionKind.generalAffair,
+                              moduleTitle: 'Pengadaan General Affair',
+                              heroTitle: 'Fasilitas & Aset Kantor',
+                              heroSubtitle: 'Permohonan inventaris, sarana, ATK & perlengkapan',
+                              moduleIcon: Icons.inventory_2_outlined,
+                              actionButtonText: 'Ajukan Permintaan GA Baru',
                               api: api,
                               workspace: w,
-                              initialKind: 'General Affair',
+                              open: open,
+                              onRefresh: onRefresh,
                             ),
                           ),
                         ),

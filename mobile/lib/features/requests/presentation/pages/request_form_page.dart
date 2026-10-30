@@ -22,11 +22,13 @@ class RequestForm extends StatefulWidget {
     this.initialKind = 'Cuti',
     this.initialRequest,
     this.workspace,
+    this.lockKindSelection = false,
   });
   final ApiClient api;
   final String initialKind;
   final Json? initialRequest;
   final Workspace? workspace;
+  final bool lockKindSelection;
   @override
   State<RequestForm> createState() => _RequestFormState();
 }
@@ -214,7 +216,7 @@ class _RequestFormState extends State<RequestForm> {
           const SizedBox(height: 24),
           DropdownMenu<String>(
             controller: kindSearch,
-            enabled: !busy && !uploading,
+            enabled: !busy && !uploading && !widget.lockKindSelection,
             initialSelection: kind,
             expandedInsets: EdgeInsets.zero,
             enableFilter: true,
