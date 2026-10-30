@@ -231,16 +231,12 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: const [
                     BoxShadow(
-                      color: Color(0x080F172A),
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
+                      color: Color(0xFFF5F5F5),
+                      blurRadius: 9,
+                      offset: Offset(0, 0),
                     ),
                   ],
                   color: Colors.white,
-                  border: Border.all(
-                    color: const Color(0xFFE2E8F0),
-                    width: 1,
-                  ),
                 ),
                 child: Row(
                   children: [
@@ -391,16 +387,12 @@ class _FilterIconButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x080F172A),
-            blurRadius: 8,
-            offset: Offset(0, 2),
+            color: Color(0xFFF5F5F5),
+            blurRadius: 9,
+            offset: Offset(0, 0),
           ),
         ],
         color: Colors.white,
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-          width: 1,
-        ),
       ),
       child: Material(
         color: Colors.transparent,

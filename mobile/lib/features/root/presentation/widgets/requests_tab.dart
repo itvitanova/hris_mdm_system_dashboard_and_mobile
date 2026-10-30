@@ -91,11 +91,12 @@ class RequestsTab extends StatelessWidget {
     ];
 
     return Scaffold(
+      backgroundColor: AppColors.bg,
       appBar: AppBar(
         shadowColor: AppColors.shadowAppBar,
         backgroundColor: AppColors.white,
         surfaceTintColor: AppColors.white,
-        elevation: 0.5,
+        elevation: 0.2,
         title: Text(
           'Pengajuan',
           style: AppTextStyles.inter16MediumPrimary,

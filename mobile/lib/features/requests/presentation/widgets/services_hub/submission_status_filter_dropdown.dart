@@ -111,18 +111,18 @@ class _SubmissionStatusFilterDropdownState
           borderRadius: BorderRadius.circular(10),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x080F172A),
-              blurRadius: 8,
-              offset: Offset(0, 2),
+              color: Color(0xFFF5F5F5),
+              blurRadius: 9,
+              offset: Offset(0, 0),
             ),
           ],
           color: Colors.white,
-          border: Border.all(
-            color: isActive
-                ? AppColors.filterTealAccent
-                : const Color(0xFFE2E8F0),
-            width: isActive ? 1.5 : 1,
-          ),
+          border: isActive
+              ? Border.all(
+                  color: AppColors.filterTealAccent,
+                  width: 1.5,
+                )
+              : null,
         ),
         child: Row(
           children: [

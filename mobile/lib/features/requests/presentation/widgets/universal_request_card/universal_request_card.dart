@@ -46,12 +46,11 @@ class UniversalRequestCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x0A0F172A),
-                blurRadius: 8,
-                offset: Offset(0, 2),
+                color: Color(0xFFF5F5F5),
+                blurRadius: 9,
+                offset: Offset(0, 0),
               ),
             ],
           ),

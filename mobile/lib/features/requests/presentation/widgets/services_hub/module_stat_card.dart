@@ -92,15 +92,11 @@ class ModuleStatCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-          width: 1,
-        ),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x080F172A),
-            blurRadius: 8,
-            offset: Offset(0, 2),
+            color: Color(0xFFF5F5F5),
+            blurRadius: 9,
+            offset: Offset(0, 0),
           ),
         ],
       ),
