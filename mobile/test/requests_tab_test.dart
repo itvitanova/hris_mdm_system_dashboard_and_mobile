@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mdm_hris/core/api_client.dart';
 import 'package:mdm_hris/core/workspace.dart';
@@ -19,12 +20,16 @@ void main() {
         Widget? openedWidget;
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: RequestsTab(
-              api: ApiClient(),
-              workspace: workspace,
-              onRefresh: () async {},
-              open: (w) async => openedWidget = w,
+          ScreenUtilInit(
+            designSize: const Size(375, 812),
+            minTextAdapt: true,
+            builder: (context, child) => MaterialApp(
+              home: RequestsTab(
+                api: ApiClient(),
+                workspace: workspace,
+                onRefresh: () async {},
+                open: (w) async => openedWidget = w,
+              ),
             ),
           ),
         );

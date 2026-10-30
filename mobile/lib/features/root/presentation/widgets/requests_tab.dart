@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/workspace.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets.dart';
 import '../../../home/leave_calendar_screen.dart';
 import '../../../requests/request_form.dart';
@@ -90,10 +92,15 @@ class RequestsTab extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        shadowColor: AppColors.shadowAppBar,
+        backgroundColor: AppColors.white,
+        surfaceTintColor: AppColors.white,
+        elevation: 0.5,
+        title: Text(
           'Pengajuan',
-          style: TextStyle(fontWeight: FontWeight.w700),
+          style: AppTextStyles.inter16MediumPrimary,
         ),
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
         actions: [
           IconButton(
             tooltip: 'Kalender cuti',
@@ -124,7 +131,7 @@ class RequestsTab extends StatelessWidget {
           IconButton(
             tooltip: 'Segarkan data',
             onPressed: onRefresh,
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh_rounded),
           ),
         ],
       ),

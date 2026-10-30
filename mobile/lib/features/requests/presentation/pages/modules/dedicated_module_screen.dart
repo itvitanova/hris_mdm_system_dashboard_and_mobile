@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mdm_hris/core/api_client.dart';
 import 'package:mdm_hris/core/workspace.dart';
 import 'package:mdm_hris/core/theme/app_colors.dart';
+import 'package:mdm_hris/core/theme/app_text_styles.dart';
 import 'package:mdm_hris/features/requests/request_detail.dart';
 import 'package:mdm_hris/features/requests/request_form.dart';
 import 'package:mdm_hris/features/requests/presentation/models/mock_universal_requests.dart';
@@ -104,19 +105,28 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
     return Scaffold(
       backgroundColor: AppColors.bg,
       appBar: AppBar(
+        shadowColor: AppColors.shadowAppBar,
+        backgroundColor: AppColors.white,
+        surfaceTintColor: AppColors.white,
+        elevation: 0.5,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_rounded,
+            color: AppColors.textPrimary,
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: Text(
           widget.moduleTitle,
-          style: const TextStyle(
-            fontFamily: 'Inter',
-            fontWeight: FontWeight.w700,
-          ),
+          style: AppTextStyles.inter16MediumPrimary,
         ),
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
         actions: [
           if (widget.customActions != null) ...widget.customActions!,
           IconButton(
             tooltip: 'Segarkan data',
             onPressed: widget.onRefresh,
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh_rounded),
           ),
         ],
       ),
