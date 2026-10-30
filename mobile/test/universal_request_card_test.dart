@@ -147,7 +147,7 @@ void main() {
       },
     );
 
-    testWidgets('RequestsTab displays unified top tabs and cards', (
+    testWidgets('RequestsTab displays catalog service cards and recent requests', (
       tester,
     ) async {
       final workspace = Workspace({
@@ -168,21 +168,24 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Top TabBar 5 categories
+      // 5 Service Cards
+      expect(find.text('Katalog Pengajuan'), findsOneWidget);
       expect(find.text('Cuti & Izin'), findsOneWidget);
       expect(find.text('Lembur'), findsOneWidget);
       expect(find.text('Reimbursement'), findsOneWidget);
       expect(find.text('Petty Cash'), findsOneWidget);
       expect(find.text('General Affair'), findsOneWidget);
 
-      // Status filters
-      expect(find.text('Semua'), findsOneWidget);
-      expect(find.text('Menunggu'), findsWidgets);
-      expect(find.text('Disetujui'), findsWidgets);
-      expect(find.text('Perlu Revisi'), findsWidgets);
+      // Recent Requests section
+      expect(find.text('Pengajuan Terkini'), findsOneWidget);
 
-      // Active tab is Cuti: FAB and Cuti card rendered
-      expect(find.text('Ajukan Cuti'), findsOneWidget);
+      // Scroll to reveal recent request cards
+      await tester.scrollUntilVisible(
+        find.text('Cuti tahunan'),
+        200,
+        scrollable: find.byType(Scrollable),
+      );
+
       expect(find.byType(UniversalRequestCard), findsWidgets);
       expect(find.text('Cuti tahunan'), findsOneWidget);
     });

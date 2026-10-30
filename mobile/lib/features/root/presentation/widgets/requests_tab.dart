@@ -7,52 +7,14 @@ import '../../../requests/request_form.dart';
 import '../../../requests/request_detail.dart';
 import '../../../requests/request_notifications.dart';
 import '../../../requests/presentation/widgets/universal_request_card/universal_request_card.dart';
+import '../../../requests/presentation/widgets/services_hub/service_module_card.dart';
 import '../../../requests/presentation/models/mock_universal_requests.dart';
+import '../../../requests/presentation/pages/modules/dedicated_module_screen.dart';
 
-class _TabMeta {
-  final SubmissionKind kind;
-  final String label;
-  final String fabText;
-
-  const _TabMeta({
-    required this.kind,
-    required this.label,
-    required this.fabText,
-  });
-}
-
-const List<_TabMeta> _tabCategories = [
-  _TabMeta(
-    kind: SubmissionKind.cuti,
-    label: 'Cuti & Izin',
-    fabText: 'Ajukan Cuti',
-  ),
-  _TabMeta(
-    kind: SubmissionKind.lembur,
-    label: 'Lembur',
-    fabText: 'Ajukan Lembur',
-  ),
-  _TabMeta(
-    kind: SubmissionKind.reimbursement,
-    label: 'Reimbursement',
-    fabText: 'Buat Klaim',
-  ),
-  _TabMeta(
-    kind: SubmissionKind.pettyCash,
-    label: 'Petty Cash',
-    fabText: 'Ajukan Kas Kecil',
-  ),
-  _TabMeta(
-    kind: SubmissionKind.generalAffair,
-    label: 'General Affair',
-    fabText: 'Permintaan GA',
-  ),
-];
-
-/// Halaman Pengajuan Terpadu (Single-Page Direct View)
-/// Mengintegrasikan 5 kategori pengajuan mandiri dengan Top Scrollable TabBar,
-/// Dynamic FAB, dan Filter Status inline tanpa banner dekoratif.
-class RequestsTab extends StatefulWidget {
+/// Halaman Hub Pengajuan Utama (Tab 'Pengajuan' di Bottom Navbar)
+/// Berisi 5 Kartu Layanan Penghubung yang mengarah ke Halaman Khusus Mandiri,
+/// serta seksi Pengajuan Terkini untuk pemantauan cepat.
+class RequestsTab extends StatelessWidget {
   const RequestsTab({
     super.key,
     required this.api,
@@ -66,119 +28,67 @@ class RequestsTab extends StatefulWidget {
   final Future<void> Function() onRefresh;
   final Future<void> Function(Widget) open;
 
-  @override
-  State<RequestsTab> createState() => _RequestsTabState();
-}
-
-class _RequestsTabState extends State<RequestsTab>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tabController;
-  SubmissionStatus? _selectedStatusFilter;
-
-  Workspace get w => widget.workspace;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: _tabCategories.length, vsync: this);
-    _tabController.addListener(_onTabChanged);
-  }
-
-  void _onTabChanged() {
-    if (mounted) setState(() {});
-  }
-
-  @override
-  void dispose() {
-    _tabController.removeListener(_onTabChanged);
-    _tabController.dispose();
-    super.dispose();
-  }
-
-  List<UniversalRequestModel> _getRequestsForKind(SubmissionKind kind) {
-    final rows = w.mine('requests');
-    final List<UniversalRequestModel> items = [];
-
-    // 1. Data riil dari workspace
-    for (final r in rows) {
-      final model = UniversalRequestModel.fromMap(r);
-      if (model.kind == kind) {
-        items.add(model);
-      }
-    }
-
-    // 2. Data mock jika belum ada data riil serupa
-    for (final m in mockUniversalRequests) {
-      if (m.kind == kind && !items.any((x) => x.title == m.title)) {
-        items.add(m);
-      }
-    }
-
-    // 3. Filter berdasarkan status jika ada yang dipilih
-    if (_selectedStatusFilter != null) {
-      return items.where((it) => it.status == _selectedStatusFilter).toList();
-    }
-
-    return items;
-  }
-
-  void _openCreateForm(SubmissionKind kind) {
-    widget.open(
-      RequestForm(
-        api: widget.api,
-        workspace: widget.workspace,
-        initialKind: kind.displayName,
-        lockKindSelection: true,
-      ),
-    );
-  }
-
-  Widget _filterChip(SubmissionStatus? status, String label) {
-    final isSelected = _selectedStatusFilter == status;
-    return InkWell(
-      onTap: () => setState(() => _selectedStatusFilter = status),
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0F766E) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected
-                ? const Color(0xFF0F766E)
-                : const Color(0xFFE2E8F0),
-            width: 1.2,
-          ),
-          boxShadow: isSelected
-              ? const [
-                  BoxShadow(
-                    color: Color(0x200F766E),
-                    blurRadius: 6,
-                    offset: Offset(0, 2),
-                  ),
-                ]
-              : null,
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected ? Colors.white : const Color(0xFF64748B),
-          ),
-        ),
-      ),
-    );
-  }
+  Workspace get w => workspace;
 
   @override
   Widget build(BuildContext context) {
     final rows = w.mine('requests');
     final unreadCount = rows.where((r) => r['unread'] == true).length;
-    final activeMeta = _tabCategories[_tabController.index];
+
+    // Gabungkan data request riil dan mock untuk preview pengajuan terkini
+    final allCards = <Widget>[
+      ...rows.map((r) {
+        final model = UniversalRequestModel.fromMap(r);
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: UniversalRequestCard(
+            data: model,
+            onDetailPressed: () => open(
+              RequestDetailScreen(
+                api: api,
+                request: r,
+                own: true,
+              ),
+            ),
+            onRevisePressed: () => open(
+              RequestForm(
+                api: api,
+                workspace: w,
+                initialKind: model.kind.displayName,
+                initialRequest: r,
+              ),
+            ),
+          ),
+        );
+      }),
+      ...mockUniversalRequests
+          .where((m) => !rows.any((r) => text(r, 'title') == m.title))
+          .map((mockItem) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: UniversalRequestCard(
+            data: mockItem,
+            onDetailPressed: () => open(
+              RequestDetailScreen(
+                api: api,
+                request: mockItem.toMap(),
+                own: true,
+              ),
+            ),
+            onRevisePressed: () => open(
+              RequestForm(
+                api: api,
+                workspace: w,
+                initialKind: mockItem.kind.displayName,
+                initialRequest: mockItem.toMap(),
+              ),
+            ),
+          ),
+        );
+      }),
+    ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: const Text(
           'Pengajuan',
@@ -187,16 +97,13 @@ class _RequestsTabState extends State<RequestsTab>
         actions: [
           IconButton(
             tooltip: 'Kalender cuti',
-            onPressed: () => widget.open(
-              LeaveCalendarScreen(api: widget.api, workspace: w),
-            ),
+            onPressed: () => open(LeaveCalendarScreen(api: api, workspace: w)),
             icon: const Icon(Icons.calendar_month_outlined),
           ),
           IconButton(
             tooltip: 'Notifikasi pengajuan',
-            onPressed: () => widget.open(
-              RequestNotificationsScreen(api: widget.api, workspace: w),
-            ),
+            onPressed: () =>
+                open(RequestNotificationsScreen(api: api, workspace: w)),
             icon: Badge.count(
               count: unreadCount,
               isLabelVisible: unreadCount > 0,
@@ -206,7 +113,7 @@ class _RequestsTabState extends State<RequestsTab>
           if (w.data['approvalAccess'] == true)
             IconButton(
               tooltip: 'Persetujuan',
-              onPressed: () => widget.open(ApprovalsScreen(api: widget.api)),
+              onPressed: () => open(ApprovalsScreen(api: api)),
               icon: Badge(
                 label: Text(
                   '${w.rows("requests").where((r) => r["canReview"] == true).length}',
@@ -216,153 +123,222 @@ class _RequestsTabState extends State<RequestsTab>
             ),
           IconButton(
             tooltip: 'Segarkan data',
-            onPressed: widget.onRefresh,
+            onPressed: onRefresh,
             icon: const Icon(Icons.refresh),
           ),
         ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(48),
-          child: Container(
-            alignment: Alignment.centerLeft,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              border: Border(
-                bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1),
-              ),
-            ),
-            child: TabBar(
-              controller: _tabController,
-              isScrollable: true,
-              tabAlignment: TabAlignment.start,
-              indicatorColor: const Color(0xFF0F766E),
-              indicatorWeight: 2.5,
-              labelColor: const Color(0xFF0F766E),
-              labelStyle: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 13,
-              ),
-              unselectedLabelColor: const Color(0xFF64748B),
-              unselectedLabelStyle: const TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 13,
-              ),
-              tabs: _tabCategories.map((meta) => Tab(text: meta.label)).toList(),
-            ),
-          ),
-        ),
-      ),
-      floatingActionButton: Container(
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF0F766E), Color(0xFF14B8A6)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(28),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x330F766E),
-              blurRadius: 10,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        child: FloatingActionButton.extended(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          focusElevation: 0,
-          hoverElevation: 0,
-          highlightElevation: 0,
-          onPressed: () => _openCreateForm(activeMeta.kind),
-          icon: const Icon(Icons.add, color: Colors.white, size: 20),
-          label: Text(
-            activeMeta.fabText,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
-            ),
-          ),
-        ),
       ),
       body: SafeArea(
         top: false,
-        child: Column(
-          children: [
-            // Status Filter Chips
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              color: Colors.white,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _filterChip(null, 'Semua'),
-                    const SizedBox(width: 8),
-                    _filterChip(SubmissionStatus.menunggu, 'Menunggu'),
-                    const SizedBox(width: 8),
-                    _filterChip(SubmissionStatus.disetujui, 'Disetujui'),
-                    const SizedBox(width: 8),
-                    _filterChip(SubmissionStatus.perluRevisi, 'Perlu Revisi'),
-                    const SizedBox(width: 8),
-                    _filterChip(SubmissionStatus.ditolak, 'Ditolak'),
-                  ],
+        child: RefreshIndicator(
+          onRefresh: onRefresh,
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
+            children: [
+              // ==================== 1. KATALOG 5 MODUL PENGAJUAN ====================
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Katalog Pengajuan',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF0F172A),
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: () => open(RequestForm(api: api, workspace: w)),
+                    icon: const Icon(Icons.add, size: 16),
+                    label: const Text(
+                      'Buat pengajuan',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  const spacing = 12.0;
+                  final itemWidth = (constraints.maxWidth - spacing) / 2;
+                  return Wrap(
+                    spacing: spacing,
+                    runSpacing: spacing,
+                    children: [
+                      // 1. Cuti & Izin
+                      SizedBox(
+                        width: itemWidth,
+                        child: ServiceModuleCard(
+                          title: 'Cuti & Izin',
+                          metricTag: 'Sisa 10 Hari',
+                          description: 'Tahunan, sakit & izin kerja',
+                          icon: Icons.event_available_outlined,
+                          onTap: () => open(
+                            DedicatedModuleScreen(
+                              kind: SubmissionKind.cuti,
+                              moduleTitle: 'Pengajuan Cuti & Izin',
+                              keyMetricLabel: 'SISA KUOTA',
+                              keyMetricValue: '10 Hari',
+                              keyMetricIcon: Icons.event_available_outlined,
+                              api: api,
+                              workspace: w,
+                              open: open,
+                              onRefresh: onRefresh,
+                              customActions: [
+                                IconButton(
+                                  tooltip: 'Kalender cuti',
+                                  onPressed: () => open(
+                                    LeaveCalendarScreen(api: api, workspace: w),
+                                  ),
+                                  icon: const Icon(Icons.calendar_month_outlined),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      // 2. Lembur
+                      SizedBox(
+                        width: itemWidth,
+                        child: ServiceModuleCard(
+                          title: 'Lembur',
+                          metricTag: 'Total 4 Jam',
+                          description: 'Tugas lembur & kompensasi',
+                          icon: Icons.access_time_rounded,
+                          onTap: () => open(
+                            DedicatedModuleScreen(
+                              kind: SubmissionKind.lembur,
+                              moduleTitle: 'Pengajuan Lembur',
+                              keyMetricLabel: 'TOTAL LEMBUR',
+                              keyMetricValue: '4 Jam',
+                              keyMetricIcon: Icons.access_time_rounded,
+                              api: api,
+                              workspace: w,
+                              open: open,
+                              onRefresh: onRefresh,
+                            ),
+                          ),
+                        ),
+                      ),
+                      // 3. Reimbursement
+                      SizedBox(
+                        width: itemWidth,
+                        child: ServiceModuleCard(
+                          title: 'Reimbursement',
+                          metricTag: 'Klaim Biaya',
+                          description: 'Transport, makan & klien',
+                          icon: Icons.receipt_long_rounded,
+                          onTap: () => open(
+                            DedicatedModuleScreen(
+                              kind: SubmissionKind.reimbursement,
+                              moduleTitle: 'Klaim Reimbursement',
+                              keyMetricLabel: 'TOTAL KLAIM',
+                              keyMetricValue: 'Rp 850K',
+                              keyMetricIcon: Icons.receipt_long_rounded,
+                              api: api,
+                              workspace: w,
+                              open: open,
+                              onRefresh: onRefresh,
+                            ),
+                          ),
+                        ),
+                      ),
+                      // 4. Petty Cash
+                      SizedBox(
+                        width: itemWidth,
+                        child: ServiceModuleCard(
+                          title: 'Petty Cash',
+                          metricTag: 'Kas Kecil',
+                          description: 'Permohonan dana operasional',
+                          icon: Icons.payments_outlined,
+                          onTap: () => open(
+                            DedicatedModuleScreen(
+                              kind: SubmissionKind.pettyCash,
+                              moduleTitle: 'Pengajuan Petty Cash',
+                              keyMetricLabel: 'KAS KECIL',
+                              keyMetricValue: 'Rp 375K',
+                              keyMetricIcon: Icons.payments_outlined,
+                              api: api,
+                              workspace: w,
+                              open: open,
+                              onRefresh: onRefresh,
+                            ),
+                          ),
+                        ),
+                      ),
+                      // 5. General Affair
+                      SizedBox(
+                        width: itemWidth,
+                        child: ServiceModuleCard(
+                          title: 'General Affair',
+                          metricTag: 'Fasilitas & GA',
+                          description: 'Pengadaan barang & sarana',
+                          icon: Icons.inventory_2_outlined,
+                          onTap: () => open(
+                            DedicatedModuleScreen(
+                              kind: SubmissionKind.generalAffair,
+                              moduleTitle: 'General Affair',
+                              keyMetricLabel: 'PERMOHONAN GA',
+                              keyMetricValue: '1 Aktif',
+                              keyMetricIcon: Icons.inventory_2_outlined,
+                              api: api,
+                              workspace: w,
+                              open: open,
+                              onRefresh: onRefresh,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: 22),
+              const Divider(height: 1, color: Color(0xFFE2E8F0)),
+              const SizedBox(height: 18),
+
+              // ==================== 2. PENGAJUAN TERKINI ====================
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Pengajuan Terkini',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF0F172A),
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                  Text(
+                    '${allCards.length} Pengajuan',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF64748B),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Pantau status dan tindak lanjut pengajuan terbaru Anda.',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFF64748B),
                 ),
               ),
-            ),
-            const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: _tabCategories.map((meta) {
-                  final items = _getRequestsForKind(meta.kind);
-                  return RefreshIndicator(
-                    onRefresh: widget.onRefresh,
-                    child: items.isEmpty
-                        ? ListView(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            padding: const EdgeInsets.fromLTRB(20, 40, 20, 100),
-                            children: [
-                              EmptyState(
-                                'Belum ada pengajuan ${meta.label.toLowerCase()}.',
-                              ),
-                            ],
-                          )
-                        : ListView.builder(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            padding: const EdgeInsets.fromLTRB(16, 14, 16, 100),
-                            itemCount: items.length,
-                            itemBuilder: (context, index) {
-                              final item = items[index];
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: UniversalRequestCard(
-                                  data: item,
-                                  onDetailPressed: () => widget.open(
-                                    RequestDetailScreen(
-                                      api: widget.api,
-                                      request: item.toMap(),
-                                      own: true,
-                                    ),
-                                  ),
-                                  onRevisePressed: () => widget.open(
-                                    RequestForm(
-                                      api: widget.api,
-                                      workspace: widget.workspace,
-                                      initialKind: item.kind.displayName,
-                                      initialRequest: item.toMap(),
-                                      lockKindSelection: true,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                  );
-                }).toList(),
-              ),
-            ),
-          ],
+              const SizedBox(height: 14),
+
+              if (allCards.isEmpty)
+                const EmptyState('Belum ada pengajuan aktif saat ini.')
+              else
+                ...allCards,
+            ],
+          ),
         ),
       ),
     );

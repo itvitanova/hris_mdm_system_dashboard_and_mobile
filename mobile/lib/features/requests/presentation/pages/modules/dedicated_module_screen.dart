@@ -6,15 +6,16 @@ import 'package:mdm_hris/features/requests/request_detail.dart';
 import 'package:mdm_hris/features/requests/request_form.dart';
 import 'package:mdm_hris/features/requests/presentation/models/mock_universal_requests.dart';
 import 'package:mdm_hris/features/requests/presentation/widgets/universal_request_card/universal_request_card.dart';
+import 'package:mdm_hris/features/requests/presentation/widgets/services_hub/module_stat_card.dart';
 
-/// Halaman Khusus (Dedicated Screen) untuk Setiap Modul Layanan Mandiri
+/// Halaman Khusus (Dedicated Screen) untuk Setiap Modul Pengajuan Mandiri
+/// Dilengkapi rekap statistik 2x2, filter status, dan header riwayat dengan tombol (+) tanpa FAB dan tanpa banner.
 class DedicatedModuleScreen extends StatefulWidget {
   final SubmissionKind kind;
   final String moduleTitle;
-  final String heroTitle;
-  final String heroSubtitle;
-  final IconData moduleIcon;
-  final String actionButtonText;
+  final String keyMetricLabel;
+  final String keyMetricValue;
+  final IconData keyMetricIcon;
   final ApiClient api;
   final Workspace workspace;
   final Future<void> Function(Widget) open;
@@ -25,10 +26,9 @@ class DedicatedModuleScreen extends StatefulWidget {
     super.key,
     required this.kind,
     required this.moduleTitle,
-    required this.heroTitle,
-    required this.heroSubtitle,
-    required this.moduleIcon,
-    required this.actionButtonText,
+    required this.keyMetricLabel,
+    required this.keyMetricValue,
+    required this.keyMetricIcon,
     required this.api,
     required this.workspace,
     required this.open,
@@ -45,7 +45,7 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
 
   Workspace get w => widget.workspace;
 
-  List<UniversalRequestModel> _getModuleRequests() {
+  List<UniversalRequestModel> _getAllKindRequests() {
     final rows = w.mine('requests');
     final List<UniversalRequestModel> items = [];
 
@@ -64,11 +64,6 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
       }
     }
 
-    // 3. Filter berdasarkan status jika ada yang dipilih
-    if (_selectedStatusFilter != null) {
-      return items.where((it) => it.status == _selectedStatusFilter).toList();
-    }
-
     return items;
   }
 
@@ -83,9 +78,65 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
     );
   }
 
+  Widget _filterChip(SubmissionStatus? status, String label) {
+    final isSelected = _selectedStatusFilter == status;
+    return InkWell(
+      onTap: () => setState(() => _selectedStatusFilter = status),
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF0F766E) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected
+                ? const Color(0xFF0F766E)
+                : const Color(0xFFE2E8F0),
+            width: 1.2,
+          ),
+          boxShadow: isSelected
+              ? const [
+                  BoxShadow(
+                    color: Color(0x200F766E),
+                    blurRadius: 6,
+                    offset: Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            color: isSelected ? Colors.white : const Color(0xFF64748B),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final requests = _getModuleRequests();
+    final allRequests = _getAllKindRequests();
+    final approvedCount = allRequests
+        .where((r) => r.status == SubmissionStatus.disetujui)
+        .length;
+    final pendingCount = allRequests
+        .where((r) => r.status == SubmissionStatus.menunggu)
+        .length;
+    final rejectedCount = allRequests
+        .where((r) =>
+            r.status == SubmissionStatus.ditolak ||
+            r.status == SubmissionStatus.perluRevisi)
+        .length;
+
+    // Filter daftar sesuai status terpilih
+    final filteredRequests = _selectedStatusFilter != null
+        ? allRequests
+            .where((it) => it.status == _selectedStatusFilter)
+            .toList()
+        : allRequests;
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -109,105 +160,79 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
           onRefresh: widget.onRefresh,
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
+            padding: const EdgeInsets.fromLTRB(18, 14, 18, 32),
             children: [
-              // 1. HERO METRIC SUMMARY CARD
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: const Color(0xFFE2E8F0),
-                    width: 1.2,
+              // ==================== 1. REKAP STATISTIK 2X2 ====================
+              Row(
+                children: [
+                  Expanded(
+                    child: ModuleStatCard(
+                      label: 'DISETUJUI',
+                      value: '$approvedCount',
+                      icon: Icons.check_circle_outline_rounded,
+                      isSelected:
+                          _selectedStatusFilter == SubmissionStatus.disetujui,
+                      onTap: () => setState(() {
+                        _selectedStatusFilter = _selectedStatusFilter ==
+                                SubmissionStatus.disetujui
+                            ? null
+                            : SubmissionStatus.disetujui;
+                      }),
+                    ),
                   ),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x080F172A),
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ModuleStatCard(
+                      label: 'MENUNGGU',
+                      value: '$pendingCount',
+                      icon: Icons.access_time_rounded,
+                      isSelected:
+                          _selectedStatusFilter == SubmissionStatus.menunggu,
+                      onTap: () => setState(() {
+                        _selectedStatusFilter =
+                            _selectedStatusFilter == SubmissionStatus.menunggu
+                                ? null
+                                : SubmissionStatus.menunggu;
+                      }),
                     ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF0FDFA),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: const Color(0xFFCCFBF1),
-                          width: 1,
-                        ),
-                      ),
-                      alignment: Alignment.center,
-                      child: Icon(
-                        widget.moduleIcon,
-                        size: 24,
-                        color: const Color(0xFF0F766E),
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.heroTitle,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF0F172A),
-                              letterSpacing: -0.3,
-                            ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            widget.heroSubtitle,
-                            style: const TextStyle(
-                              fontSize: 11.5,
-                              color: Color(0xFF64748B),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-
-              const SizedBox(height: 14),
-
-              // 2. TOMBOL AKSI PRIMER (BUAT PENGAJUAN MODUL INI)
-              SizedBox(
-                width: double.infinity,
-                height: 44,
-                child: ElevatedButton.icon(
-                  onPressed: _openCreateForm,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0F766E),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: ModuleStatCard(
+                      label: 'DITOLAK / REVISI',
+                      value: '$rejectedCount',
+                      icon: Icons.highlight_off_rounded,
+                      isSelected:
+                          _selectedStatusFilter == SubmissionStatus.ditolak ||
+                              _selectedStatusFilter ==
+                                  SubmissionStatus.perluRevisi,
+                      onTap: () => setState(() {
+                        _selectedStatusFilter =
+                            _selectedStatusFilter == SubmissionStatus.ditolak
+                                ? null
+                                : SubmissionStatus.ditolak;
+                      }),
                     ),
                   ),
-                  icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
-                  label: Text(
-                    widget.actionButtonText,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ModuleStatCard(
+                      label: widget.keyMetricLabel,
+                      value: widget.keyMetricValue,
+                      icon: widget.keyMetricIcon,
+                      isSelected: false,
                     ),
                   ),
-                ),
+                ],
               ),
 
               const SizedBox(height: 16),
 
-              // 3. STATUS FILTER TABS
+              // ==================== 2. FILTER STATUS INLINE ====================
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
@@ -225,10 +250,83 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
 
-              // 4. LIST KARTU PENGAJUAN TERISOLASI
-              if (requests.isEmpty)
+              // ==================== 3. HEADER RIWAYAT DENGAN TOMBOL (+) ====================
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x080F172A),
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                  color: Colors.white,
+                  border: Border.all(
+                    color: const Color(0xFFE2E8F0),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Riwayat Pengajuan ${widget.kind.displayName} (${filteredRequests.length})',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF0F172A),
+                        ),
+                      ),
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [
+                            Color(0xFF0F766E),
+                            Color(0xFF14B8A6),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x250F766E),
+                            blurRadius: 6,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: _openCreateForm,
+                          borderRadius: BorderRadius.circular(8),
+                          child: const Padding(
+                            padding: EdgeInsets.all(7),
+                            child: Icon(
+                              Icons.add_rounded,
+                              size: 18,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // ==================== 4. DAFTAR KARTU PENGAJUAN ====================
+              if (filteredRequests.isEmpty)
                 Container(
                   padding: const EdgeInsets.symmetric(vertical: 40),
                   alignment: Alignment.center,
@@ -249,11 +347,28 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                           color: Colors.grey.shade600,
                         ),
                       ),
+                      const SizedBox(height: 12),
+                      TextButton.icon(
+                        onPressed: _openCreateForm,
+                        icon: const Icon(
+                          Icons.add_rounded,
+                          size: 16,
+                          color: Color(0xFF0D9488),
+                        ),
+                        label: const Text(
+                          'Buat Pengajuan Baru',
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF0D9488),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 )
               else
-                ...requests.map(
+                ...filteredRequests.map(
                   (model) => Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: UniversalRequestCard(
@@ -278,35 +393,6 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                   ),
                 ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _filterChip(SubmissionStatus? status, String label) {
-    final isSelected = _selectedStatusFilter == status;
-    return InkWell(
-      onTap: () => setState(() => _selectedStatusFilter = status),
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0F766E) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected
-                ? const Color(0xFF0F766E)
-                : const Color(0xFFE2E8F0),
-            width: 1,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 11.5,
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected ? Colors.white : const Color(0xFF64748B),
           ),
         ),
       ),

@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mdm_hris/core/api_client.dart';
 import 'package:mdm_hris/core/workspace.dart';
-import 'package:mdm_hris/features/requests/request_form.dart';
+import 'package:mdm_hris/features/requests/presentation/pages/modules/dedicated_module_screen.dart';
+import 'package:mdm_hris/features/requests/presentation/widgets/services_hub/service_module_card.dart';
 import 'package:mdm_hris/features/root/presentation/widgets/requests_tab.dart';
 
 void main() {
-  group('RequestsTab Unified Single-Page Tests', () {
+  group('RequestsTab Hub Portal Tests', () {
     testWidgets(
-      'renders 5 category tabs and dynamically updates FAB and card list on tab change',
+      'renders 5 service cards and opens DedicatedModuleScreen on tap',
       (tester) async {
         final workspace = Workspace({
           'requests': [],
@@ -29,47 +30,26 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        // 1. Initial State: Cuti tab is active
+        // 1. Verify 5 Service Cards in catalog
+        expect(find.text('Katalog Pengajuan'), findsOneWidget);
+        expect(find.byType(ServiceModuleCard), findsNWidgets(5));
         expect(find.text('Cuti & Izin'), findsOneWidget);
-        expect(find.text('Ajukan Cuti'), findsOneWidget);
-        expect(find.text('Cuti tahunan'), findsOneWidget);
-        expect(find.text('Lembur Maintenance & Backup Server'), findsNothing);
+        expect(find.text('Lembur'), findsOneWidget);
+        expect(find.text('Reimbursement'), findsOneWidget);
+        expect(find.text('Petty Cash'), findsOneWidget);
+        expect(find.text('General Affair'), findsOneWidget);
 
-        // 2. Tap FAB on Cuti tab -> opens locked RequestForm with kind 'Cuti'
-        await tester.tap(find.text('Ajukan Cuti'));
-        await tester.pumpAndSettle();
-        expect(openedWidget, isA<RequestForm>());
-        expect((openedWidget as RequestForm).initialKind, 'Cuti');
-        expect((openedWidget as RequestForm).lockKindSelection, isTrue);
+        // 2. Verify Pengajuan Terkini section
+        expect(find.text('Pengajuan Terkini'), findsOneWidget);
 
-        // 3. Switch to Lembur tab
-        await tester.tap(find.text('Lembur'));
+        // 3. Tap Cuti & Izin card -> routes to DedicatedModuleScreen
+        await tester.tap(find.text('Cuti & Izin'));
         await tester.pumpAndSettle();
 
-        expect(find.text('Ajukan Lembur'), findsOneWidget);
-        expect(find.text('Lembur Maintenance & Backup Server'), findsOneWidget);
-        expect(find.text('Cuti tahunan'), findsNothing);
-
-        // 4. Switch to Reimbursement tab
-        await tester.tap(find.text('Reimbursement'));
-        await tester.pumpAndSettle();
-
-        expect(find.text('Buat Klaim'), findsOneWidget);
-        expect(find.text('Biaya Transport & Akomodasi Klien'), findsOneWidget);
-
-        // 5. Switch to Petty Cash tab
-        await tester.tap(find.text('Petty Cash'));
-        await tester.pumpAndSettle();
-
-        expect(find.text('Ajukan Kas Kecil'), findsOneWidget);
-        expect(find.text('Konsumsi Rapat Bulanan Divisi'), findsOneWidget);
-
-        // 6. Switch to General Affair tab
-        await tester.tap(find.text('General Affair'));
-        await tester.pumpAndSettle();
-
-        expect(find.text('Permintaan GA'), findsOneWidget);
-        expect(find.text('Pengadaan Kursi Kerja Ergonomis'), findsOneWidget);
+        expect(openedWidget, isA<DedicatedModuleScreen>());
+        final screen = openedWidget as DedicatedModuleScreen;
+        expect(screen.moduleTitle, 'Pengajuan Cuti & Izin');
+        expect(screen.keyMetricLabel, 'SISA KUOTA');
       },
     );
   });

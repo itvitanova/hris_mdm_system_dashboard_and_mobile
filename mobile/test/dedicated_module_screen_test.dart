@@ -10,7 +10,7 @@ import 'package:mdm_hris/features/requests/request_form.dart';
 void main() {
   group('DedicatedModuleScreen Tests', () {
     testWidgets(
-      'renders dedicated cuti module with isolation and locked form action',
+      'renders dedicated cuti module with 2x2 stats and header (+) action',
       (tester) async {
         final workspace = Workspace({
           'requests': [],
@@ -25,12 +25,10 @@ void main() {
             builder: (context, child) => MaterialApp(
               home: DedicatedModuleScreen(
                 kind: SubmissionKind.cuti,
-                moduleTitle: 'Manajemen Cuti',
-                heroTitle: 'Sisa Kuota Cuti Tahunan',
-                heroSubtitle:
-                    'Gunakan saldo cuti dengan bijak dan rencanakan liburanmu.',
-                moduleIcon: Icons.beach_access_rounded,
-                actionButtonText: 'Ajukan Cuti Baru',
+                moduleTitle: 'Pengajuan Cuti & Izin',
+                keyMetricLabel: 'SISA KUOTA',
+                keyMetricValue: '10 Hari',
+                keyMetricIcon: Icons.event_available_outlined,
                 api: ApiClient(),
                 workspace: workspace,
                 open: (w) async => openedWidget = w,
@@ -41,19 +39,21 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        // 1. Check module header & hero card
-        expect(find.text('Manajemen Cuti'), findsOneWidget);
-        expect(find.text('Sisa Kuota Cuti Tahunan'), findsOneWidget);
-        expect(find.text('Ajukan Cuti Baru'), findsOneWidget);
+        // 1. Check title & 2x2 stat cards
+        expect(find.text('Pengajuan Cuti & Izin'), findsOneWidget);
+        expect(find.text('DISETUJUI'), findsOneWidget);
+        expect(find.text('MENUNGGU'), findsWidgets);
+        expect(find.text('DITOLAK / REVISI'), findsOneWidget);
+        expect(find.text('SISA KUOTA'), findsOneWidget);
+        expect(find.text('10 Hari'), findsOneWidget);
 
-        // 2. Verify strict isolation: Only cuti items appear, not reimbursement/lembur/petty cash
+        // 2. Verify strict isolation: Only cuti items appear
         expect(find.text('Cuti tahunan'), findsOneWidget);
         expect(find.text('Biaya Transport & Akomodasi Klien'), findsNothing);
         expect(find.text('Lembur Maintenance & Backup Server'), findsNothing);
-        expect(find.text('Konsumsi Rapat Bulanan Divisi'), findsNothing);
 
-        // 3. Tap action button to verify it opens RequestForm with locked kind
-        await tester.tap(find.text('Ajukan Cuti Baru'));
+        // 3. Tap (+) icon button in riwayat header -> opens RequestForm locked to Cuti
+        await tester.tap(find.byIcon(Icons.add_rounded));
         await tester.pumpAndSettle();
         expect(openedWidget, isA<RequestForm>());
         final form = openedWidget as RequestForm;
@@ -63,7 +63,7 @@ void main() {
     );
 
     testWidgets(
-      'filters requests by status chips correctly in dedicated module',
+      'filters requests by status chips and stat card taps',
       (tester) async {
         final workspace = Workspace({
           'requests': [
@@ -94,11 +94,10 @@ void main() {
             builder: (context, child) => MaterialApp(
               home: DedicatedModuleScreen(
                 kind: SubmissionKind.cuti,
-                moduleTitle: 'Manajemen Cuti',
-                heroTitle: 'Sisa Kuota Cuti Tahunan',
-                heroSubtitle: 'Saldo cuti tahunan aktif.',
-                moduleIcon: Icons.beach_access_rounded,
-                actionButtonText: 'Ajukan Cuti',
+                moduleTitle: 'Pengajuan Cuti & Izin',
+                keyMetricLabel: 'SISA KUOTA',
+                keyMetricValue: '10 Hari',
+                keyMetricIcon: Icons.event_available_outlined,
                 api: ApiClient(),
                 workspace: workspace,
                 open: (w) async {},
@@ -109,7 +108,7 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        // Initial 'Semua' filter: both items appear
+        // Initial state: both items appear
         expect(find.text('Cuti Sakit Rawat Inap'), findsOneWidget);
         expect(find.text('Cuti Menikah'), findsOneWidget);
 
