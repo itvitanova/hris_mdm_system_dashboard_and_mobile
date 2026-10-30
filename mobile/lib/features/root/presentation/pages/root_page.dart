@@ -11,6 +11,7 @@ import '../../../requests/request_detail.dart';
 import '../../../requests/request_notifications.dart';
 import '../widgets/dashboard_tab.dart';
 import '../widgets/requests_tab.dart';
+import '../widgets/payroll_tab.dart';
 import '../widgets/profile_tab.dart';
 
 class RootPage extends StatefulWidget {
@@ -109,6 +110,12 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
     ApprovalsScreen(
       api: widget.api,
     ),
+    PayrollTab(
+      api: widget.api,
+      workspace: widget.workspace,
+      onRefresh: widget.onRefresh,
+      open: open,
+    ),
     ProfileTab(
       api: widget.api,
       workspace: widget.workspace,
@@ -188,7 +195,7 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
             height: 24,
             colorFilter: const ColorFilter.mode(AppColors.deepTeal, BlendMode.srcIn),
           ),
-          label: 'Layanan',
+          label: 'Pengajuan',
           badgeCount: unreadCount,
         ),
         inactiveIcon: _tabIcon(
@@ -196,10 +203,10 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
             'assets/icon/note-add.svg',
             colorFilter: const ColorFilter.mode(Colors.grey, BlendMode.srcIn),
           ),
-          label: 'Layanan',
+          label: 'Pengajuan',
           badgeCount: unreadCount,
         ),
-        title: 'Layanan',
+        title: 'Pengajuan',
         textStyle: AppTextStyles.inter12MediumDeepTeal,
         activeColorPrimary: AppColors.deepTeal,
         inactiveColorPrimary: Colors.grey,
@@ -225,6 +232,28 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
           badgeCount: pendingApprovals,
         ),
         title: 'Persetujuan',
+        textStyle: AppTextStyles.inter12MediumDeepTeal,
+        activeColorPrimary: AppColors.deepTeal,
+        inactiveColorPrimary: Colors.grey,
+      ),
+      PersistentBottomNavBarItem(
+        icon: _tabIcon(
+          svg: SvgPicture.asset(
+            'assets/icon/empty-wallet-active.svg',
+            width: 24,
+            height: 24,
+            colorFilter: const ColorFilter.mode(AppColors.deepTeal, BlendMode.srcIn),
+          ),
+          label: 'Slip gaji',
+        ),
+        inactiveIcon: _tabIcon(
+          svg: SvgPicture.asset(
+            'assets/icon/empty-wallet.svg',
+            colorFilter: const ColorFilter.mode(Colors.grey, BlendMode.srcIn),
+          ),
+          label: 'Slip gaji',
+        ),
+        title: 'Slip gaji',
         textStyle: AppTextStyles.inter12MediumDeepTeal,
         activeColorPrimary: AppColors.deepTeal,
         inactiveColorPrimary: Colors.grey,
