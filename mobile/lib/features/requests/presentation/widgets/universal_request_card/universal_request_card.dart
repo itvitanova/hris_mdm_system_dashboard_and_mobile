@@ -4,7 +4,6 @@ import '../../../domain/entities/submission_status.dart';
 import '../../../domain/entities/universal_request_item.dart';
 import 'request_card_config.dart';
 import 'request_revision_box.dart';
-import 'request_segmented_stepper.dart';
 
 export '../../../domain/entities/submission_kind.dart';
 export '../../../domain/entities/submission_status.dart';
@@ -14,7 +13,8 @@ export 'request_revision_box.dart';
 export 'request_segmented_stepper.dart';
 
 /// Universal Request Card Widget
-/// Dilengkapi Judul Tipe Pengajuan (Eyebrow), Judul Bebas Elipsis, dan Stepper Murni.
+/// Desain scannable, tenang, dan bersih dengan Status Pill di pojok kanan atas,
+/// baris metadata terstruktur, dan chevron subtle (tanpa stepper berat / tombol berlebih).
 class UniversalRequestCard extends StatelessWidget {
   final UniversalRequestModel data;
   final VoidCallback? onCardTap;
@@ -58,202 +58,175 @@ class UniversalRequestCard extends StatelessWidget {
           clipBehavior: Clip.antiAlias,
           child: Stack(
             children: [
-              // 1. Aksen Garis Vertikal Kiri
+              // 1. Aksen Garis Vertikal Kiri Tipis & Elegan (3.5px)
               Positioned(
                 left: 0,
                 top: 0,
                 bottom: 0,
-                width: 6.w,
+                width: 3.5.w,
                 child: Container(color: statusConfig.barColor),
               ),
 
               // 2. Konten Utama
               Padding(
-                padding: EdgeInsets.fromLTRB(20.w, 15.h, 16.w, 15.h),
+                padding: EdgeInsets.fromLTRB(16.w, 14.h, 16.w, 14.h),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // BARIS 1: Icon Mint + Type Title + Judul Custom (Full Width, No Ellipsis)
+                    // BARIS 1: Icon Squircle + Judul & Subtitle + Status Pill di Pojok Kanan Atas
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Mint Icon Box 40x40
+                        // Mint Icon Box 38x38
                         Container(
-                          width: 40.w,
-                          height: 40.w,
+                          width: 38.w,
+                          height: 38.w,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFE6F7F4),
+                            color: const Color(0xFFF0FDFA),
                             borderRadius: BorderRadius.circular(10.r),
-                            border: Border.all(color: const Color(0xFFA7F3D0)),
+                            border: Border.all(
+                              color: const Color(0xFFCCFBF1),
+                              width: 0.8,
+                            ),
                           ),
                           alignment: Alignment.center,
                           child: Icon(
                             kindConfig.icon,
-                            size: 19.w,
+                            size: 18.w,
                             color: const Color(0xFF0F766E),
                           ),
                         ),
                         SizedBox(width: 12.w),
 
-                        // Title & Tags Column
+                        // Title & Metadata
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // TYPE TITLE EYEBROW
-                              Text(
-                                kindConfig.typeTitle.toUpperCase(),
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF0F766E),
-                                  letterSpacing: 0.6,
-                                ),
-                              ),
-                              SizedBox(height: 2.h),
-
-                              // Judul 100% Bebas Elipsis (Auto Multi-Line)
                               Text(
                                 data.title,
-                                softWrap: true,
-                                overflow: TextOverflow.visible,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
-                                  fontSize: 15,
+                                  fontFamily: 'Inter',
+                                  fontSize: 14.5,
                                   fontWeight: FontWeight.w700,
                                   color: Color(0xFF0F172A),
                                   height: 1.3,
                                   letterSpacing: -0.2,
                                 ),
                               ),
-
-                              SizedBox(height: 6.h),
-
-                              // Tag Baris: [METRIK] [STATUS HALUS] Subtitle
-                              Wrap(
-                                crossAxisAlignment: WrapCrossAlignment.center,
-                                spacing: 6.w,
-                                runSpacing: 4.h,
+                              SizedBox(height: 3.h),
+                              // Baris Metadata Ringkas & Tenang
+                              Row(
                                 children: [
-                                  // Metric Tag Chip (e.g. [1 HARI])
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 7.w,
-                                      vertical: 2.5.h,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFE6F7F4),
-                                      borderRadius: BorderRadius.circular(5.r),
-                                      border: Border.all(
-                                        color: const Color(0xFFA7F3D0),
-                                      ),
-                                    ),
+                                  Flexible(
                                     child: Text(
-                                      kindConfig.metricTag(data),
+                                      '${kindConfig.typeTitle} · ${kindConfig.metricTag(data)}',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
+                                        fontFamily: 'Inter',
                                         fontSize: 11,
-                                        fontWeight: FontWeight.w700,
-                                        color: Color(0xFF0F766E),
-                                        letterSpacing: 0.2,
+                                        fontWeight: FontWeight.w500,
+                                        color: Color(0xFF64748B),
+                                        letterSpacing: 0.1,
                                       ),
                                     ),
                                   ),
-
-                                  // Status Badge Inline Bersih (Tanpa Icon)
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 7.w,
-                                      vertical: 2.5.h,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: statusConfig.badgeBg,
-                                      borderRadius: BorderRadius.circular(5.r),
-                                      border: Border.all(
-                                        color: statusConfig.badgeBorder,
-                                      ),
-                                    ),
-                                    child: Text(
-                                      statusConfig.label,
-                                      style: TextStyle(
-                                        fontSize: 10.5,
-                                        fontWeight: FontWeight.w600,
-                                        color: statusConfig.textColor,
-                                      ),
-                                    ),
-                                  ),
-
-                                  // Subtitle Ringkas
-                                  if (kindConfig.secondaryMeta(data) != null)
+                                  if (kindConfig.secondaryMeta(data) != null) ...[
                                     Text(
-                                      kindConfig.secondaryMeta(data)!,
+                                      ' ${kindConfig.secondaryMeta(data)}',
                                       style: const TextStyle(
-                                        fontSize: 11.5,
+                                        fontFamily: 'Inter',
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w400,
                                         color: Color(0xFF94A3B8),
                                       ),
                                     ),
+                                  ],
                                 ],
                               ),
                             ],
                           ),
                         ),
+                        SizedBox(width: 8.w),
+
+                        // Status Pill di Pojok Kanan Atas
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8.w,
+                            vertical: 3.5.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: statusConfig.badgeBg,
+                            borderRadius: BorderRadius.circular(6.r),
+                            border: Border.all(
+                              color: statusConfig.badgeBorder,
+                              width: 0.8,
+                            ),
+                          ),
+                          child: Text(
+                            statusConfig.label,
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: statusConfig.textColor,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
 
-                    // BARIS 2: Deskripsi Keperluan (Prosa Bersih Tanpa Boks)
+                    // BARIS 2: Deskripsi Keperluan (Maksimal 2 baris elipsis agar rapi)
                     if (data.description != null &&
                         data.description!.trim().isNotEmpty &&
                         data.description != '-') ...[
-                      SizedBox(height: 10.h),
+                      SizedBox(height: 8.h),
                       Text(
                         data.description!,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          fontSize: 12.5,
+                          fontFamily: 'Inter',
+                          fontSize: 12,
                           fontWeight: FontWeight.w400,
                           color: Color(0xFF475569),
-                          height: 1.4,
+                          height: 1.35,
                         ),
                       ),
                     ],
 
-                    SizedBox(height: 12.h),
-
-                    // BARIS 3: STEPPER ATAU REVISION BOX
-                    if (isRevision && data.reviewNote != null)
+                    // BARIS 3: JIKA PERLU REVISI (Tampilkan Box Revisi + Tombol Aksi Kritis)
+                    if (isRevision && data.reviewNote != null) ...[
+                      SizedBox(height: 10.h),
                       RequestRevisionBox(
                         note: data.reviewNote!,
                         reviewerName: data.reviewedBy,
-                      )
-                    else
-                      RequestSegmentedStepper(data: data),
-
-                    SizedBox(height: 12.h),
-                    const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                    SizedBox(height: 10.h),
-
-                    // BARIS 4: Tanggal di Kiri & Tombol Aksi di Kanan
-                    SizedBox(
-                      width: double.infinity,
-                      child: Wrap(
-                        alignment: WrapAlignment.spaceBetween,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: 8.w,
-                        runSpacing: 8.h,
+                      ),
+                      SizedBox(height: 10.h),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
                                 Icons.calendar_today_outlined,
-                                size: 13.w,
+                                size: 12.w,
                                 color: const Color(0xFF94A3B8),
                               ),
-                              SizedBox(width: 6.w),
+                              SizedBox(width: 5.w),
                               Text(
                                 RequestCardHelper.formatDateRange(
                                   data.startDate,
                                   data.endDate,
                                 ),
                                 style: const TextStyle(
+                                  fontFamily: 'Inter',
                                   fontSize: 11,
                                   fontWeight: FontWeight.w500,
                                   color: Color(0xFF64748B),
@@ -261,114 +234,94 @@ class UniversalRequestCard extends StatelessWidget {
                               ),
                             ],
                           ),
-
-                          if (isRevision)
-                            InkWell(
-                              onTap: onRevisePressed,
-                              borderRadius: BorderRadius.circular(8.r),
-                              child: Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 10.w,
-                                  vertical: 6.h,
-                                ),
-                                decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [
-                                      Color(0xFFE11D48),
-                                      Color(0xFFBE123C),
-                                    ],
-                                  ),
-                                  borderRadius: BorderRadius.circular(8.r),
-                                  border: Border.all(
-                                    color: const Color(0x59FFFFFF),
-                                    width: 1,
-                                  ),
-                                  boxShadow: const [
-                                    BoxShadow(
-                                      color: Color(0x28E11D48),
-                                      blurRadius: 6,
-                                      offset: Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.refresh_rounded,
-                                      size: 13.w,
-                                      color: Colors.white,
-                                    ),
-                                    SizedBox(width: 4.w),
-                                    const Text(
-                                      'Perbaiki pengajuan',
-                                      style: TextStyle(
-                                        fontSize: 11.5,
-                                        fontWeight: FontWeight.w700,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                          InkWell(
+                            onTap: onRevisePressed,
+                            borderRadius: BorderRadius.circular(6.r),
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 10.w,
+                                vertical: 5.5.h,
                               ),
-                            )
-                          else
-                            InkWell(
-                              onTap: onDetailPressed,
-                              borderRadius: BorderRadius.circular(8.r),
-                              child: Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 10.w,
-                                  vertical: 6.h,
-                                ),
-                                decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [
-                                      Color(0xFF0F766E),
-                                      Color(0xFF14B8A6),
-                                    ],
-                                  ),
-                                  borderRadius: BorderRadius.circular(8.r),
-                                  border: Border.all(
-                                    color: const Color(0x59FFFFFF),
-                                    width: 1,
-                                  ),
-                                  boxShadow: const [
-                                    BoxShadow(
-                                      color: Color(0x200F766E),
-                                      blurRadius: 6,
-                                      offset: Offset(0, 2),
-                                    ),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    Color(0xFFE11D48),
+                                    Color(0xFFBE123C),
                                   ],
                                 ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.description_outlined,
-                                      size: 13.w,
+                                borderRadius: BorderRadius.circular(6.r),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Color(0x28E11D48),
+                                    blurRadius: 4,
+                                    offset: Offset(0, 1),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.refresh_rounded,
+                                    size: 12.w,
+                                    color: Colors.white,
+                                  ),
+                                  SizedBox(width: 4.w),
+                                  const Text(
+                                    'Perbaiki pengajuan',
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
                                       color: Colors.white,
                                     ),
-                                    SizedBox(width: 4.w),
-                                    const Text(
-                                      'Rincian dan dokumen',
-                                      style: TextStyle(
-                                        fontSize: 11.5,
-                                        fontWeight: FontWeight.w700,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
                             ),
+                          ),
                         ],
                       ),
-                    ),
+                    ] else ...[
+                      // BARIS 3 NORMAL: Tanggal di Kiri & Chevron Subtle '>' di Kanan
+                      SizedBox(height: 10.h),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.calendar_today_outlined,
+                                size: 12.w,
+                                color: const Color(0xFF94A3B8),
+                              ),
+                              SizedBox(width: 5.w),
+                              Text(
+                                RequestCardHelper.formatDateRange(
+                                  data.startDate,
+                                  data.endDate,
+                                ),
+                                style: const TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF64748B),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Icon(
+                            Icons.chevron_right_rounded,
+                            size: 18.w,
+                            color: const Color(0xFF94A3B8),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),

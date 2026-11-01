@@ -5,6 +5,7 @@ import 'package:mdm_hris/core/api_client.dart';
 import 'package:mdm_hris/core/workspace.dart';
 import 'package:mdm_hris/features/requests/presentation/pages/modules/dedicated_module_screen.dart';
 import 'package:mdm_hris/features/requests/presentation/widgets/services_hub/service_module_card.dart';
+import 'package:mdm_hris/features/requests/request_detail.dart';
 import 'package:mdm_hris/features/requests/request_form.dart';
 import 'package:mdm_hris/features/root/presentation/widgets/requests_tab.dart';
 
@@ -44,7 +45,7 @@ void main() {
 
         // 1. Verify Hero Action Banner
         expect(find.text('Pusat Layanan Mandiri'), findsOneWidget);
-        expect(find.text('Buat Pengajuan Baru'), findsOneWidget);
+        expect(find.text('Pusat Persetujuan'), findsOneWidget);
 
         // 2. Verify 5 Service Cards in catalog (1 featured + 4 grid)
         expect(find.text('Katalog Pengajuan'), findsOneWidget);
@@ -82,7 +83,7 @@ void main() {
     );
 
     testWidgets(
-      'tapping Buat Pengajuan Baru in Hero Banner opens RequestForm',
+      'tapping Pusat Persetujuan in Hero Banner opens ApprovalsScreen',
       (tester) async {
         final workspace = Workspace({
           'requests': [],
@@ -107,11 +108,11 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        expect(find.text('Buat Pengajuan Baru'), findsOneWidget);
-        await tester.tap(find.text('Buat Pengajuan Baru'));
+        expect(find.text('Pusat Persetujuan'), findsOneWidget);
+        await tester.tap(find.text('Pusat Persetujuan'));
         await tester.pumpAndSettle();
 
-        expect(openedWidget, isA<RequestForm>());
+        expect(openedWidget, isA<ApprovalsScreen>());
       },
     );
   });

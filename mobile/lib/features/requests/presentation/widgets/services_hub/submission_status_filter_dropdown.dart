@@ -97,7 +97,8 @@ class _SubmissionStatusFilterDropdownState
   @override
   Widget build(BuildContext context) {
     final isActive = _isOpen;
-    final dotColor = widget.selected != null
+    final hasFilter = widget.selected != null;
+    final dotColor = hasFilter
         ? _statusDotColor(widget.selected!)
         : (isActive ? AppColors.filterTealAccent : AppColors.filterStatusGreen);
 
@@ -109,20 +110,22 @@ class _SubmissionStatusFilterDropdownState
         padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
-          boxShadow: const [
+          boxShadow: [
             BoxShadow(
-              color: Color(0xFFF5F5F5),
+              color: hasFilter
+                  ? const Color(0xFF0F766E).withValues(alpha: 0.12)
+                  : const Color(0xFFF5F5F5),
               blurRadius: 9,
-              offset: Offset(0, 0),
+              offset: const Offset(0, 0),
             ),
           ],
           color: Colors.white,
-          border: isActive
+          border: isActive || hasFilter
               ? Border.all(
                   color: AppColors.filterTealAccent,
                   width: 1.5,
                 )
-              : null,
+              : Border.all(color: const Color(0xFFE2E8F0), width: 0.8),
         ),
         child: Row(
           children: [
@@ -234,14 +237,25 @@ class _SubmissionStatusPanel extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 10),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8),
-                            color: isSelected
-                                ? AppColors.filterFrostedTealBg
-                                : AppColors.filterSlateBg,
-                            border: isSelected
-                                ? Border.all(
-                                    color: AppColors.filterFrostedTealBorder,
-                                    width: 1,
+                            gradient: isSelected
+                                ? const LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Color(0xFF0F766E),
+                                      Color(0xFF14B8A6),
+                                    ],
                                   )
+                                : null,
+                            color: isSelected ? null : AppColors.filterSlateBg,
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: const Color(0xFF0F766E).withValues(alpha: 0.22),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 1.5),
+                                    ),
+                                  ]
                                 : null,
                           ),
                           child: Row(
@@ -251,7 +265,9 @@ class _SubmissionStatusPanel extends StatelessWidget {
                                 height: 8,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: _statusDotColor(status),
+                                  color: isSelected
+                                      ? Colors.white
+                                      : _statusDotColor(status),
                                 ),
                               ),
                               const SizedBox(width: 8),
@@ -262,10 +278,10 @@ class _SubmissionStatusPanel extends StatelessWidget {
                                     fontFamily: 'Inter',
                                     fontSize: 11.5,
                                     fontWeight: isSelected
-                                        ? FontWeight.w600
+                                        ? FontWeight.w700
                                         : FontWeight.w500,
                                     color: isSelected
-                                        ? AppColors.filterTealAccent
+                                        ? Colors.white
                                         : AppColors.filterItemText,
                                   ),
                                   overflow: TextOverflow.ellipsis,
@@ -295,11 +311,25 @@ class _SubmissionStatusPanel extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
-          color: isSelected
-              ? AppColors.filterFrostedTealBg
-              : AppColors.filterSlateBg,
-          border: isSelected
-              ? Border.all(color: AppColors.filterFrostedTealBorder, width: 1)
+          gradient: isSelected
+              ? const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF0F766E),
+                    Color(0xFF14B8A6),
+                  ],
+                )
+              : null,
+          color: isSelected ? null : AppColors.filterSlateBg,
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF0F766E).withValues(alpha: 0.22),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1.5),
+                  ),
+                ]
               : null,
         ),
         child: Row(
@@ -310,16 +340,18 @@ class _SubmissionStatusPanel extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: isSelected
-                    ? AppColors.filterTealAccent
+                    ? Colors.white
                     : AppColors.filterStatusGreen,
               ),
               child: Center(
                 child: Container(
                   width: 3.6,
                   height: 3.6,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white,
+                    color: isSelected
+                        ? const Color(0xFF0F766E)
+                        : Colors.white,
                   ),
                 ),
               ),
@@ -331,9 +363,9 @@ class _SubmissionStatusPanel extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
                   color: isSelected
-                      ? AppColors.filterTealAccent
+                      ? Colors.white
                       : AppColors.filterItemText,
                 ),
               ),
@@ -342,7 +374,7 @@ class _SubmissionStatusPanel extends StatelessWidget {
               const Icon(
                 Icons.check,
                 size: 14,
-                color: AppColors.filterTealAccent,
+                color: Colors.white,
               ),
           ],
         ),

@@ -43,11 +43,11 @@ void main() {
       expect(find.text('Lembur Maintenance & Backup Server'), findsOneWidget);
       expect(find.text('Pengadaan Kursi Kerja Ergonomis'), findsOneWidget);
 
-      expect(find.text('PENGAJUAN CUTI'), findsOneWidget);
-      expect(find.text('KLAIM REIMBURSEMENT'), findsOneWidget);
-      expect(find.text('PENGAJUAN PETTY CASH'), findsOneWidget);
-      expect(find.text('PENGAJUAN LEMBUR'), findsOneWidget);
-      expect(find.text('PENGAJUAN GENERAL AFFAIR'), findsOneWidget);
+      expect(find.textContaining('Pengajuan Cuti'), findsOneWidget);
+      expect(find.textContaining('Klaim Reimbursement'), findsOneWidget);
+      expect(find.textContaining('Pengajuan Petty Cash'), findsOneWidget);
+      expect(find.textContaining('Pengajuan Lembur'), findsOneWidget);
+      expect(find.textContaining('Pengajuan General Affair'), findsOneWidget);
     });
 
     testWidgets('renders revision box when status is perluRevisi', (
@@ -95,25 +95,28 @@ void main() {
       expect(reviseClicked, isTrue);
     });
 
-    testWidgets('renders 2-stage stepper for reimbursement', (tester) async {
-      final reimbursementItem = mockUniversalRequests.firstWhere(
-        (m) => m.kind == SubmissionKind.reimbursement,
-      );
+    testWidgets(
+      'renders status pill in top right and subtle chevron for clean scannable card',
+      (tester) async {
+        final reimbursementItem = mockUniversalRequests.firstWhere(
+          (m) => m.kind == SubmissionKind.reimbursement,
+        );
 
-      await tester.pumpWidget(
-        wrapWithScreenUtil(
-          UniversalRequestCard(data: reimbursementItem),
-        ),
-      );
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          wrapWithScreenUtil(
+            UniversalRequestCard(data: reimbursementItem),
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text('Atasan (Aries M.)'), findsOneWidget);
-      expect(find.text('Finance (Alicia)'), findsOneWidget);
-      expect(find.text('Tahap 2 dari 2'), findsOneWidget);
-    });
+        expect(find.text('Menunggu Finance'), findsOneWidget);
+        expect(find.byIcon(Icons.chevron_right_rounded), findsOneWidget);
+        expect(find.textContaining('Klaim Reimbursement'), findsOneWidget);
+      },
+    );
 
     testWidgets(
-      'renders solid teal button for "Rincian dan dokumen" when not in revision',
+      'tapping card triggers onCardTap or onDetailPressed and displays chevron',
       (tester) async {
         final standardItem = mockUniversalRequests.firstWhere(
           (m) => m.status != SubmissionStatus.perluRevisi,
@@ -130,23 +133,9 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        final buttonFinder = find.text('Rincian dan dokumen');
-        expect(buttonFinder, findsOneWidget);
+        expect(find.byIcon(Icons.chevron_right_rounded), findsOneWidget);
 
-        final containerFinder = find.ancestor(
-          of: buttonFinder,
-          matching: find.byType(Container),
-        );
-        final containerWidget = tester.widget<Container>(containerFinder.first);
-        final decoration = containerWidget.decoration as BoxDecoration?;
-        expect(decoration?.gradient, isA<LinearGradient>());
-        final gradient = decoration!.gradient as LinearGradient;
-        expect(gradient.colors, [
-          const Color(0xFF0F766E),
-          const Color(0xFF14B8A6),
-        ]);
-
-        await tester.tap(buttonFinder);
+        await tester.tap(find.byType(UniversalRequestCard));
         await tester.pumpAndSettle();
         expect(detailClicked, isTrue);
       },

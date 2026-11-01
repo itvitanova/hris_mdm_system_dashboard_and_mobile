@@ -63,11 +63,9 @@ void main() {
         expect(find.text('Lembur Maintenance & Backup Server'), findsNothing);
 
         // 4. Tap (+) hero button -> opens RequestForm locked to Cuti
-        await tester.scrollUntilVisible(
-          find.text('Buat Pengajuan Cuti'),
-          -100,
-          scrollable: find.byType(Scrollable).first,
-        );
+        await tester.drag(find.byType(Scrollable).first, const Offset(0, 300));
+        await tester.pumpAndSettle();
+        expect(find.text('Buat Pengajuan Cuti'), findsOneWidget);
         await tester.tap(find.text('Buat Pengajuan Cuti'));
         await tester.pumpAndSettle();
         expect(openedWidget, isA<RequestForm>());

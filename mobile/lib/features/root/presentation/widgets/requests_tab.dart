@@ -134,7 +134,7 @@ class _RequestsTabState extends State<RequestsTab> {
             ),
             SizedBox(height: 8.h),
             const Text(
-              'Ada Kebutuhan Kerja Hari Ini?',
+              'Pusat Layanan & Persetujuan',
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 16,
@@ -145,7 +145,7 @@ class _RequestsTabState extends State<RequestsTab> {
             ),
             SizedBox(height: 3.h),
             Text(
-              'Ajukan cuti, lembur, atau reimbursement dengan mudah. Riwayat dan kuota tersimpan rapi di tiap modul.',
+              'Tinjau persetujuan pengajuan tim kerja atau akses formulir melalui modul layanan mandiri di bawah.',
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 11,
@@ -158,7 +158,7 @@ class _RequestsTabState extends State<RequestsTab> {
             Material(
               color: Colors.transparent,
               child: InkWell(
-                onTap: () => open(RequestForm(api: api, workspace: w)),
+                onTap: () => open(ApprovalsScreen(api: api)),
                 borderRadius: BorderRadius.circular(5.r),
                 child: Container(
                   padding: EdgeInsets.symmetric(
@@ -180,13 +180,13 @@ class _RequestsTabState extends State<RequestsTab> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        Icons.add_circle_rounded,
+                        Icons.fact_check_rounded,
                         size: 15.w,
                         color: const Color(0xFF0F766E),
                       ),
                       SizedBox(width: 5.w),
                       const Text(
-                        'Buat Pengajuan Baru',
+                        'Pusat Persetujuan',
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 11.5,
@@ -236,14 +236,23 @@ class _RequestsTabState extends State<RequestsTab> {
                   duration: const Duration(milliseconds: 160),
                   curve: Curves.easeInOut,
                   decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFF0F766E) : Colors.transparent,
+                    gradient: isSelected
+                        ? const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color(0xFF0F766E), // Teal 700
+                              Color(0xFF14B8A6), // Teal 500
+                            ],
+                          )
+                        : null,
                     borderRadius: BorderRadius.circular(7.r),
                     boxShadow: isSelected
                         ? [
                             BoxShadow(
-                              color: const Color(0xFF0F766E).withValues(alpha: 0.18),
-                              blurRadius: 3,
-                              offset: const Offset(0, 1),
+                              color: const Color(0xFF0F766E).withValues(alpha: 0.25),
+                              blurRadius: 4,
+                              offset: const Offset(0, 1.5),
                             ),
                           ]
                         : null,
