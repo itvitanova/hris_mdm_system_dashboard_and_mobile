@@ -27,7 +27,7 @@ class DashboardAttendanceItem {
     this.lateMinutes = 0,
     required this.dateText,
     required this.timeText,
-    this.method = 'Via Fingerprint',
+    this.method = 'Via Phone',
     this.isToday = false,
     this.rawData,
   });
@@ -78,7 +78,7 @@ class DashboardAttendanceItem {
         language == AppLanguage.en ? 'Check In' : 'Masuk';
     final String onTimeText =
         language == AppLanguage.en ? 'On Time' : 'Tepat Waktu';
-    const String methodText = 'Via Fingerprint';
+    const String methodText = 'Via Phone';
 
     for (final att in list) {
       final String dateStr = _extractDate(att);

@@ -465,6 +465,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       FilledButton.icon(
         onPressed: () => open(RequestForm(api: widget.api, workspace: w)),
         icon: const Icon(Icons.add),
+        style: FilledButton.styleFrom(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(5),
+          ),
+        ),
         label: const Text('Buat pengajuan'),
       ),
       const SizedBox(height: 20),

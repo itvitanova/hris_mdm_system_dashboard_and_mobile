@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../domain/entities/submission_status.dart';
 import '../../../domain/entities/universal_request_item.dart';
 import 'request_card_config.dart';
@@ -41,11 +42,11 @@ class UniversalRequestCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onCardTap ?? onDetailPressed,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
         child: Container(
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(16.r),
             boxShadow: const [
               BoxShadow(
                 color: Color(0xFFF5F5F5),
@@ -62,13 +63,13 @@ class UniversalRequestCard extends StatelessWidget {
                 left: 0,
                 top: 0,
                 bottom: 0,
-                width: 6,
+                width: 6.w,
                 child: Container(color: statusConfig.barColor),
               ),
 
               // 2. Konten Utama
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 15, 16, 15),
+                padding: EdgeInsets.fromLTRB(20.w, 15.h, 16.w, 15.h),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
@@ -79,21 +80,21 @@ class UniversalRequestCard extends StatelessWidget {
                       children: [
                         // Mint Icon Box 40x40
                         Container(
-                          width: 40,
-                          height: 40,
+                          width: 40.w,
+                          height: 40.w,
                           decoration: BoxDecoration(
                             color: const Color(0xFFE6F7F4),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(10.r),
                             border: Border.all(color: const Color(0xFFA7F3D0)),
                           ),
                           alignment: Alignment.center,
                           child: Icon(
                             kindConfig.icon,
-                            size: 19,
+                            size: 19.w,
                             color: const Color(0xFF0F766E),
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        SizedBox(width: 12.w),
 
                         // Title & Tags Column
                         Expanded(
@@ -110,7 +111,7 @@ class UniversalRequestCard extends StatelessWidget {
                                   letterSpacing: 0.6,
                                 ),
                               ),
-                              const SizedBox(height: 2),
+                              SizedBox(height: 2.h),
 
                               // Judul 100% Bebas Elipsis (Auto Multi-Line)
                               Text(
@@ -126,23 +127,23 @@ class UniversalRequestCard extends StatelessWidget {
                                 ),
                               ),
 
-                              const SizedBox(height: 6),
+                              SizedBox(height: 6.h),
 
                               // Tag Baris: [METRIK] [STATUS HALUS] Subtitle
                               Wrap(
                                 crossAxisAlignment: WrapCrossAlignment.center,
-                                spacing: 6,
-                                runSpacing: 4,
+                                spacing: 6.w,
+                                runSpacing: 4.h,
                                 children: [
                                   // Metric Tag Chip (e.g. [1 HARI])
                                   Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 7,
-                                      vertical: 2.5,
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 7.w,
+                                      vertical: 2.5.h,
                                     ),
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFE6F7F4),
-                                      borderRadius: BorderRadius.circular(5),
+                                      borderRadius: BorderRadius.circular(5.r),
                                       border: Border.all(
                                         color: const Color(0xFFA7F3D0),
                                       ),
@@ -160,13 +161,13 @@ class UniversalRequestCard extends StatelessWidget {
 
                                   // Status Badge Inline Bersih (Tanpa Icon)
                                   Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 7,
-                                      vertical: 2.5,
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 7.w,
+                                      vertical: 2.5.h,
                                     ),
                                     decoration: BoxDecoration(
                                       color: statusConfig.badgeBg,
-                                      borderRadius: BorderRadius.circular(5),
+                                      borderRadius: BorderRadius.circular(5.r),
                                       border: Border.all(
                                         color: statusConfig.badgeBorder,
                                       ),
@@ -202,7 +203,7 @@ class UniversalRequestCard extends StatelessWidget {
                     if (data.description != null &&
                         data.description!.trim().isNotEmpty &&
                         data.description != '-') ...[
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10.h),
                       Text(
                         data.description!,
                         style: const TextStyle(
@@ -214,7 +215,7 @@ class UniversalRequestCard extends StatelessWidget {
                       ),
                     ],
 
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12.h),
 
                     // BARIS 3: STEPPER ATAU REVISION BOX
                     if (isRevision && data.reviewNote != null)
@@ -225,9 +226,9 @@ class UniversalRequestCard extends StatelessWidget {
                     else
                       RequestSegmentedStepper(data: data),
 
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12.h),
                     const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                    const SizedBox(height: 10),
+                    SizedBox(height: 10.h),
 
                     // BARIS 4: Tanggal di Kiri & Tombol Aksi di Kanan
                     SizedBox(
@@ -235,18 +236,18 @@ class UniversalRequestCard extends StatelessWidget {
                       child: Wrap(
                         alignment: WrapAlignment.spaceBetween,
                         crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: 8,
-                        runSpacing: 8,
+                        spacing: 8.w,
+                        runSpacing: 8.h,
                         children: [
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.calendar_today_outlined,
-                                size: 13,
-                                color: Color(0xFF94A3B8),
+                                size: 13.w,
+                                color: const Color(0xFF94A3B8),
                               ),
-                              const SizedBox(width: 6),
+                              SizedBox(width: 6.w),
                               Text(
                                 RequestCardHelper.formatDateRange(
                                   data.startDate,
@@ -264,11 +265,11 @@ class UniversalRequestCard extends StatelessWidget {
                           if (isRevision)
                             InkWell(
                               onTap: onRevisePressed,
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(8.r),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 6,
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 10.w,
+                                  vertical: 6.h,
                                 ),
                                 decoration: BoxDecoration(
                                   gradient: const LinearGradient(
@@ -279,7 +280,7 @@ class UniversalRequestCard extends StatelessWidget {
                                       Color(0xFFBE123C),
                                     ],
                                   ),
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(8.r),
                                   border: Border.all(
                                     color: const Color(0x59FFFFFF),
                                     width: 1,
@@ -292,16 +293,16 @@ class UniversalRequestCard extends StatelessWidget {
                                     ),
                                   ],
                                 ),
-                                child: const Row(
+                                child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(
                                       Icons.refresh_rounded,
-                                      size: 13,
+                                      size: 13.w,
                                       color: Colors.white,
                                     ),
-                                    SizedBox(width: 4),
-                                    Text(
+                                    SizedBox(width: 4.w),
+                                    const Text(
                                       'Perbaiki pengajuan',
                                       style: TextStyle(
                                         fontSize: 11.5,
@@ -316,11 +317,11 @@ class UniversalRequestCard extends StatelessWidget {
                           else
                             InkWell(
                               onTap: onDetailPressed,
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(8.r),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 6,
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 10.w,
+                                  vertical: 6.h,
                                 ),
                                 decoration: BoxDecoration(
                                   gradient: const LinearGradient(
@@ -331,7 +332,7 @@ class UniversalRequestCard extends StatelessWidget {
                                       Color(0xFF14B8A6),
                                     ],
                                   ),
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(8.r),
                                   border: Border.all(
                                     color: const Color(0x59FFFFFF),
                                     width: 1,
@@ -344,16 +345,16 @@ class UniversalRequestCard extends StatelessWidget {
                                     ),
                                   ],
                                 ),
-                                child: const Row(
+                                child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(
                                       Icons.description_outlined,
-                                      size: 13,
+                                      size: 13.w,
                                       color: Colors.white,
                                     ),
-                                    SizedBox(width: 4),
-                                    Text(
+                                    SizedBox(width: 4.w),
+                                    const Text(
                                       'Rincian dan dokumen',
                                       style: TextStyle(
                                         fontSize: 11.5,

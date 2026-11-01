@@ -8,19 +8,29 @@ import 'package:mdm_hris/features/requests/presentation/widgets/universal_reques
 import 'package:mdm_hris/features/root/presentation/widgets/requests_tab.dart';
 
 void main() {
+  Widget wrapWithScreenUtil(Widget child) {
+    return ScreenUtilInit(
+      designSize: const Size(375, 812),
+      minTextAdapt: true,
+      builder: (context, _) => MaterialApp(
+        home: Scaffold(
+          body: child,
+        ),
+      ),
+    );
+  }
+
   group('UniversalRequestCard Tests', () {
     testWidgets('renders all 5 mock submission kinds without errors', (
       tester,
     ) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: Column(
-                children: mockUniversalRequests
-                    .map((data) => UniversalRequestCard(data: data))
-                    .toList(),
-              ),
+        wrapWithScreenUtil(
+          SingleChildScrollView(
+            child: Column(
+              children: mockUniversalRequests
+                  .map((data) => UniversalRequestCard(data: data))
+                  .toList(),
             ),
           ),
         ),
@@ -49,12 +59,10 @@ void main() {
 
       bool reviseClicked = false;
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: UniversalRequestCard(
-              data: revisionItem,
-              onRevisePressed: () => reviseClicked = true,
-            ),
+        wrapWithScreenUtil(
+          UniversalRequestCard(
+            data: revisionItem,
+            onRevisePressed: () => reviseClicked = true,
           ),
         ),
       );
@@ -93,10 +101,8 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: UniversalRequestCard(data: reimbursementItem),
-          ),
+        wrapWithScreenUtil(
+          UniversalRequestCard(data: reimbursementItem),
         ),
       );
       await tester.pumpAndSettle();
@@ -115,12 +121,10 @@ void main() {
 
         bool detailClicked = false;
         await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: UniversalRequestCard(
-                data: standardItem,
-                onDetailPressed: () => detailClicked = true,
-              ),
+          wrapWithScreenUtil(
+            UniversalRequestCard(
+              data: standardItem,
+              onDetailPressed: () => detailClicked = true,
             ),
           ),
         );

@@ -53,12 +53,22 @@ void main() {
         expect(find.text('Semua Status Pengajuan'), findsOneWidget);
 
         // 3. Verify strict isolation: Only cuti items appear
+        await tester.scrollUntilVisible(
+          find.text('Cuti tahunan'),
+          100,
+          scrollable: find.byType(Scrollable).first,
+        );
         expect(find.text('Cuti tahunan'), findsOneWidget);
         expect(find.text('Biaya Transport & Akomodasi Klien'), findsNothing);
         expect(find.text('Lembur Maintenance & Backup Server'), findsNothing);
 
-        // 4. Tap (+) icon button in riwayat header -> opens RequestForm locked to Cuti
-        await tester.tap(find.byIcon(Icons.add_rounded));
+        // 4. Tap (+) hero button -> opens RequestForm locked to Cuti
+        await tester.scrollUntilVisible(
+          find.text('Buat Pengajuan Cuti'),
+          -100,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await tester.tap(find.text('Buat Pengajuan Cuti'));
         await tester.pumpAndSettle();
         expect(openedWidget, isA<RequestForm>());
         final form = openedWidget as RequestForm;
@@ -114,22 +124,57 @@ void main() {
         await tester.pumpAndSettle();
 
         // Initial state: both items appear
+        await tester.scrollUntilVisible(
+          find.text('Cuti Sakit Rawat Inap'),
+          100,
+          scrollable: find.byType(Scrollable).first,
+        );
         expect(find.text('Cuti Sakit Rawat Inap'), findsOneWidget);
+        await tester.scrollUntilVisible(
+          find.text('Cuti Menikah'),
+          100,
+          scrollable: find.byType(Scrollable).first,
+        );
         expect(find.text('Cuti Menikah'), findsOneWidget);
+        await tester.scrollUntilVisible(
+          find.text('DISETUJUI'),
+          -100,
+          scrollable: find.byType(Scrollable).first,
+        );
 
         // Tap stat card 'DISETUJUI'
         await tester.tap(find.text('DISETUJUI'));
         await tester.pumpAndSettle();
 
+        await tester.scrollUntilVisible(
+          find.text('Cuti Sakit Rawat Inap'),
+          100,
+          scrollable: find.byType(Scrollable).first,
+        );
         expect(find.text('Cuti Sakit Rawat Inap'), findsOneWidget);
         expect(find.text('Cuti Menikah'), findsNothing);
+        await tester.scrollUntilVisible(
+          find.text('MENUNGGU'),
+          -100,
+          scrollable: find.byType(Scrollable).first,
+        );
 
         // Tap stat card 'MENUNGGU'
         await tester.tap(find.text('MENUNGGU'));
         await tester.pumpAndSettle();
 
         expect(find.text('Cuti Sakit Rawat Inap'), findsNothing);
+        await tester.scrollUntilVisible(
+          find.text('Cuti Menikah'),
+          100,
+          scrollable: find.byType(Scrollable).first,
+        );
         expect(find.text('Cuti Menikah'), findsOneWidget);
+        await tester.scrollUntilVisible(
+          find.byType(SubmissionStatusFilterDropdown),
+          -100,
+          scrollable: find.byType(Scrollable).first,
+        );
 
         // Open dropdown trigger to select 'Semua Status Pengajuan'
         await tester.tap(find.byType(SubmissionStatusFilterDropdown));
@@ -140,7 +185,17 @@ void main() {
         await tester.pumpAndSettle();
 
         // Both items appear again
+        await tester.scrollUntilVisible(
+          find.text('Cuti Sakit Rawat Inap'),
+          100,
+          scrollable: find.byType(Scrollable).first,
+        );
         expect(find.text('Cuti Sakit Rawat Inap'), findsOneWidget);
+        await tester.scrollUntilVisible(
+          find.text('Cuti Menikah'),
+          100,
+          scrollable: find.byType(Scrollable).first,
+        );
         expect(find.text('Cuti Menikah'), findsOneWidget);
       },
     );

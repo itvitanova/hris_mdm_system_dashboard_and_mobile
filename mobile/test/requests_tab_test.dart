@@ -5,6 +5,7 @@ import 'package:mdm_hris/core/api_client.dart';
 import 'package:mdm_hris/core/workspace.dart';
 import 'package:mdm_hris/features/requests/presentation/pages/modules/dedicated_module_screen.dart';
 import 'package:mdm_hris/features/requests/presentation/widgets/services_hub/service_module_card.dart';
+import 'package:mdm_hris/features/requests/request_form.dart';
 import 'package:mdm_hris/features/root/presentation/widgets/requests_tab.dart';
 
 void main() {
@@ -35,7 +36,17 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        // 1. Verify 5 Service Cards in catalog
+        // 0. Verify Header title, contextual subtitle, and modern action buttons
+        expect(find.text('Pengajuan'), findsOneWidget);
+        expect(find.text('Layanan & Permohonan Mandiri'), findsOneWidget);
+        expect(find.byKey(const Key('requests_calendar_button')), findsOneWidget);
+        expect(find.byKey(const Key('requests_notification_button')), findsOneWidget);
+
+        // 1. Verify Hero Action Banner
+        expect(find.text('Pusat Layanan Mandiri'), findsOneWidget);
+        expect(find.text('Buat Pengajuan Baru'), findsOneWidget);
+
+        // 2. Verify 5 Service Cards in catalog (1 featured + 4 grid)
         expect(find.text('Katalog Pengajuan'), findsOneWidget);
         expect(find.byType(ServiceModuleCard), findsNWidgets(5));
         expect(find.text('Cuti & Izin'), findsOneWidget);
@@ -44,7 +55,7 @@ void main() {
         expect(find.text('Petty Cash'), findsOneWidget);
         expect(find.text('General Affair'), findsOneWidget);
 
-        // 2. Tap Cuti & Izin card -> routes to DedicatedModuleScreen
+        // 3. Tap Cuti & Izin card -> routes to DedicatedModuleScreen
         await tester.tap(find.text('Cuti & Izin'));
         await tester.pumpAndSettle();
 
@@ -53,13 +64,54 @@ void main() {
         expect(screen.moduleTitle, 'Pengajuan Cuti & Izin');
         expect(screen.keyMetricLabel, 'SISA KUOTA');
 
-        // 3. Verify Pengajuan Terkini section by scrolling down
+        // 4. Verify Pengajuan Terkini section & Segmented Filter Bar
         await tester.scrollUntilVisible(
-          find.text('Pengajuan Terkini'),
+          find.byKey(const ValueKey('filter_segment_Semua')),
           150,
           scrollable: find.byType(Scrollable),
         );
         expect(find.text('Pengajuan Terkini'), findsOneWidget);
+        expect(find.byKey(const ValueKey('filter_segment_Semua')), findsOneWidget);
+        expect(find.byKey(const ValueKey('filter_segment_Menunggu')), findsOneWidget);
+        expect(find.byKey(const ValueKey('filter_segment_Selesai')), findsOneWidget);
+
+        // 5. Tap segmented filter 'Selesai'
+        await tester.tap(find.byKey(const ValueKey('filter_segment_Selesai')));
+        await tester.pumpAndSettle();
+      },
+    );
+
+    testWidgets(
+      'tapping Buat Pengajuan Baru in Hero Banner opens RequestForm',
+      (tester) async {
+        final workspace = Workspace({
+          'requests': [],
+          'employees': [],
+          'attendancePolicy': {},
+        });
+        Widget? openedWidget;
+
+        await tester.pumpWidget(
+          ScreenUtilInit(
+            designSize: const Size(375, 812),
+            minTextAdapt: true,
+            builder: (context, child) => MaterialApp(
+              home: RequestsTab(
+                api: ApiClient(),
+                workspace: workspace,
+                onRefresh: () async {},
+                open: (w) async => openedWidget = w,
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Buat Pengajuan Baru'), findsOneWidget);
+        await tester.tap(find.text('Buat Pengajuan Baru'));
+        await tester.pumpAndSettle();
+
+        expect(openedWidget, isA<RequestForm>());
       },
     );
   });

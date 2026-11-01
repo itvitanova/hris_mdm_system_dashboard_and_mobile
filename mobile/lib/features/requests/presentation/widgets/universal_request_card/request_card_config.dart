@@ -38,7 +38,7 @@ class RequestCardHelper {
 
   static String formatIDR(int amount) {
     final str = amount.toString();
-    final buffer = StringBuffer('Rp ');
+    final buffer = StringBuffer();
     int count = 0;
     for (int i = str.length - 1; i >= 0; i--) {
       buffer.write(str[i]);
@@ -47,7 +47,7 @@ class RequestCardHelper {
         buffer.write('.');
       }
     }
-    return buffer.toString().split('').reversed.join('');
+    return 'Rp ${buffer.toString().split('').reversed.join('')}';
   }
 
   static String formatDateRange(DateTime start, DateTime? end) {
