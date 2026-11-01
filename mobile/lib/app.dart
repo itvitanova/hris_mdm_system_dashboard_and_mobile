@@ -1,5 +1,7 @@
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'core/theme/app_colors.dart';
 import 'features/root/presentation/pages/root_page.dart';
+import 'features/root/presentation/widgets/dashboard_skeleton.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/api_client.dart';
@@ -85,9 +87,7 @@ class _HrisAppState extends State<HrisApp> {
       home: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, state) {
           if (state is AuthBooting || state is AuthInitial) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
+            return const DashboardSkeleton();
           }
 
           if (state is Unauthenticated && state.message != null) {
@@ -186,12 +186,12 @@ class _WorkspaceLoaderState extends State<WorkspaceLoader> {
               onRefresh: refresh,
               onLogout: widget.onLogout,
             )
-      : Scaffold(
-          appBar: AppBar(title: const Text('MDM HR')),
-          body: Center(
-            child: error == null
-                ? const CircularProgressIndicator()
-                : Padding(
+      : error != null
+          ? Scaffold(
+              backgroundColor: AppColors.bg,
+              body: SafeArea(
+                child: Center(
+                  child: Padding(
                     padding: const EdgeInsets.all(24),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -205,6 +205,8 @@ class _WorkspaceLoaderState extends State<WorkspaceLoader> {
                       ],
                     ),
                   ),
-          ),
-        );
+                ),
+              ),
+            )
+          : const DashboardSkeleton();
 }
