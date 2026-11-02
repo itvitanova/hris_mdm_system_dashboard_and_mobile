@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mdm_hris/features/attendance/presentation/widgets/attendance_detail_modal.dart';
 import 'package:mdm_hris/features/root/presentation/widgets/dashboard_attendance_card.dart';
 
 void main() {
@@ -81,6 +82,89 @@ void main() {
             (c.decoration as BoxDecoration).color == const Color(0xFFFFFFFF),
       );
       expect((secondCardBox.decoration as BoxDecoration).gradient, isNull);
+    },
+  );
+
+  testWidgets(
+    'DashboardAttendanceCard triggers onTap callback when tapped',
+    (tester) async {
+      bool tapped = false;
+      const item = DashboardAttendanceItem(
+        type: DashboardAttendanceType.masuk,
+        title: 'Masuk',
+        statusText: 'Tepat Waktu',
+        isLate: false,
+        dateText: '2 Nov 2026',
+        timeText: '08:24 am',
+      );
+
+      await tester.pumpWidget(
+        ScreenUtilInit(
+          designSize: const Size(375, 812),
+          builder: (context, _) => MaterialApp(
+            home: Scaffold(
+              body: DashboardAttendanceCard(
+                item: item,
+                onTap: () {
+                  tapped = true;
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Masuk'));
+      await tester.pumpAndSettle();
+
+      expect(tapped, isTrue);
+    },
+  );
+
+  testWidgets(
+    'showAttendanceDetailModal renders detail modal sheet with check-in info',
+    (tester) async {
+      final raw = {
+        'date': '2026-11-02',
+        'checkIn': '2026-11-02T08:24:00+07:00',
+        'checkOut': '2026-11-02T17:30:00+07:00',
+        'status': 'Hadir',
+        'lateMinutes': 0,
+        'earlyDeparture': false,
+        'distance': 15.0,
+        'faceVerified': true,
+        'checkInLocation': {
+          'latitude': -6.137607,
+          'longitude': 106.799707,
+          'policy': {'name': 'Kantor Pusat MDM Jakarta'},
+        },
+      };
+
+      await tester.pumpWidget(
+        ScreenUtilInit(
+          designSize: const Size(375, 812),
+          builder: (context, _) => MaterialApp(
+            home: Scaffold(
+              body: Builder(
+                builder: (ctx) => ElevatedButton(
+                  onPressed: () => showAttendanceDetailModal(ctx, raw),
+                  child: const Text('Open Detail'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Open Detail'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Detail Kehadiran'), findsOneWidget);
+      expect(find.text('JAM MASUK'), findsOneWidget);
+      expect(find.text('JAM PULANG'), findsOneWidget);
+      expect(find.text('Tutup'), findsOneWidget);
     },
   );
 }
