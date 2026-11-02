@@ -20,6 +20,7 @@ class UniversalRequestCard extends StatelessWidget {
   final VoidCallback? onCardTap;
   final VoidCallback? onDetailPressed;
   final VoidCallback? onRevisePressed;
+  final bool showApplicant;
 
   const UniversalRequestCard({
     super.key,
@@ -27,6 +28,7 @@ class UniversalRequestCard extends StatelessWidget {
     this.onCardTap,
     this.onDetailPressed,
     this.onRevisePressed,
+    this.showApplicant = false,
   });
 
   @override
@@ -119,62 +121,79 @@ class UniversalRequestCard extends StatelessWidget {
                               ),
                               SizedBox(height: 3.h),
                               // Baris Metadata Ringkas & Tenang
-                              Row(
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      '${kindConfig.typeTitle} · ${kindConfig.metricTag(data)}',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        fontFamily: 'Inter',
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w500,
-                                        color: Color(0xFF64748B),
-                                        letterSpacing: 0.1,
-                                      ),
+                              Text(
+                                [
+                                  '${kindConfig.typeTitle} · ${kindConfig.metricTag(data)}',
+                                  if (kindConfig.secondaryMeta(data) != null)
+                                    kindConfig.secondaryMeta(data)!,
+                                ].join(' '),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF64748B),
+                                  letterSpacing: 0.1,
+                                ),
+                              ),
+                              if (showApplicant && data.employeeName.isNotEmpty) ...[
+                                SizedBox(height: 5.h),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.person_outline_rounded,
+                                      size: 13.w,
+                                      color: const Color(0xFF0F766E),
                                     ),
-                                  ),
-                                  if (kindConfig.secondaryMeta(data) != null) ...[
-                                    Text(
-                                      ' ${kindConfig.secondaryMeta(data)}',
-                                      style: const TextStyle(
-                                        fontFamily: 'Inter',
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w400,
-                                        color: Color(0xFF94A3B8),
+                                    SizedBox(width: 4.w),
+                                    Expanded(
+                                      child: Text(
+                                        data.employeeName,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontFamily: 'Inter',
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF0F766E),
+                                        ),
                                       ),
                                     ),
                                   ],
-                                ],
-                              ),
+                                ),
+                              ],
                             ],
                           ),
                         ),
                         SizedBox(width: 8.w),
 
                         // Status Pill di Pojok Kanan Atas
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 8.w,
-                            vertical: 3.5.h,
-                          ),
-                          decoration: BoxDecoration(
-                            color: statusConfig.badgeBg,
-                            borderRadius: BorderRadius.circular(6.r),
-                            border: Border.all(
-                              color: statusConfig.badgeBorder,
-                              width: 0.8,
+                        Flexible(
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 8.w,
+                              vertical: 3.5.h,
                             ),
-                          ),
-                          child: Text(
-                            statusConfig.label,
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: statusConfig.textColor,
-                              letterSpacing: 0.2,
+                            decoration: BoxDecoration(
+                              color: statusConfig.badgeBg,
+                              borderRadius: BorderRadius.circular(6.r),
+                              border: Border.all(
+                                color: statusConfig.badgeBorder,
+                                width: 0.8,
+                              ),
+                            ),
+                            child: Text(
+                              statusConfig.label,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: statusConfig.textColor,
+                                letterSpacing: 0.2,
+                              ),
                             ),
                           ),
                         ),
@@ -291,28 +310,33 @@ class UniversalRequestCard extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.calendar_today_outlined,
-                                size: 12.w,
-                                color: const Color(0xFF94A3B8),
-                              ),
-                              SizedBox(width: 5.w),
-                              Text(
-                                RequestCardHelper.formatDateRange(
-                                  data.startDate,
-                                  data.endDate,
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.calendar_today_outlined,
+                                  size: 12.w,
+                                  color: const Color(0xFF94A3B8),
                                 ),
-                                style: const TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color(0xFF64748B),
+                                SizedBox(width: 5.w),
+                                Expanded(
+                                  child: Text(
+                                    RequestCardHelper.formatDateRange(
+                                      data.startDate,
+                                      data.endDate,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
+                                      color: Color(0xFF64748B),
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                           Icon(
                             Icons.chevron_right_rounded,

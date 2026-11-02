@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../widgets/universal_request_card/universal_request_card.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../../core/api_client.dart';
@@ -556,19 +558,300 @@ class _ApprovalsState extends State<ApprovalsScreen> {
     }
   }
 
+  Widget _buildHeroSummaryBanner(int pendingCount) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF0F766E), // Teal 700
+            Color(0xFF14B8A6), // Teal 500
+          ],
+        ),
+        borderRadius: BorderRadius.circular(14.r),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x140F766E),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Stack(
+        clipBehavior: Clip.antiAlias,
+        children: [
+          Positioned(
+            right: -25.w,
+            top: -25.h,
+            child: Container(
+              width: 105.w,
+              height: 105.w,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.08),
+              ),
+            ),
+          ),
+          Positioned(
+            left: -20.w,
+            bottom: -30.h,
+            child: Container(
+              width: 80.w,
+              height: 80.w,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.05),
+              ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 7.w,
+                    vertical: 2.5.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(16.r),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.25),
+                      width: 0.6,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 5.w,
+                        height: 5.w,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF4ADE80),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      SizedBox(width: 5.w),
+                      const Flexible(
+                        child: Text(
+                          'Pusat Persetujuan Tim',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                          letterSpacing: 0.1,
+                        ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                const Text(
+                  'Tinjau & Beri Keputusan',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+                SizedBox(height: 3.h),
+                Text(
+                  pendingCount > 0
+                      ? 'Ada $pendingCount pengajuan menunggu tindakan persetujuan Anda.'
+                      : 'Semua pengajuan telah ditindaklanjuti. Tidak ada yang tertunda.',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 11,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.white.withValues(alpha: 0.88),
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSegmentedFilterBar(int pendingCount) {
+    final filters = [
+      {
+        'key': 'pending',
+        'label': pendingCount > 0
+            ? 'Menunggu tindakan ($pendingCount)'
+            : 'Menunggu tindakan',
+        'isSelected': !history,
+      },
+      {
+        'key': 'history',
+        'label': 'Riwayat keputusan',
+        'isSelected': history,
+      },
+    ];
+
+    return Container(
+      constraints: BoxConstraints(minHeight: 38.h),
+      padding: EdgeInsets.all(3.w),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(9.r),
+      ),
+      child: Row(
+        children: filters.map((f) {
+          final isSelected = f['isSelected'] as bool;
+          final label = f['label'] as String;
+          final isPending = f['key'] == 'pending';
+
+          return Expanded(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                key: ValueKey('approval_filter_${f['key']}'),
+                onTap: () {
+                  if (isPending && history) {
+                    setState(() => history = false);
+                  } else if (!isPending && !history) {
+                    setState(() => history = true);
+                  }
+                },
+                borderRadius: BorderRadius.circular(7.r),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 160),
+                  curve: Curves.easeInOut,
+                  padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 4.w),
+                  decoration: BoxDecoration(
+                    gradient: isSelected
+                        ? const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color(0xFF0F766E), // Teal 700
+                              Color(0xFF14B8A6), // Teal 500
+                            ],
+                          )
+                        : null,
+                    borderRadius: BorderRadius.circular(7.r),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: const Color(0xFF0F766E)
+                                  .withValues(alpha: 0.25),
+                              blurRadius: 4,
+                              offset: const Offset(0, 1.5),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 11.5.sp,
+                      fontWeight:
+                          isSelected ? FontWeight.w700 : FontWeight.w500,
+                      color:
+                          isSelected ? Colors.white : const Color(0xFF64748B),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x05000000),
+            blurRadius: 4,
+            offset: Offset(0, 1),
+          ),
+        ],
+      ),
+      child: TextField(
+        decoration: InputDecoration(
+          hintText: 'Cari pemohon atau pengajuan...',
+          hintStyle: const TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 12.5,
+            color: Color(0xFF94A3B8),
+          ),
+          prefixIcon: const Icon(
+            Icons.search_rounded,
+            size: 20,
+            color: Color(0xFF94A3B8),
+          ),
+          suffixIcon: query.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.close_rounded, size: 18, color: Color(0xFF94A3B8)),
+                  onPressed: () => setState(() => query = ''),
+                )
+              : null,
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 11.h),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12.r),
+            borderSide: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12.r),
+            borderSide: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12.r),
+            borderSide: const BorderSide(color: Color(0xFF0F766E), width: 1.5),
+          ),
+        ),
+        style: const TextStyle(
+          fontFamily: 'Inter',
+          fontSize: 13,
+          color: Color(0xFF0F172A),
+        ),
+        onChanged: (v) => setState(() => query = v),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final w = workspace;
+    final allRequests = w?.rows('requests') ?? <Json>[];
+    final actorId = w?.actor['employeeId'];
+
+    final pendingCount = allRequests
+        .where((r) => r['employeeId'] != actorId && r['canReview'] == true)
+        .length;
+
     final rows =
         w
             ?.rows('requests')
             .where(
               (r) =>
-                  r['employeeId'] != w.actor['employeeId'] &&
+                  r['employeeId'] != actorId &&
                   (history
                       ? ((r['steps'] as List?) ?? []).any(
                           (s) => ((s['decisions'] as List?) ?? []).any(
-                            (d) => d['employeeId'] == w.actor['employeeId'],
+                            (d) => d['employeeId'] == actorId,
                           ),
                         )
                       : r['canReview'] == true),
@@ -581,104 +864,163 @@ class _ApprovalsState extends State<ApprovalsScreen> {
             )
             .toList() ??
         <Json>[];
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Persetujuan'),
-        leading: Navigator.of(context).canPop()
-            ? BackButton(onPressed: () => Navigator.pop(context, changed))
-            : null,
-        actions: [
-          IconButton(
-            tooltip: 'Segarkan persetujuan',
-            onPressed: load,
-            icon: const Icon(Icons.refresh),
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: load,
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(20),
-            children: [
-              const SectionHeading(
-                'Pengajuan tim',
-                subtitle: 'Tinjau pengajuan yang menjadi tanggung jawab Anda.',
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  ChoiceChip(
-                    label: const Text('Menunggu tindakan'),
-                    selected: !history,
-                    onSelected: (_) => setState(() => history = false),
+
+    return ScreenUtilInit(
+      designSize: const Size(375, 812),
+      minTextAdapt: true,
+      builder: (context, _) => Scaffold(
+        backgroundColor: const Color(0xFFF8FAFC),
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.white,
+          elevation: 0.4,
+          shadowColor: const Color(0x120F172A),
+          titleSpacing: Navigator.of(context).canPop() ? 0 : 20,
+          centerTitle: false,
+          leading: Navigator.of(context).canPop()
+              ? IconButton(
+                  icon: const Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    size: 18,
+                    color: Color(0xFF0F172A),
                   ),
-                  ChoiceChip(
-                    label: const Text('Riwayat keputusan'),
-                    selected: history,
-                    onSelected: (_) => setState(() => history = true),
+                  onPressed: () => Navigator.pop(context, changed),
+                )
+              : null,
+          title: const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Persetujuan',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF0F172A),
+                  letterSpacing: -0.3,
+                ),
+              ),
+              SizedBox(height: 1.5),
+              Text(
+                'Tinjau & Verifikasi Pengajuan Tim',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 11,
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xFF64748B),
+                  letterSpacing: 0.1,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            Container(
+              width: 38.w,
+              height: 38.w,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(11.r),
+                border: Border.all(
+                  color: const Color(0xFFE2E8F0),
+                  width: 0.8,
+                ),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x06000000),
+                    blurRadius: 3,
+                    offset: Offset(0, 1),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              TextField(
-                decoration: const InputDecoration(
-                  labelText: 'Cari pemohon atau pengajuan',
-                  prefixIcon: Icon(Icons.search),
-                ),
-                onChanged: (v) => setState(() => query = v),
-              ),
-              const SizedBox(height: 16),
-              if (error != null) ...[
-                ErrorNotice(error!),
-                TextButton(onPressed: load, child: const Text('Coba lagi')),
-              ],
-              if (w == null && error == null) const LinearProgressIndicator(),
-              if (w != null && w.data['approvalAccess'] != true)
-                const ErrorNotice(
-                  'Anda belum ditetapkan sebagai pemberi persetujuan.',
-                )
-              else if (w != null && rows.isEmpty)
-                const EmptyState('Tidak ada pengajuan yang sesuai.')
-              else
-                for (final r in rows)
-                  Card(
-                    child: ListTile(
-                      isThreeLine: true,
-                      title: Text(text(r, 'title')),
-                      subtitle: Text(
-                        '${text(r, 'employeeName')} · ${text(r, 'kind')}\n${text(r, 'status')}',
-                      ),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () async {
-                        final result = await Navigator.push<bool>(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => RequestDetailScreen(
-                              api: widget.api,
-                              request: r,
-                              own: false,
-                            ),
-                          ),
-                        );
-                        if (result == true) {
-                          changed = true;
-                          await load();
-                        }
-                      },
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(11.r),
+                  onTap: load,
+                  child: Tooltip(
+                    message: 'Segarkan persetujuan',
+                    child: Icon(
+                      Icons.refresh_rounded,
+                      size: 19.w,
+                      color: const Color(0xFF334155),
                     ),
                   ),
-            ],
+                ),
+              ),
+            ),
+            SizedBox(width: 16.w),
+          ],
+        ),
+        body: SafeArea(
+          child: RefreshIndicator(
+            color: const Color(0xFF0F766E),
+            onRefresh: load,
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+              children: [
+                _buildHeroSummaryBanner(pendingCount),
+                SizedBox(height: 16.h),
+                _buildSegmentedFilterBar(pendingCount),
+                SizedBox(height: 14.h),
+                _buildSearchBar(),
+                SizedBox(height: 16.h),
+                if (error != null) ...[
+                  ErrorNotice(error!),
+                  SizedBox(height: 8.h),
+                  Center(
+                    child: TextButton.icon(
+                      onPressed: load,
+                      icon: const Icon(Icons.refresh_rounded, color: Color(0xFF0F766E)),
+                      label: const Text(
+                        'Coba lagi',
+                        style: TextStyle(color: Color(0xFF0F766E)),
+                      ),
+                    ),
+                  ),
+                ],
+                if (w == null && error == null)
+                  const LinearProgressIndicator(color: Color(0xFF0F766E)),
+                if (w != null && w.data['approvalAccess'] != true)
+                  const ErrorNotice(
+                    'Anda belum ditetapkan sebagai pemberi persetujuan.',
+                  )
+                else if (w != null && rows.isEmpty)
+                  const EmptyState('Tidak ada pengajuan yang sesuai.')
+                else
+                  for (final r in rows)
+                    Padding(
+                      padding: EdgeInsets.only(bottom: 12.h),
+                      child: UniversalRequestCard(
+                        data: UniversalRequestModel.fromMap(r),
+                        showApplicant: true,
+                        onCardTap: () async {
+                          final result = await Navigator.push<bool>(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => RequestDetailScreen(
+                                api: widget.api,
+                                request: r,
+                                own: false,
+                              ),
+                            ),
+                          );
+                          if (result == true) {
+                            changed = true;
+                            await load();
+                          }
+                        },
+                      ),
+                    ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 }
-
 String requestDateLabel(String value) {
   final date = DateTime.tryParse(value);
   if (date == null) return value;
@@ -712,3 +1054,4 @@ class _RequestInfo extends StatelessWidget {
 
 typedef RequestDetailPage = RequestDetailScreen;
 typedef ApprovalsPage = ApprovalsScreen;
+
