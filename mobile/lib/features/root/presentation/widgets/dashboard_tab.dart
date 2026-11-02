@@ -7,6 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../attendance/daily_attendance.dart';
+import '../../../attendance/presentation/pages/attendance_history_page.dart';
 import '../../../attendance/presentation/widgets/attendance_modal_bottom_sheet.dart';
 import '../../../requests/request_notifications.dart';
 import 'compact_attendance_card.dart';
@@ -470,7 +471,7 @@ class _DashboardTabState extends State<DashboardTab> {
         .where((r) =>
             text(r, 'status') == 'Terlambat' || number(r, 'lateMinutes') > 0)
         .length;
-    final totalAbsen = monthlyAttendance
+    final belumAbsen = monthlyAttendance
         .where((r) {
           final s = text(r, 'status').toLowerCase();
           return s == 'alpha' ||
@@ -546,10 +547,10 @@ class _DashboardTabState extends State<DashboardTab> {
                         width: width,
                         child: _AttendanceStatCard(
                           icon: UIcons.regularRounded.calendar_minus,
-                          title: 'Total Absen',
+                          title: 'Belum Absen',
                           subTitle: 'bulan ini',
-                          day: '$totalAbsen',
-                          description: 'TIDAK HADIR',
+                          day: '$belumAbsen',
+                          description: 'BELUM ABSEN',
                         ),
                       ),
                     ],
@@ -599,7 +600,12 @@ class _DashboardTabState extends State<DashboardTab> {
                           borderRadius: BorderRadius.circular(5.w),
                           canRequestFocus: false,
                           onTap: () {
-                            // Button show all tanpa redirect dulu sesuai permintaan
+                            open(
+                              AttendanceHistoryPage(
+                                api: api,
+                                workspace: w,
+                              ),
+                            );
                           },
                           child: Padding(
                             padding: EdgeInsets.symmetric(
