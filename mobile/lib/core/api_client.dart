@@ -66,7 +66,9 @@ class ApiClient {
         } catch (_) {
           /* Non-JSON gateway error. */
         }
-        if (response.statusCode == 401 && path != '/auth/login') {
+        if (response.statusCode == 401 &&
+            path != '/auth/login' &&
+            path != '/auth/logout') {
           await forget();
           onUnauthorized?.call();
         }
@@ -108,10 +110,12 @@ class ApiClient {
   Future<Map<String, dynamic>> workspace() async =>
       jsonDecode((await _send('GET', '/workspace')).body)
           as Map<String, dynamic>;
+
   Future<List<Map<String, dynamic>>> getList(String path) async =>
       (jsonDecode((await _send('GET', path)).body) as List)
           .map((v) => Map<String, dynamic>.from(v as Map))
           .toList();
+
   Future<void> post(String path, Map<String, dynamic> body) async {
     await _send('POST', path, body);
   }
@@ -149,7 +153,13 @@ class ApiClient {
 
   Future<void> logout() async {
     // Preserve on connection failure so revocation can be retried.
-    await post('/auth/logout', {});
+    if (_cookie != null) {
+      try {
+        await post('/auth/logout', {});
+      } catch (_) {
+        // Ignored: network error or session already expired on server
+      }
+    }
     await forget();
   }
 

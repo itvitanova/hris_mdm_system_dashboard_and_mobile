@@ -10,10 +10,26 @@
 	<string>MDM HR</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Kamera digunakan untuk foto wajah saat absensi.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Izin mikrofon diperlukan saat menggunakan fitur kamera.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Lokasi digunakan saat absensi untuk memeriksa radius 100 meter dari kantor.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Lokasi digunakan saat absensi untuk memeriksa radius 100 meter dari kantor.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Diperlukan oleh layanan kamera untuk pengambilan foto absensi.</string>
+	<string>Aplikasi memerlukan izin galeri foto untuk memilih file lampiran, bukti transaksi/kwitansi, atau foto absensi.</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>https</string>
+		<string>http</string>
+	</array>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

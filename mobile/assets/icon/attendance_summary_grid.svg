@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 286" width="440" height="286">
+  <defs>
+    <!-- Soft Ambient Elevation Shadow -->
+    <filter id="grid-card-shadow" x="-5%" y="-10%" width="112%" height="135%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0F172A" flood-opacity="0.04" />
+      <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="#0F172A" flood-opacity="0.02" />
+    </filter>
+  </defs>
+
+  <style>
+    .font-inter {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+  </style>
+
+  <!-- ==================== ROW 1 ==================== -->
+  
+  <!-- 1. Total Hadir (Col 1, Row 1) -->
+  <g transform="translate(10, 8)">
+    <rect width="206" height="80" rx="16" ry="16" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.2" filter="url(#grid-card-shadow)" />
+    <!-- Squircle Container -->
+    <rect x="14" y="15" width="50" height="50" rx="14" ry="14" fill="#E6F7EB" />
+    <!-- Gojek Style Solid Emerald Circle -->
+    <circle cx="39" cy="40" r="17" fill="#00AA13" />
+    <path d="M32.5 40.5l4.5 4.5 9-9" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <!-- Text -->
+    <text x="76" y="40" class="font-inter" font-size="24" font-weight="800" fill="#0F172A" letter-spacing="-0.5">20</text>
+    <text x="76" y="58" class="font-inter" font-size="11" font-weight="700" fill="#64748B" letter-spacing="0.4">TOTAL HADIR</text>
+  </g>
+
+  <!-- 2. Total Terlambat (Col 2, Row 1) -->
+  <g transform="translate(224, 8)">
+    <rect width="206" height="80" rx="16" ry="16" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.2" filter="url(#grid-card-shadow)" />
+    <rect x="14" y="15" width="50" height="50" rx="14" ry="14" fill="#FFF8E6" />
+    <!-- Gojek Style Solid Amber Circle -->
+    <circle cx="39" cy="40" r="17" fill="#FF9800" />
+    <circle cx="39" cy="40" r="9.5" stroke="#FFFFFF" stroke-width="2.4" fill="none" />
+    <line x1="39" y1="40" x2="39" y2="35" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" />
+    <line x1="39" y1="40" x2="43.5" y2="40" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" />
+    <circle cx="39" cy="40" r="1.5" fill="#FFFFFF" />
+    <path d="M32 33l-2.2-2.2M46 33l2.2-2.2" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" />
+    <text x="76" y="40" class="font-inter" font-size="24" font-weight="800" fill="#0F172A" letter-spacing="-0.5">0</text>
+    <text x="76" y="58" class="font-inter" font-size="11" font-weight="700" fill="#64748B" letter-spacing="0.4">TOTAL TERLAMBAT</text>
+  </g>
+
+  <!-- ==================== ROW 2 ==================== -->
+
+  <!-- 3. Total Alpha (Col 1, Row 2) - With subtle rose accent border -->
+  <g transform="translate(10, 100)">
+    <rect width="206" height="80" rx="16" ry="16" fill="#FFFFFF" stroke="#FECDD3" stroke-width="1.3" filter="url(#grid-card-shadow)" />
+    <rect x="14" y="15" width="50" height="50" rx="14" ry="14" fill="#FEECEE" />
+    <!-- Gojek Style Solid Red Circle -->
+    <circle cx="39" cy="40" r="17" fill="#ED2736" />
+    <line x1="33.5" y1="34.5" x2="44.5" y2="45.5" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" />
+    <line x1="44.5" y1="34.5" x2="33.5" y2="45.5" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" />
+    <text x="76" y="40" class="font-inter" font-size="24" font-weight="800" fill="#0F172A" letter-spacing="-0.5">0</text>
+    <text x="76" y="58" class="font-inter" font-size="11" font-weight="700" fill="#ED2736" letter-spacing="0.4">TOTAL ALPHA</text>
+  </g>
+
+  <!-- 4. Total Izin (Col 2, Row 2) -->
+  <g transform="translate(224, 100)">
+    <rect width="206" height="80" rx="16" ry="16" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.2" filter="url(#grid-card-shadow)" />
+    <rect x="14" y="15" width="50" height="50" rx="14" ry="14" fill="#E6F7FB" />
+    <!-- Gojek Style Solid Blue Circle -->
+    <circle cx="39" cy="40" r="17" fill="#00AED6" />
+    <rect x="32.5" y="32" width="13" height="16" rx="2.5" fill="#FFFFFF" />
+    <line x1="35.5" y1="36" x2="42.5" y2="36" stroke="#00AED6" stroke-width="1.8" stroke-linecap="round" />
+    <line x1="35.5" y1="40" x2="42.5" y2="40" stroke="#00AED6" stroke-width="1.8" stroke-linecap="round" />
+    <line x1="35.5" y1="44" x2="39.5" y2="44" stroke="#00AED6" stroke-width="1.8" stroke-linecap="round" />
+    <text x="76" y="40" class="font-inter" font-size="24" font-weight="800" fill="#0F172A" letter-spacing="-0.5">0</text>
+    <text x="76" y="58" class="font-inter" font-size="11" font-weight="700" fill="#64748B" letter-spacing="0.4">TOTAL IZIN</text>
+  </g>
+
+  <!-- ==================== ROW 3 ==================== -->
+
+  <!-- 5. Total Cuti (Col 1, Row 3) -->
+  <g transform="translate(10, 192)">
+    <rect width="206" height="80" rx="16" ry="16" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.2" filter="url(#grid-card-shadow)" />
+    <rect x="14" y="15" width="50" height="50" rx="14" ry="14" fill="#F2EBFD" />
+    <!-- Gojek Style Solid Purple Circle -->
+    <circle cx="39" cy="40" r="17" fill="#7C3AED" />
+    <rect x="32" y="34.5" width="14" height="11" rx="2.5" fill="#FFFFFF" />
+    <path d="M36.5 34.5v-2.2a1.5 1.5 0 0 1 1.5-1.5h2a1.5 1.5 0 0 1 1.5 1.5v2.2" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" fill="none" />
+    <line x1="39" y1="36.5" x2="39" y2="43.5" stroke="#7C3AED" stroke-width="1.6" stroke-linecap="round" />
+    <circle cx="34.5" cy="46" r="1" fill="#FFFFFF" />
+    <circle cx="43.5" cy="46" r="1" fill="#FFFFFF" />
+    <text x="76" y="40" class="font-inter" font-size="24" font-weight="800" fill="#0F172A" letter-spacing="-0.5">0</text>
+    <text x="76" y="58" class="font-inter" font-size="11" font-weight="700" fill="#64748B" letter-spacing="0.4">TOTAL CUTI</text>
+  </g>
+
+  <!-- 6. Total Sakit (Col 2, Row 3) -->
+  <g transform="translate(224, 192)">
+    <rect width="206" height="80" rx="16" ry="16" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.2" filter="url(#grid-card-shadow)" />
+    <rect x="14" y="15" width="50" height="50" rx="14" ry="14" fill="#FEEFEA" />
+    <!-- Gojek Style Solid Coral Circle -->
+    <circle cx="39" cy="40" r="17" fill="#FF5722" />
+    <rect x="36.5" y="32.5" width="5" height="15" rx="2" fill="#FFFFFF" />
+    <rect x="31.5" y="37.5" width="15" height="5" rx="2" fill="#FFFFFF" />
+    <text x="76" y="40" class="font-inter" font-size="24" font-weight="800" fill="#0F172A" letter-spacing="-0.5">1</text>
+    <text x="76" y="58" class="font-inter" font-size="11" font-weight="700" fill="#64748B" letter-spacing="0.4">TOTAL SAKIT</text>
+  </g>
+
+</svg>

@@ -1,0 +1,90 @@
+<svg width="360" height="108" viewBox="0 0 360 108" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Soft Ambient Dual-Layer Card Shadow -->
+    <filter id="profile-card-shadow" x="-5%" y="-10%" width="112%" height="135%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#0F172A" flood-opacity="0.05" />
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#0F172A" flood-opacity="0.02" />
+    </filter>
+
+    <!-- Notification Button Soft Shadow -->
+    <filter id="notif-btn-shadow" x="-10%" y="-15%" width="125%" height="140%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0F172A" flood-opacity="0.04" />
+    </filter>
+
+    <!-- Executive Deep Teal Avatar Gradient -->
+    <linearGradient id="avatar-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F766E" />
+      <stop offset="100%" stop-color="#14B8A6" />
+    </linearGradient>
+
+    <!-- Avatar Clip Path for Symmetrical Squircle -->
+    <clipPath id="avatar-squircle">
+      <rect width="56" height="56" rx="16" />
+    </clipPath>
+
+    <style>
+      .font-inter {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      }
+    </style>
+  </defs>
+
+  <!-- ==================== 1. BASE CARD CONTAINER ==================== -->
+  <rect x="8" y="8" width="344" height="92" rx="20" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.2" filter="url(#profile-card-shadow)" />
+
+  <!-- ==================== 2. AVATAR PROFILE (SQUIRCLE + ACTIVE STATUS) ==================== -->
+  <g transform="translate(22, 26)">
+    <!-- Squircle Avatar Container -->
+    <g clip-path="url(#avatar-squircle)">
+      <rect width="56" height="56" fill="url(#avatar-grad)" />
+      <!-- Corporate Monogram Initials "LV" -->
+      <text x="28" y="36" class="font-inter" font-size="20" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="-0.5">LV</text>
+      <!-- Subtle Decorative Inner Ring -->
+      <rect x="0" y="0" width="56" height="56" rx="16" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-opacity="0.25" />
+    </g>
+
+    <!-- Outer Fine Border -->
+    <rect width="56" height="56" rx="16" fill="none" stroke="#CCFBF1" stroke-width="1.2" />
+
+    <!-- Active Status Online Dot (Bottom Right, 100% Symmetrical) -->
+    <circle cx="50" cy="50" r="5.5" fill="#00AA13" stroke="#FFFFFF" stroke-width="2" />
+  </g>
+
+  <!-- ==================== 3. USER INFO & IDENTITY ==================== -->
+  <!-- Micro Greeting -->
+  <text x="92" y="38" class="font-inter" font-size="11" font-weight="600" fill="#64748B" letter-spacing="0.2">Selamat Datang 👋</text>
+
+  <!-- Employee Full Name -->
+  <text x="92" y="58" class="font-inter" font-size="16.5" font-weight="700" fill="#0F172A" letter-spacing="-0.3">Livia Vacarro</text>
+
+  <!-- Status Capsule Badge (Gojek/Corporate Style, Replacing Empty White Box) -->
+  <g transform="translate(92, 67)">
+    <rect width="170" height="24" rx="12" fill="#F0FDFA" stroke="#CCFBF1" stroke-width="1" />
+    
+    <!-- Lucide Mail Icon (100% Symmetrical, stroke-width 1.5) -->
+    <g transform="translate(9, 6)" stroke="#0D9488" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <rect x="0" y="0.5" width="13" height="10" rx="2" />
+      <path d="M0 2.5L6.5 6.5L13 2.5" />
+    </g>
+    
+    <!-- User Email / Identifier -->
+    <text x="28" y="16" class="font-inter" font-size="11" font-weight="600" fill="#0F766E" letter-spacing="-0.1">karyawan@email.com</text>
+  </g>
+
+  <!-- ==================== 4. NOTIFICATION ACTION BUTTON ==================== -->
+  <g transform="translate(296, 32)" cursor="pointer">
+    <!-- Squircle Button Surface -->
+    <rect width="44" height="44" rx="15" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1.2" filter="url(#notif-btn-shadow)" />
+
+    <!-- Lucide Bell Icon (Centered in 44x44) -->
+    <g transform="translate(13, 13)" stroke="#0F172A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <!-- Bell Body -->
+      <path d="M9 1C6.2 1 4 3.2 4 6V9.5C4 10.7 3.2 11.8 2 12.5H16C14.8 11.8 14 10.7 14 9.5V6C14 3.2 11.8 1 9 1Z" />
+      <!-- Bell Clapper -->
+      <path d="M7 13.5C7 14.6 7.9 15.5 9 15.5C10.1 15.5 11 14.6 11 13.5" />
+    </g>
+
+    <!-- Unread Notification Badge Dot (Red Gojek with White Rim) -->
+    <circle cx="32" cy="12" r="4.5" fill="#ED2736" stroke="#FFFFFF" stroke-width="1.5" />
+  </g>
+</svg>

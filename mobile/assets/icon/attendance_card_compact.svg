@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 236" width="360" height="236" fill="none">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="compactBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0d9488" />
+      <stop offset="50%" stop-color="#0f766e" />
+      <stop offset="100%" stop-color="#115e59" />
+    </linearGradient>
+
+    <!-- Glass Fill -->
+    <linearGradient id="glassFillCompact" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.16" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.08" />
+    </linearGradient>
+
+    <!-- Glass Stroke -->
+    <linearGradient id="glassStrokeCompact" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.32" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.12" />
+    </linearGradient>
+
+    <!-- Button Drop Shadow -->
+    <filter id="shadowBtnCompact" x="-10%" y="-20%" width="120%" height="160%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#042f2e" flood-opacity="0.25" />
+    </filter>
+
+    <!-- Ambient Glow -->
+    <filter id="blurOrb" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="28" />
+    </filter>
+
+    <style>
+      .font-sans {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      }
+    </style>
+  </defs>
+
+  <!-- Main Card Container -->
+  <g>
+    <!-- Card Background -->
+    <rect x="0" y="0" width="360" height="236" rx="24" fill="url(#compactBg)" />
+
+    <!-- Ambient Light Glows -->
+    <g clip-path="url(#cardClipCompact)">
+      <clipPath id="cardClipCompact">
+        <rect x="0" y="0" width="360" height="236" rx="24" />
+      </clipPath>
+      <circle cx="340" cy="20" r="70" fill="#2dd4bf" fill-opacity="0.28" filter="url(#blurOrb)" />
+      <circle cx="20" cy="220" r="75" fill="#34d399" fill-opacity="0.2" filter="url(#blurOrb)" />
+    </g>
+
+    <!-- Border Stroke -->
+    <rect x="0.5" y="0.5" width="359" height="235" rx="23.5" stroke="url(#glassStrokeCompact)" stroke-width="1" />
+  </g>
+
+  <!-- ================= 1. HEADER ROW ================= -->
+  <g transform="translate(20, 18)">
+    <!-- Clock Icon -->
+    <rect x="0" y="0" width="26" height="26" rx="13" fill="#ffffff" fill-opacity="0.15" stroke="url(#glassStrokeCompact)" stroke-width="0.8" />
+    <circle cx="13" cy="13" r="5.5" stroke="#ccfbf1" stroke-width="1.5" />
+    <path d="M13 10.5v3l2 1.5" stroke="#ccfbf1" stroke-width="1.5" stroke-linecap="round" />
+
+    <!-- Title & Date -->
+    <text x="34" y="12" class="font-sans" font-size="10" font-weight="700" letter-spacing="0.6" fill="#ccfbf1">KEHADIRAN HARI INI</text>
+    <text x="34" y="23" class="font-sans" font-size="10" font-weight="400" fill="#99f6e4" fill-opacity="0.85">Rabu, 28 Okt • 08:30 - 17:30</text>
+
+    <!-- Status Badge (Right) -->
+    <g transform="translate(230, 2)">
+      <rect x="0" y="0" width="90" height="22" rx="11" fill="#ffffff" fill-opacity="0.18" stroke="url(#glassStrokeCompact)" stroke-width="0.8" />
+      <circle cx="10" cy="11" r="3" fill="#34d399" />
+      <text x="18" y="14.5" class="font-sans" font-size="10" font-weight="600" fill="#f0fdfa">Sedang Aktif</text>
+    </g>
+  </g>
+
+  <!-- ================= 2. COMPACT DUAL TILES ================= -->
+  <!-- Tile Masuk -->
+  <g transform="translate(20, 60)">
+    <rect x="0" y="0" width="154" height="88" rx="16" fill="url(#glassFillCompact)" stroke="url(#glassStrokeCompact)" stroke-width="1" />
+    
+    <!-- Label & Chip -->
+    <text x="12" y="20" class="font-sans" font-size="11" font-weight="600" fill="#ccfbf1">Jam Masuk</text>
+    <rect x="102" y="8" width="40" height="17" rx="5" fill="#34d399" fill-opacity="0.25" />
+    <text x="110" y="20" class="font-sans" font-size="9" font-weight="700" fill="#a7f3d0">Tepat</text>
+
+    <!-- Big Time -->
+    <text x="12" y="54" class="font-sans" font-size="22" font-weight="800" fill="#ffffff">08:45</text>
+
+    <!-- Sublabel -->
+    <path d="M12 70l2 2 4.5 -4.5" stroke="#99f6e4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+    <text x="22" y="72" class="font-sans" font-size="9.5" font-weight="500" fill="#99f6e4" fill-opacity="0.9">Verifikasi Sukses</text>
+  </g>
+
+  <!-- Tile Pulang -->
+  <g transform="translate(186, 60)">
+    <rect x="0" y="0" width="154" height="88" rx="16" fill="url(#glassFillCompact)" stroke="url(#glassStrokeCompact)" stroke-width="1" />
+    
+    <!-- Label & Chip -->
+    <text x="12" y="20" class="font-sans" font-size="11" font-weight="600" fill="#ccfbf1">Jam Pulang</text>
+    <rect x="104" y="8" width="38" height="17" rx="5" fill="#ffffff" fill-opacity="0.12" />
+    <text x="110" y="20" class="font-sans" font-size="9" font-weight="600" fill="#99f6e4">Belum</text>
+
+    <!-- Big Time -->
+    <text x="12" y="54" class="font-sans" font-size="22" font-weight="700" letter-spacing="1" fill="#ccfbf1" fill-opacity="0.6">— : —</text>
+
+    <!-- Sublabel -->
+    <text x="12" y="72" class="font-sans" font-size="9.5" font-weight="400" fill="#99f6e4" fill-opacity="0.85">Estimasi: 17:30 WIB</text>
+  </g>
+
+  <!-- ================= 3. ACTION BUTTON ================= -->
+  <g transform="translate(20, 164)" filter="url(#shadowBtnCompact)">
+    <rect x="0" y="0" width="320" height="46" rx="16" fill="#ffffff" />
+    
+    <!-- Logout Icon -->
+    <g transform="translate(112, 14)">
+      <path d="M7 2H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4" stroke="#115e59" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+      <path d="M12 13l3.5-3.5-3.5-3.5" stroke="#115e59" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+      <path d="M15.5 9.5H6" stroke="#115e59" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+
+    <!-- Label -->
+    <text x="138" y="28" class="font-sans" font-size="13.5" font-weight="700" fill="#115e59">Absensi Keluar</text>
+  </g>
+
+  <!-- Bottom Mini Indicator -->
+  <rect x="150" y="222" width="60" height="3" rx="1.5" fill="#ffffff" fill-opacity="0.2" />
+</svg>
