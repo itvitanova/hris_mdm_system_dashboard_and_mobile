@@ -8,6 +8,7 @@ import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../attendance/daily_attendance.dart';
 import '../../../attendance/presentation/pages/attendance_history_page.dart';
+import '../../../attendance/presentation/widgets/attendance_detail_modal.dart';
 import '../../../attendance/presentation/widgets/attendance_modal_bottom_sheet.dart';
 import '../../../requests/request_notifications.dart';
 import 'compact_attendance_card.dart';
@@ -655,7 +656,16 @@ class _DashboardTabState extends State<DashboardTab> {
                           key: ValueKey('dash_$i'),
                           item: recentAttendanceItems[i],
                           isHighlighted: i == 0 && recentAttendanceItems[i].isToday,
-                          onTap: () {},
+                          onTap: () {
+                            if (recentAttendanceItems[i].rawData is Map) {
+                              showAttendanceDetailModal(
+                                context,
+                                Map<String, dynamic>.from(
+                                  recentAttendanceItems[i].rawData as Map,
+                                ),
+                              );
+                            }
+                          },
                         ),
                         if (i < recentAttendanceItems.length - 1)
                           SizedBox(height: 10.w),
