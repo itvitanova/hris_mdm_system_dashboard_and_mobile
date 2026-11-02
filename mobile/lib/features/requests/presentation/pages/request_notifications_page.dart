@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/workspace.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_shadows.dart';
 import '../../domain/entities/submission_kind.dart';
 import '../../domain/entities/submission_status.dart';
 import '../models/mock_request_notifications.dart';
@@ -9,7 +11,8 @@ import 'request_detail_page.dart';
 
 /// Halaman Notifikasi Pembaruan Pengajuan Mandiri
 /// Dilengkapi Header Dua Baris Seragam, Segmented Filter ('Semua' & 'Belum Dibaca'),
-/// Aksi 'Tandai Semua Dibaca', serta kartu notifikasi modern scannable.
+/// Aksi 'Tandai Semua Dibaca', Card Notifikasi Modern dengan Catatan Peninjau,
+/// Tombol 'Perbaiki Sekarang', serta Pengelompokan Hari ('Hari Ini', 'Kemarin', 'Terdahulu').
 class RequestNotificationsScreen extends StatefulWidget {
   const RequestNotificationsScreen({
     super.key,
@@ -150,7 +153,8 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
       {'key': 'Semua', 'label': 'Semua'},
       {
         'key': 'Belum Dibaca',
-        'label': unreadCount > 0 ? 'Belum Dibaca ($unreadCount)' : 'Belum Dibaca',
+        'label':
+            unreadCount > 0 ? 'Belum Dibaca ($unreadCount)' : 'Belum Dibaca',
       },
     ];
 
@@ -196,7 +200,8 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
                     boxShadow: isSelected
                         ? [
                             BoxShadow(
-                              color: const Color(0xFF0F766E).withValues(alpha: 0.25),
+                              color: const Color(0xFF0F766E)
+                                  .withValues(alpha: 0.25),
                               blurRadius: 4,
                               offset: const Offset(0, 1.5),
                             ),
@@ -208,9 +213,11 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
                     label,
                     style: TextStyle(
                       fontFamily: 'Inter',
-                      fontSize: 11.5,
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                      color: isSelected ? Colors.white : const Color(0xFF64748B),
+                      fontSize: 11.5.sp,
+                      fontWeight:
+                          isSelected ? FontWeight.w700 : FontWeight.w500,
+                      color:
+                          isSelected ? Colors.white : const Color(0xFF64748B),
                     ),
                   ),
                 ),
@@ -222,11 +229,56 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
     );
   }
 
+  /// Section Header Grouping Hari: HARI INI, KEMARIN, TERDAHULU
+  Widget _buildSectionHeader(String title, int count) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(2.w, 14.h, 2.w, 8.h),
+      child: Row(
+        children: [
+          Text(
+            title.toUpperCase(),
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 10.5.sp,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF64748B),
+              letterSpacing: 0.8,
+            ),
+          ),
+          SizedBox(width: 8.w),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 1.5.h),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE2E8F0),
+              borderRadius: BorderRadius.circular(10.r),
+            ),
+            child: Text(
+              '$count',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 9.5.sp,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF475569),
+              ),
+            ),
+          ),
+          SizedBox(width: 8.w),
+          const Expanded(
+            child: Divider(
+              color: Color(0xFFE2E8F0),
+              height: 1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Kartu Notifikasi Modern Berbasis Signature Solid Surface & Teal Accent
   Widget _buildNotificationCard(RequestNotificationItem item) {
     final isRevision = item.status == SubmissionStatus.perluRevisi;
-    final statusColor = item.status == SubmissionStatus.disetujui
-        ? const Color(0xFF0F766E)
-        : (isRevision ? const Color(0xFFE11D48) : const Color(0xFFD97706));
+    final isRejected = item.status == SubmissionStatus.ditolak;
+    final isApproved = item.status == SubmissionStatus.disetujui;
 
     final iconData = item.kind == SubmissionKind.cuti
         ? Icons.calendar_today_rounded
@@ -238,111 +290,155 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
                     ? Icons.schedule_rounded
                     : Icons.inventory_2_rounded)));
 
+    final hasReviewNote =
+        item.reviewNote != null && item.reviewNote!.trim().isNotEmpty;
+    final needsFixAction = isRevision || isRejected;
+
     return Container(
       margin: EdgeInsets.only(bottom: 10.h),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          key: ValueKey('notif_item_${item.id}'),
-          onTap: () => _openItem(item),
-          borderRadius: BorderRadius.circular(14.r),
-          child: Container(
-            decoration: BoxDecoration(
-              color: item.isUnread ? const Color(0xFFFAFDFF) : Colors.white,
-              borderRadius: BorderRadius.circular(14.r),
-              border: Border.all(
-                color: item.isUnread
-                    ? const Color(0xFFBAE6FD)
-                    : const Color(0xFFE2E8F0),
-                width: item.isUnread ? 1 : 0.8,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(
+          color: Colors.white,
+          width: 1.5.w,
+        ),
+        boxShadow: const [AppShadows.shadow094],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14.r),
+        child: Stack(
+          children: [
+            // Left Unread Accent Indicator Bar
+            if (item.isUnread)
+              Positioned(
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: 3.5.w,
+                child: Container(
+                  color: AppColors.filterTealAccent,
+                ),
               ),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x06000000),
-                  blurRadius: 4,
-                  offset: Offset(0, 1),
-                ),
-              ],
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Stack(
-              children: [
-                // Aksen Garis Vertikal Kiri 3.5px
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: 3.5.w,
-                  child: Container(color: statusColor),
-                ),
-                Padding(
-                  padding: EdgeInsets.fromLTRB(16.w, 14.h, 14.w, 14.h),
+
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                key: ValueKey('notif_item_${item.id}'),
+                onTap: () => _openItem(item),
+                splashColor: const Color(0xFF0D9488).withValues(alpha: 0.08),
+                highlightColor:
+                    const Color(0xFF0D9488).withValues(alpha: 0.03),
+                child: Padding(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Squircle Icon 38x38
+                      // Corporate Teal Squircle Icon
                       Container(
-                        width: 38.w,
-                        height: 38.w,
+                        width: 42.w,
+                        height: 42.w,
                         decoration: BoxDecoration(
-                          color: isRevision
-                              ? const Color(0xFFFFF1F2)
-                              : (item.status == SubmissionStatus.disetujui
-                                  ? const Color(0xFFF0FDFA)
-                                  : const Color(0xFFFEF3C7)),
-                          borderRadius: BorderRadius.circular(10.r),
+                          color: const Color(0xFFF0FDFA),
+                          borderRadius: BorderRadius.circular(12.r),
                           border: Border.all(
-                            color: isRevision
-                                ? const Color(0xFFFECDD3)
-                                : (item.status == SubmissionStatus.disetujui
-                                    ? const Color(0xFFCCFBF1)
-                                    : const Color(0xFFFDE68A)),
-                            width: 0.8,
+                            color: const Color(0xFFCCFBF1),
+                            width: 1.w,
                           ),
                         ),
                         alignment: Alignment.center,
                         child: Icon(
-                          isRevision ? Icons.edit_note_rounded : iconData,
-                          size: 19.w,
-                          color: isRevision
-                              ? const Color(0xFFBE123C)
-                              : (item.status == SubmissionStatus.disetujui
-                                  ? const Color(0xFF0F766E)
-                                  : const Color(0xFFB45309)),
+                          iconData,
+                          size: 20.sp,
+                          color: const Color(0xFF0D9488),
                         ),
                       ),
+
                       SizedBox(width: 12.w),
 
-                      // Konten Pesan
+                      // Konten Notifikasi
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Kategori · Waktu · Dot Unread
+                            // 1. Kategori Tag & Status Pill
                             Row(
                               children: [
                                 Flexible(
-                                  child: Text(
-                                    '${item.kind.displayName} · ${item.timeAgo}',
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontSize: 10.5,
-                                      fontWeight: item.isUnread
-                                          ? FontWeight.w600
-                                          : FontWeight.w400,
-                                      color: item.isUnread
-                                          ? const Color(0xFF0F766E)
-                                          : const Color(0xFF94A3B8),
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                                  child: Wrap(
+                                    spacing: 6.w,
+                                    runSpacing: 4.h,
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
+                                    children: [
+                                      Container(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 7.w,
+                                          vertical: 2.5.h,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFF0FDFA),
+                                          borderRadius:
+                                              BorderRadius.circular(4.r),
+                                          border: Border.all(
+                                            color: const Color(0xFFCCFBF1),
+                                            width: 0.8.w,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          item.kind.displayName,
+                                          style: TextStyle(
+                                            fontFamily: 'Inter',
+                                            fontSize: 10.sp,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.deepTeal,
+                                          ),
+                                        ),
+                                      ),
+                                      Container(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 7.w,
+                                          vertical: 2.5.h,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: isApproved
+                                              ? const Color(0xFFDCFCE7)
+                                              : (isRevision
+                                                  ? const Color(0xFFFFF1F2)
+                                                  : (isRejected
+                                                      ? const Color(0xFFFEE2E2)
+                                                      : const Color(
+                                                          0xFFFEF3C7))),
+                                          borderRadius:
+                                              BorderRadius.circular(4.r),
+                                        ),
+                                        child: Text(
+                                          item.status.displayName,
+                                          style: TextStyle(
+                                            fontFamily: 'Inter',
+                                            fontSize: 9.5.sp,
+                                            fontWeight: FontWeight.w600,
+                                            color: isApproved
+                                                ? const Color(0xFF15803D)
+                                                : (isRevision
+                                                    ? const Color(0xFFE11D48)
+                                                    : (isRejected
+                                                        ? const Color(
+                                                            0xFFDC2626)
+                                                        : const Color(
+                                                            0xFFB45309))),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                                 if (item.isUnread) ...[
-                                  SizedBox(width: 6.w),
+                                  SizedBox(width: 8.w),
                                   Container(
-                                    width: 6.5.w,
-                                    height: 6.5.w,
+                                    width: 7.w,
+                                    height: 7.w,
                                     decoration: const BoxDecoration(
                                       color: Color(0xFF0D9488),
                                       shape: BoxShape.circle,
@@ -351,94 +447,197 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
                                 ],
                               ],
                             ),
-                            SizedBox(height: 3.h),
 
-                            // Headline Judul Notifikasi
+                            SizedBox(height: 5.h),
+
+                            // 2. Headline Judul Notifikasi
                             Text(
                               item.headline,
                               style: TextStyle(
                                 fontFamily: 'Inter',
-                                fontSize: 13.5,
+                                fontSize: 13.5.sp,
                                 fontWeight: item.isUnread
                                     ? FontWeight.w700
                                     : FontWeight.w600,
-                                color: const Color(0xFF0F172A),
+                                color: item.isUnread
+                                    ? const Color(0xFF0F172A)
+                                    : const Color(0xFF334155),
+                                letterSpacing: -0.2,
                                 height: 1.3,
-                                letterSpacing: -0.1,
                               ),
                             ),
+
                             SizedBox(height: 3.h),
 
-                            // Detail Pesan / Catatan Peninjau
+                            // 3. Ringkasan Pesan
                             Text(
                               item.message,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontFamily: 'Inter',
-                                fontSize: 11.5,
+                                fontSize: 11.5.sp,
                                 fontWeight: FontWeight.w400,
-                                color: isRevision
-                                    ? const Color(0xFF9F1239)
-                                    : const Color(0xFF64748B),
-                                height: 1.35,
+                                color: const Color(0xFF64748B),
+                                height: 1.38,
                               ),
                             ),
 
-                            // Quick Action Pill jika Perlu Revisi
-                            if (isRevision) ...[
+                            // 4. Catatan Peninjau (Reviewer Note Box)
+                            if (hasReviewNote) ...[
                               SizedBox(height: 8.h),
                               Container(
                                 padding: EdgeInsets.symmetric(
-                                  horizontal: 8.w,
-                                  vertical: 3.5.h,
+                                  horizontal: 10.w,
+                                  vertical: 7.h,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFFFF1F2),
-                                  borderRadius: BorderRadius.circular(5.r),
+                                  color: const Color(0xFFF8FAFC),
+                                  borderRadius: BorderRadius.circular(8.r),
                                   border: Border.all(
-                                    color: const Color(0xFFFECDD3),
-                                    width: 0.8,
+                                    color: const Color(0xFFE2E8F0),
+                                    width: 1.w,
                                   ),
                                 ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Icon(
-                                      Icons.refresh_rounded,
-                                      size: 11.w,
-                                      color: const Color(0xFFE11D48),
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.rate_review_outlined,
+                                          size: 13.sp,
+                                          color: AppColors.deepTeal,
+                                        ),
+                                        SizedBox(width: 5.w),
+                                        Expanded(
+                                          child: Text(
+                                            'Catatan Peninjau${item.reviewerName != null ? ' (${item.reviewerName})' : ''}:',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontFamily: 'Inter',
+                                              fontSize: 10.5.sp,
+                                              fontWeight: FontWeight.w700,
+                                              color: AppColors.deepTeal,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    SizedBox(width: 4.w),
-                                    const Text(
-                                      'Perbaiki sekarang',
+                                    SizedBox(height: 3.h),
+                                    Text(
+                                      item.reviewNote!,
                                       style: TextStyle(
                                         fontFamily: 'Inter',
-                                        fontSize: 10.5,
-                                        fontWeight: FontWeight.w700,
-                                        color: Color(0xFFE11D48),
+                                        fontSize: 11.sp,
+                                        fontStyle: FontStyle.italic,
+                                        color: const Color(0xFF334155),
+                                        height: 1.3,
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
                             ],
+
+                            // 5. Button "Perbaiki Sekarang"
+                            if (needsFixAction) ...[
+                              SizedBox(height: 8.h),
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: () => _openItem(item),
+                                    borderRadius: BorderRadius.circular(6.r),
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 10.w,
+                                        vertical: 5.h,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        gradient: const LinearGradient(
+                                          colors: [
+                                            Color(0xFFE11D48),
+                                            Color(0xFFF43F5E),
+                                          ],
+                                        ),
+                                        borderRadius:
+                                            BorderRadius.circular(6.r),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: const Color(0xFFE11D48)
+                                                .withValues(alpha: 0.25),
+                                            blurRadius: 4,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.edit_calendar_rounded,
+                                            size: 12.sp,
+                                            color: Colors.white,
+                                          ),
+                                          SizedBox(width: 5.w),
+                                          Text(
+                                            'Perbaiki Sekarang',
+                                            style: TextStyle(
+                                              fontFamily: 'Inter',
+                                              fontSize: 10.5.sp,
+                                              fontWeight: FontWeight.w700,
+                                              color: Colors.white,
+                                              letterSpacing: 0.1,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+
+                            SizedBox(height: 8.h),
+
+                            // 6. Metadata Bar (Waktu & Chevron)
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.access_time_rounded,
+                                  size: 11.5.sp,
+                                  color: const Color(0xFF94A3B8),
+                                ),
+                                SizedBox(width: 4.w),
+                                Text(
+                                  item.timeAgo,
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 10.5.sp,
+                                    fontWeight: FontWeight.w500,
+                                    color: const Color(0xFF94A3B8),
+                                  ),
+                                ),
+                                const Spacer(),
+                                Icon(
+                                  Icons.chevron_right_rounded,
+                                  size: 16.sp,
+                                  color: const Color(0xFFCBD5E1),
+                                ),
+                              ],
+                            ),
                           ],
                         ),
-                      ),
-                      SizedBox(width: 8.w),
-
-                      Icon(
-                        Icons.chevron_right_rounded,
-                        size: 18.w,
-                        color: const Color(0xFF94A3B8),
                       ),
                     ],
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -452,6 +651,44 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
     final filteredItems = _selectedFilter == 'Belum Dibaca'
         ? allItems.where((i) => i.isUnread).toList()
         : allItems;
+
+    // Pengelompokan Notifikasi: Hari Ini, Kemarin, Terdahulu
+    final todayItems = <RequestNotificationItem>[];
+    final yesterdayItems = <RequestNotificationItem>[];
+    final earlierItems = <RequestNotificationItem>[];
+
+    for (final item in filteredItems) {
+      final time = item.timeAgo.toLowerCase();
+      if (time.contains('kemarin')) {
+        yesterdayItems.add(item);
+      } else if (time.contains('hari lalu') ||
+          time.contains('minggu') ||
+          time.contains('bulan') ||
+          time.contains('2026') ||
+          time.contains('okt') ||
+          time.contains('sep')) {
+        earlierItems.add(item);
+      } else {
+        todayItems.add(item);
+      }
+    }
+
+    final sections = <_NotificationDaySection>[];
+    if (todayItems.isNotEmpty) {
+      sections.add(
+        _NotificationDaySection(title: 'Hari Ini', items: todayItems),
+      );
+    }
+    if (yesterdayItems.isNotEmpty) {
+      sections.add(
+        _NotificationDaySection(title: 'Kemarin', items: yesterdayItems),
+      );
+    }
+    if (earlierItems.isNotEmpty) {
+      sections.add(
+        _NotificationDaySection(title: 'Terdahulu', items: earlierItems),
+      );
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -472,25 +709,25 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
-          children: const [
+          children: [
             Text(
               'Notifikasi Pengajuan',
               style: TextStyle(
                 fontFamily: 'Inter',
-                fontSize: 17,
+                fontSize: 17.sp,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF0F172A),
+                color: const Color(0xFF0F172A),
                 letterSpacing: -0.2,
               ),
             ),
-            SizedBox(height: 1.5),
+            SizedBox(height: 1.5.h),
             Text(
               'Pembaruan Status & Keputusan',
               style: TextStyle(
                 fontFamily: 'Inter',
-                fontSize: 11,
+                fontSize: 11.sp,
                 fontWeight: FontWeight.w400,
-                color: Color(0xFF64748B),
+                color: const Color(0xFF64748B),
                 letterSpacing: 0.1,
               ),
             ),
@@ -508,7 +745,8 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
                   onTap: _markAllAsRead,
                   borderRadius: BorderRadius.circular(8.r),
                   child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(8.r),
                       border: Border.all(
@@ -521,17 +759,17 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
                       children: [
                         Icon(
                           Icons.done_all_rounded,
-                          size: 14.w,
+                          size: 14.sp,
                           color: const Color(0xFF0F766E),
                         ),
                         SizedBox(width: 4.w),
-                        const Text(
+                        Text(
                           'Tandai Dibaca',
                           style: TextStyle(
                             fontFamily: 'Inter',
-                            fontSize: 11,
+                            fontSize: 11.sp,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF0F766E),
+                            color: const Color(0xFF0F766E),
                           ),
                         ),
                       ],
@@ -552,9 +790,9 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
             physics: const AlwaysScrollableScrollPhysics(),
             padding: EdgeInsets.fromLTRB(18.w, 14.h, 18.w, 16.h),
             children: [
-              // 1. Segmented Status Filter Bar
+              // 1. Segmented Status Filter Bar ('Semua' & 'Belum Dibaca')
               _buildSegmentedFilterBar(unreadCount),
-              SizedBox(height: 14.h),
+              SizedBox(height: 10.h),
 
               if (error != null)
                 Container(
@@ -571,10 +809,11 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
                   ),
                 ),
 
-              // 2. Daftar Notifikasi
+              // 2. Daftar Notifikasi (Grouping: Hari Ini, Kemarin, Terdahulu)
               if (filteredItems.isEmpty)
                 Container(
-                  padding: EdgeInsets.symmetric(vertical: 40.h, horizontal: 20.w),
+                  padding:
+                      EdgeInsets.symmetric(vertical: 40.h, horizontal: 20.w),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(14.r),
@@ -593,7 +832,7 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
                         ),
                         child: Icon(
                           Icons.notifications_off_outlined,
-                          size: 24.w,
+                          size: 24.sp,
                           color: const Color(0xFF94A3B8),
                         ),
                       ),
@@ -603,34 +842,47 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
                             ? 'Tidak ada notifikasi yang belum dibaca.'
                             : 'Belum ada pembaruan pengajuan saat ini.',
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'Inter',
-                          fontSize: 13,
+                          fontSize: 13.sp,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF475569),
+                          color: const Color(0xFF475569),
                         ),
                       ),
                       SizedBox(height: 4.h),
-                      const Text(
+                      Text(
                         'Pembaruan keputusan dan catatan peninjau akan muncul di sini.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontFamily: 'Inter',
-                          fontSize: 11.5,
-                          color: Color(0xFF94A3B8),
+                          fontSize: 11.5.sp,
+                          color: const Color(0xFF94A3B8),
                         ),
                       ),
                     ],
                   ),
                 )
               else
-                ...filteredItems.map(_buildNotificationCard),
+                ...sections.expand((section) => [
+                      _buildSectionHeader(section.title, section.items.length),
+                      ...section.items.map(_buildNotificationCard),
+                    ]),
             ],
           ),
         ),
       ),
     );
   }
+}
+
+class _NotificationDaySection {
+  final String title;
+  final List<RequestNotificationItem> items;
+
+  const _NotificationDaySection({
+    required this.title,
+    required this.items,
+  });
 }
 
 typedef RequestNotificationsPage = RequestNotificationsScreen;
