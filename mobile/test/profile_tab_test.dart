@@ -30,9 +30,16 @@ void main() {
           'faceEnrolled': true,
         },
       ],
+      'requests': [
+        {
+          'id': 'req-1',
+          'type': 'leave',
+          'unread': true,
+        },
+      ],
     });
 
-    testWidgets('renders Hero Header and modular data sections', (
+    testWidgets('renders Header Card, 2x2 Info Grid, and Account Settings', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(390 * 3, 844 * 3);
@@ -56,25 +63,43 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Hero Header
-      expect(find.text('Profil Saya'), findsOneWidget);
-      expect(find.text('Nadia Putri'), findsWidgets);
+      // Profile Header Card
+      expect(find.text('Selamat Datang 👋'), findsOneWidget);
+      expect(find.text('Nadia Putri'), findsOneWidget);
       expect(find.text('nadia@example.test'), findsOneWidget);
-      expect(find.text('EMP-002'), findsWidgets);
+      expect(find.text('NP'), findsOneWidget);
 
-      // Section Cards
-      expect(find.text('Informasi Pekerjaan'), findsOneWidget);
-      expect(find.text('Data Pribadi & Kontak'), findsOneWidget);
+      // 2x2 Grid Info Cards
+      expect(find.text('ID Karyawan'), findsOneWidget);
+      expect(find.text('EMP-002'), findsOneWidget);
+      expect(find.text('Departemen'), findsOneWidget);
+      expect(find.text('Product & Design'), findsOneWidget);
+      expect(find.text('Jabatan'), findsOneWidget);
+      expect(find.text('Product Designer'), findsOneWidget);
+      expect(find.text('Nomor Telepon'), findsOneWidget);
+      expect(find.text('081234567890'), findsOneWidget);
 
-      // Scroll to view lower sections
-      await tester.scrollUntilVisible(find.text('Rekening Payroll'), 50);
-      expect(find.text('Rekening Payroll'), findsOneWidget);
+      // Account Settings Section
+      expect(find.text('Pengaturan Akun'), findsOneWidget);
+      expect(find.text('Detail Data & Kepegawaian'), findsOneWidget);
+      expect(find.text('Ganti Kata Sandi'), findsOneWidget);
+      expect(find.text('Keluar Akun'), findsOneWidget);
+
+      // Tap Detail Data & Kepegawaian to verify bottom sheet
+      await tester.tap(find.text('Detail Data & Kepegawaian'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Informasi Lengkap Karyawan'), findsOneWidget);
+      expect(find.text('3171012345670001'), findsOneWidget);
       expect(find.text('BCA'), findsOneWidget);
       expect(find.text('5410987654'), findsOneWidget);
+      expect(find.text('Terdaftar'), findsOneWidget);
 
-      await tester.scrollUntilVisible(find.text('Keamanan & Akun'), 50);
-      expect(find.text('Keamanan & Akun'), findsOneWidget);
-      expect(find.text('Ganti Password'), findsOneWidget);
+      // Close bottom sheet
+      await tester.tap(find.text('Tutup'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Informasi Lengkap Karyawan'), findsNothing);
     });
 
     testWidgets('shows confirmation dialog when Keluar Akun is tapped', (
@@ -101,16 +126,20 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Scroll until Keluar Akun is visible, then drag an extra 100px so it's fully on screen
+      // Scroll until Keluar Akun is visible
       await tester.scrollUntilVisible(find.text('Keluar Akun'), 50);
-      await tester.drag(find.byType(Scrollable), const Offset(0, -120));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Keluar Akun'));
       await tester.pumpAndSettle();
 
       // Dialog appears
-      expect(find.text('Apakah Anda yakin ingin keluar dari akun ini? Anda harus memasukkan kredensial kembali untuk masuk.'), findsOneWidget);
+      expect(
+        find.text(
+          'Apakah Anda yakin ingin keluar dari akun ini? Anda harus memasukkan kredensial kembali untuk masuk.',
+        ),
+        findsOneWidget,
+      );
       expect(find.text('Batal'), findsOneWidget);
       expect(find.text('Ya, Keluar'), findsOneWidget);
 
