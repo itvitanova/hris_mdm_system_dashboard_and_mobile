@@ -626,7 +626,7 @@ class _ProfileTabState extends State<ProfileTab> {
                           fontFamily: 'Inter',
                           fontSize: 14.sp,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.deepTeal,
+                          color: AppColors.textSecondary,
                           letterSpacing: -0.2,
                         ),
                       ),
