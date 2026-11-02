@@ -213,5 +213,40 @@ void main() {
       expect(find.text('Semua Kehadiran'), findsOneWidget);
       expect(find.textContaining('Riwayat Absensi 2026'), findsOneWidget);
     });
+
+    testWidgets('Empty state displays clean info without Absen Sekarang button', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390 * 3, 1400 * 3);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        wrapWithScreenUtil(
+          AttendanceHistoryPage(
+            api: ApiClient(),
+            workspace: workspace,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Tap on 'BELUM ABSEN' (count 0) to trigger empty state
+      await tester.tap(find.text('BELUM ABSEN').first);
+      await tester.pumpAndSettle();
+
+      // Verify Empty State is shown
+      expect(find.text('Belum Ada Catatan Kehadiran'), findsOneWidget);
+      expect(
+        find.text(
+          'Catatan kehadiran akan otomatis tercatat setelah melakukan absensi masuk atau pulang.',
+        ),
+        findsOneWidget,
+      );
+
+      // Verify 'Absen Sekarang' button is NOT present
+      expect(find.text('Absen Sekarang'), findsNothing);
+    });
   });
 }

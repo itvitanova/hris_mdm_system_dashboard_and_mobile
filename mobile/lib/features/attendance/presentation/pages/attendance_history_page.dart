@@ -10,7 +10,6 @@ import '../../../../core/theme/app_shadows.dart';
 import '../../../root/presentation/widgets/dashboard_attendance_card.dart';
 import '../widgets/attendance_stat_card.dart';
 import '../widgets/filter_dropdowns.dart';
-import '../../attendance_screen.dart';
 
 /// Halaman Riwayat Kehadiran (View All Attendance)
 /// Mengadopsi visual style corporate teal (Stat Cards 2 kolom, Subtitle Banner,
@@ -1135,39 +1134,6 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                           fontFamily: 'Inter',
                           fontSize: 11.sp,
                           color: const Color(0xFF94A3B8),
-                        ),
-                      ),
-                      SizedBox(height: 16.h),
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.deepTeal,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.r),
-                          ),
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 16.w,
-                            vertical: 8.h,
-                          ),
-                        ),
-                        onPressed: () {
-                          Navigator.of(context, rootNavigator: true).push(
-                            MaterialPageRoute(
-                              builder: (_) => AttendanceScreen(
-                                api: widget.api,
-                                workspace: _workspace,
-                              ),
-                            ),
-                          );
-                        },
-                        icon: Icon(Icons.touch_app_rounded, size: 15.sp),
-                        label: Text(
-                          'Absen Sekarang',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w700,
-                          ),
                         ),
                       ),
                     ],
