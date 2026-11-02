@@ -1,0 +1,57 @@
+================================================================================
+                RINGKASAN UPDATE MOBILE APP - HRIS MDM SYSTEM
+                         Versi: v1.2.0 (Build 2013)
+                 Periode: 26 Oktober s/d 01 November 2026
+                         Developer: Malik Ibrahim
+================================================================================
+
+INFORMASI UMUM
+--------------------------------------------------------------------------------
+* Nama Proyek   : HRIS MDM System (Mobile App)
+* Versi Rilis   : v1.2.0+2013 (Update dari v1.0.6+2007)
+* Total Aktivitas: 56 Commit
+
+================================================================================
+POKOK PEKERJAAN & FITUR BARU
+================================================================================
+
+1. ARSITEKTUR & STATE MANAGEMENT
+   * Migrasi arsitektur ke Clean Architecture (Domain, Data, Presentation).
+   * Penerapan BLoC & GetIt untuk alur data reaktif dan modular.
+   * Standardisasi entitas data Auth, Absensi, Pengajuan, dan Payroll.
+
+2. LOGIN & AUTENTIKASI
+   * Redesain UI Login dengan tema teal gradient, wave header, dan logo baru.
+   * Standardisasi penanganan error 401 dan pesan validasi input.
+   * Perbaikan bug redirect loop login dan pembersihan session saat logout.
+
+3. DASHBOARD / BERANDA
+   * Header interaktif (sapaan karyawan, notifikasi, dan pemilih bahasa).
+   * Menampilkan saldo cuti, ringkasan pengajuan pending, dan panel approval.
+   * Widget kartu absensi compact, riwayat presensi 2 hari, dan animasi shimmer.
+   * Perbaikan teks badge/jam yang terpotong (ellipsis) dan optimasi scrolling.
+
+4. PRESENSI (ATTENDANCE)
+   * Modal bottom sheet absensi 2 tahap (validasi lokasi GPS lalu konfirmasi).
+   * Penyelarasan kartu presensi dengan aksen gradient teal simetris.
+
+5. LAYANAN PENGAJUAN (SERVICES HUB & REQUESTS)
+   * Mengubah menu pengajuan menjadi katalog terpadu 1 halaman (Services Hub).
+   * Layar terpisah untuk 5 modul (Cuti, Sakit, Lembur, Klaim Medis, Dinas).
+   * Counter status 2x2 (Total, Menunggu, Disetujui, Ditolak).
+   * Dropdown filter status interaktif yang sinkron dengan kartu counter.
+   * Universal Request Card modular dengan soft ambient shadow.
+   * Form pengajuan modular dilengkapi custom date & time picker.
+
+6. NAVIGASI & APP SHELL
+   * Persistent Bottom Navbar (5 tab: Home, Layanan, Approval, Payroll, Profil).
+   * Corporate clean AppBar dengan elevasi halus dan tombol back rounded.
+   * Standardisasi ikon aktif dengan aksen teal tint.
+
+7. PROFIL & BUILD SETTINGS
+   * Modernisasi UI tab Profil dan informasi akun karyawan.
+   * Konfigurasi setelan build dan target platform iOS.
+
+================================================================================
+                                AKHIR DOKUMEN
+================================================================================
