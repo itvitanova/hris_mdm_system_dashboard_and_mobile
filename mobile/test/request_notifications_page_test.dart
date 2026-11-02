@@ -21,6 +21,11 @@ void main() {
     testWidgets('renders two-line header, segmented filters, and mock notification cards', (
       tester,
     ) async {
+      tester.view.physicalSize = const Size(390 * 3, 1600 * 3);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       final workspace = Workspace({
         'requests': [],
         'employees': [],
@@ -44,14 +49,23 @@ void main() {
       expect(find.byKey(const ValueKey('notif_filter_Semua')), findsOneWidget);
       expect(find.byKey(const ValueKey('notif_filter_Belum Dibaca')), findsOneWidget);
 
-      // 3. Verify Mock Notification Cards
+      // 3. Verify Day Grouping Section Headers
+      expect(find.text('HARI INI'), findsOneWidget);
+      expect(find.text('KEMARIN'), findsOneWidget);
+      expect(find.text('TERDAHULU'), findsOneWidget);
+
+      // 4. Verify Mock Notification Cards
       expect(find.text('Pengajuan Cuti Disetujui'), findsOneWidget);
       expect(find.text('Perlu Revisi Dokumen Klaim'), findsOneWidget);
       expect(find.text('Menunggu Verifikasi Finance'), findsOneWidget);
       expect(find.text('Tugas Lembur Disetujui'), findsOneWidget);
       expect(find.text('Permohonan Fasilitas Disetujui'), findsOneWidget);
 
-      // 4. Tap 'Belum Dibaca' filter
+      // 5. Verify Reviewer Note & "Perbaiki Sekarang" button
+      expect(find.textContaining('Catatan Peninjau'), findsOneWidget);
+      expect(find.text('Perbaiki Sekarang'), findsOneWidget);
+
+      // 6. Tap 'Belum Dibaca' filter
       await tester.tap(find.byKey(const ValueKey('notif_filter_Belum Dibaca')));
       await tester.pumpAndSettle();
 
@@ -61,7 +75,7 @@ void main() {
       // Read items should not be visible in 'Belum Dibaca'
       expect(find.text('Menunggu Verifikasi Finance'), findsNothing);
 
-      // 5. Tap 'Tandai Dibaca' action button in AppBar
+      // 7. Tap 'Tandai Dibaca' action button in AppBar
       expect(find.byKey(const Key('notif_mark_all_read_btn')), findsOneWidget);
       await tester.tap(find.byKey(const Key('notif_mark_all_read_btn')));
       await tester.pumpAndSettle();
@@ -69,7 +83,7 @@ void main() {
       // Now all items are read -> empty state in 'Belum Dibaca'
       expect(find.text('Tidak ada notifikasi yang belum dibaca.'), findsOneWidget);
 
-      // 6. Switch back to 'Semua'
+      // 8. Switch back to 'Semua'
       await tester.tap(find.byKey(const ValueKey('notif_filter_Semua')));
       await tester.pumpAndSettle();
       expect(find.text('Pengajuan Cuti Disetujui'), findsOneWidget);
@@ -79,6 +93,11 @@ void main() {
     testWidgets('tapping notification card opens RequestDetailScreen', (
       tester,
     ) async {
+      tester.view.physicalSize = const Size(390 * 3, 1200 * 3);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       final workspace = Workspace({
         'requests': [],
         'employees': [],
