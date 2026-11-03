@@ -18,7 +18,7 @@ void main() {
   }
 
   group('RequestNotificationsScreen Tests', () {
-    testWidgets('renders two-line header, segmented filters, and mock notification cards', (
+    testWidgets('renders two-line header, segmented filters, and real notification cards', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(390 * 3, 1600 * 3);
@@ -26,8 +26,42 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
+      final now = DateTime.now();
       final workspace = Workspace({
-        'requests': [],
+        'requests': [
+          {
+            'id': 'REQ-NOTIF-1',
+            'kind': 'Cuti',
+            'title': 'Cuti Tahunan Liburan',
+            'status': 'Disetujui',
+            'unread': true,
+            'reviewNote': 'Disetujui untuk periode akhir tahun',
+            'reviewedBy': 'Lead HR',
+            'updatedAt': now.toIso8601String(),
+          },
+          {
+            'id': 'REQ-NOTIF-2',
+            'kind': 'Reimbursement',
+            'title': 'Klaim Transportasi Klien',
+            'status': 'Perlu Revisi',
+            'unread': true,
+            'reviewNote': 'Struk parkir tidak terbaca jelas',
+            'reviewedBy': 'Finance',
+            'updatedAt': now.subtract(const Duration(days: 1)).toIso8601String(),
+          },
+          {
+            'id': 'REQ-NOTIF-3',
+            'kind': 'Lembur',
+            'title': 'Tugas Lembur Deployment',
+            'status': 'Disetujui',
+            'unread': false,
+            'reviewedBy': 'Manager IT',
+            'updatedAt': now.subtract(const Duration(days: 3)).toIso8601String(),
+            'history': [
+              {'decision': 'Disetujui'},
+            ],
+          },
+        ],
         'employees': [],
       });
 
@@ -54,15 +88,13 @@ void main() {
       expect(find.text('KEMARIN'), findsOneWidget);
       expect(find.text('TERDAHULU'), findsOneWidget);
 
-      // 4. Verify Mock Notification Cards
+      // 4. Verify Real Notification Cards
       expect(find.text('Pengajuan Cuti Disetujui'), findsOneWidget);
-      expect(find.text('Perlu Revisi Dokumen Klaim'), findsOneWidget);
-      expect(find.text('Menunggu Verifikasi Finance'), findsOneWidget);
-      expect(find.text('Tugas Lembur Disetujui'), findsOneWidget);
-      expect(find.text('Permohonan Fasilitas Disetujui'), findsOneWidget);
+      expect(find.text('Perlu Revisi Dokumen Reimbursement'), findsOneWidget);
+      expect(find.text('Pengajuan Lembur Disetujui'), findsOneWidget);
 
       // 5. Verify Reviewer Note & "Perbaiki Sekarang" button
-      expect(find.textContaining('Catatan Peninjau'), findsOneWidget);
+      expect(find.textContaining('Catatan Peninjau'), findsNWidgets(2));
       expect(find.text('Perbaiki Sekarang'), findsOneWidget);
 
       // 6. Tap 'Belum Dibaca' filter
@@ -71,9 +103,9 @@ void main() {
 
       // Unread items visible: Cuti & Reimbursement
       expect(find.text('Pengajuan Cuti Disetujui'), findsOneWidget);
-      expect(find.text('Perlu Revisi Dokumen Klaim'), findsOneWidget);
+      expect(find.text('Perlu Revisi Dokumen Reimbursement'), findsOneWidget);
       // Read items should not be visible in 'Belum Dibaca'
-      expect(find.text('Menunggu Verifikasi Finance'), findsNothing);
+      expect(find.text('Pengajuan Lembur Disetujui'), findsNothing);
 
       // 7. Tap 'Tandai Dibaca' action button in AppBar
       expect(find.byKey(const Key('notif_mark_all_read_btn')), findsOneWidget);
@@ -87,7 +119,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('notif_filter_Semua')));
       await tester.pumpAndSettle();
       expect(find.text('Pengajuan Cuti Disetujui'), findsOneWidget);
-      expect(find.text('Menunggu Verifikasi Finance'), findsOneWidget);
+      expect(find.text('Pengajuan Lembur Disetujui'), findsOneWidget);
     });
 
     testWidgets('tapping notification card opens RequestDetailScreen', (
@@ -99,7 +131,16 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       final workspace = Workspace({
-        'requests': [],
+        'requests': [
+          {
+            'id': 'REQ-NOTIF-1',
+            'kind': 'Cuti',
+            'title': 'Cuti Tahunan Liburan',
+            'status': 'Disetujui',
+            'unread': true,
+            'updatedAt': DateTime.now().toIso8601String(),
+          },
+        ],
         'employees': [],
       });
 

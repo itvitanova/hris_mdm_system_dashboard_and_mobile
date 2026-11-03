@@ -9,7 +9,6 @@ import '../../../requests/request_detail.dart';
 import '../../../requests/request_notifications.dart';
 import '../../../requests/presentation/widgets/universal_request_card/universal_request_card.dart';
 import '../../../requests/presentation/widgets/services_hub/service_module_card.dart';
-import '../../../requests/presentation/models/mock_universal_requests.dart';
 import '../../../requests/presentation/pages/modules/dedicated_module_screen.dart';
 
 /// Halaman Hub Pengajuan Utama (Tab 'Pengajuan' di Bottom Navbar)
@@ -281,13 +280,8 @@ class _RequestsTabState extends State<RequestsTab> {
     final rows = w.mine('requests');
     final unreadCount = rows.where((r) => r['unread'] == true).length;
 
-    // Kumpulkan seluruh data request riil dan mock
-    final allRawItems = <Map<String, dynamic>>[
-      ...rows,
-      ...mockUniversalRequests
-          .where((m) => !rows.any((r) => text(r, 'title') == m.title))
-          .map((m) => m.toMap()),
-    ];
+    // Data request riil karyawan dari workspace
+    final allRawItems = List<Map<String, dynamic>>.from(rows);
 
     // Konversi ke model universal
     final allModels = allRawItems.map((r) => UniversalRequestModel.fromMap(r)).toList();
@@ -691,21 +685,53 @@ class _RequestsTabState extends State<RequestsTab> {
 
               if (recentCards.isEmpty)
                 Container(
-                  padding: EdgeInsets.symmetric(vertical: 24.h, horizontal: 16.w),
+                  padding: EdgeInsets.symmetric(vertical: 28.h, horizontal: 16.w),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12.r),
                     border: Border.all(color: const Color(0xFFE2E8F0)),
                   ),
                   alignment: Alignment.center,
-                  child: Text(
-                    _selectedFilter == 'Semua'
-                        ? 'Belum ada pengajuan aktif saat ini.'
-                        : 'Belum ada pengajuan dengan status "$_selectedFilter".',
-                    style: const TextStyle(
-                      fontSize: 12.5,
-                      color: Color(0xFF64748B),
-                    ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 44.w,
+                        height: 44.w,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(10.r),
+                        ),
+                        child: Icon(
+                          Icons.inbox_rounded,
+                          size: 22.w,
+                          color: const Color(0xFF94A3B8),
+                        ),
+                      ),
+                      SizedBox(height: 10.h),
+                      Text(
+                        _selectedFilter == 'Semua'
+                            ? 'Belum ada pengajuan aktif saat ini.'
+                            : 'Belum ada pengajuan dengan status "$_selectedFilter".',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF475569),
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      const Text(
+                        'Pilih salah satu modul layanan di atas untuk mengajukan permohonan baru.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 11,
+                          color: Color(0xFF94A3B8),
+                        ),
+                      ),
+                    ],
                   ),
                 )
               else ...[

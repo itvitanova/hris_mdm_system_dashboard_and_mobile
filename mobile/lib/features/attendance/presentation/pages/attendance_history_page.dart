@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import '../widgets/attendance_detail_modal.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/workspace.dart';
@@ -67,97 +66,7 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
   /// Ekstraksi seluruh list absensi karyawan saat ini
   List<Map<String, dynamic>> _getAttendanceRawList() {
     final mine = _workspace.mine('attendance');
-    if (mine.isNotEmpty) {
-      return List<Map<String, dynamic>>.from(mine);
-    }
-
-    // Jika akun belum memiliki absensi dan workspace dalam mode demo,
-    // sediakan mock data realistis MDM agar tampilan dan filter dapat diuji.
-    final bool isDemo = _workspace.data['demo'] == true;
-    if (isDemo || mine.isEmpty) {
-      final policy = _workspace.attendancePolicy;
-      final policyName = text(policy, 'name', 'Kantor Pusat MDM Jakarta');
-      final lat = number(policy, 'latitude');
-      final lng = number(policy, 'longitude');
-      final now = DateTime.now();
-
-      return [
-        {
-          'id': 'att-mock-today',
-          'employeeId': text(_workspace.actor, 'employeeId'),
-          'employeeName': text(_workspace.actor, 'name'),
-          'date': DateFormat('yyyy-MM-dd').format(now),
-          'checkIn': '${DateFormat('yyyy-MM-dd').format(now)}T08:24:10+07:00',
-          'checkOut': '${DateFormat('yyyy-MM-dd').format(now)}T17:45:00+07:00',
-          'status': 'Hadir',
-          'lateMinutes': 0,
-          'earlyDeparture': false,
-          'distance': 18.5,
-          'faceVerified': true,
-          'checkInLocation': {
-            'latitude': lat != 0 ? lat : -6.137607,
-            'longitude': lng != 0 ? lng : 106.799707,
-            'policy': {'name': policyName, 'allowAnyLocation': false},
-          },
-          'checkOutLocation': {
-            'latitude': lat != 0 ? lat : -6.137607,
-            'longitude': lng != 0 ? lng : 106.799707,
-            'policy': {'name': policyName, 'allowAnyLocation': false},
-          },
-        },
-        {
-          'id': 'att-mock-yesterday',
-          'employeeId': text(_workspace.actor, 'employeeId'),
-          'employeeName': text(_workspace.actor, 'name'),
-          'date': DateFormat('yyyy-MM-dd')
-              .format(now.subtract(const Duration(days: 1))),
-          'checkIn':
-              '${DateFormat('yyyy-MM-dd').format(now.subtract(const Duration(days: 1)))}T09:12:00+07:00',
-          'checkOut':
-              '${DateFormat('yyyy-MM-dd').format(now.subtract(const Duration(days: 1)))}T18:05:00+07:00',
-          'status': 'Terlambat',
-          'lateMinutes': 12,
-          'earlyDeparture': false,
-          'distance': 25.0,
-          'faceVerified': true,
-          'checkInLocation': {
-            'latitude': lat != 0 ? lat : -6.137607,
-            'longitude': lng != 0 ? lng : 106.799707,
-            'policy': {'name': policyName, 'allowAnyLocation': false},
-          },
-        },
-        {
-          'id': 'att-mock-2days-ago',
-          'employeeId': text(_workspace.actor, 'employeeId'),
-          'employeeName': text(_workspace.actor, 'name'),
-          'date': DateFormat('yyyy-MM-dd')
-              .format(now.subtract(const Duration(days: 2))),
-          'checkIn':
-              '${DateFormat('yyyy-MM-dd').format(now.subtract(const Duration(days: 2)))}T08:30:00+07:00',
-          'checkOut':
-              '${DateFormat('yyyy-MM-dd').format(now.subtract(const Duration(days: 2)))}T16:30:00+07:00',
-          'status': 'Hadir',
-          'lateMinutes': 0,
-          'earlyDeparture': true,
-          'earlyMinutes': 60,
-          'earlyReason': 'Izin urusan keluarga mendesak',
-          'distance': 15.0,
-          'faceVerified': true,
-          'checkInLocation': {
-            'latitude': lat != 0 ? lat : -6.137607,
-            'longitude': lng != 0 ? lng : 106.799707,
-            'policy': {'name': policyName, 'allowAnyLocation': false},
-          },
-          'checkOutLocation': {
-            'latitude': lat != 0 ? lat : -6.137607,
-            'longitude': lng != 0 ? lng : 106.799707,
-            'policy': {'name': policyName, 'allowAnyLocation': false},
-          },
-        },
-      ];
-    }
-
-    return [];
+    return List<Map<String, dynamic>>.from(mine);
   }
 
   /// Modal detail kehadiran lengkap dengan informasi verifikasi MDM

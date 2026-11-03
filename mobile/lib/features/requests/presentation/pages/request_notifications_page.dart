@@ -6,7 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../domain/entities/submission_kind.dart';
 import '../../domain/entities/submission_status.dart';
-import '../models/mock_request_notifications.dart';
+import '../../domain/entities/request_notification_item.dart';
 import 'request_detail_page.dart';
 
 /// Halaman Notifikasi Pembaruan Pengajuan Mandiri
@@ -48,7 +48,6 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
   }
 
   List<RequestNotificationItem> _getCombinedNotifications() {
-    final mockList = getMockRequestNotifications();
     final realRows = data.mine('requests').where((r) {
       final history = (r['history'] as List?) ?? [];
       return r['unread'] == true ||
@@ -90,7 +89,23 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
         status: status,
         headline: headline,
         message: message,
-        timeAgo: 'Baru saja',
+        timeAgo: () {
+          final dateStr = text(r, 'updatedAt', text(r, 'createdAt', ''));
+          if (dateStr.isNotEmpty) {
+            final dt = DateTime.tryParse(dateStr);
+            if (dt != null) {
+              final diff = DateTime.now().difference(dt);
+              if (diff.inDays <= 0) {
+                return diff.inHours > 0 ? '${diff.inHours} jam lalu' : 'Baru saja';
+              } else if (diff.inDays == 1) {
+                return 'Kemarin';
+              } else {
+                return '${diff.inDays} hari lalu';
+              }
+            }
+          }
+          return 'Baru saja';
+        }(),
         isUnread: isUnread,
         reviewerName: reviewer.isNotEmpty ? reviewer : null,
         reviewNote: note.isNotEmpty ? note : null,
@@ -98,15 +113,7 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
       );
     }).toList();
 
-    return [
-      ...realItems,
-      ...mockList.map((m) {
-        if (_readIds.contains(m.id)) {
-          return m.copyWith(isUnread: false);
-        }
-        return m;
-      }),
-    ];
+    return realItems;
   }
 
   void _markAllAsRead() {

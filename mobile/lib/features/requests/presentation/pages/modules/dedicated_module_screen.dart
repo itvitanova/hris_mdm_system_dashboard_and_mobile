@@ -7,7 +7,6 @@ import 'package:mdm_hris/features/home/leave_calendar_screen.dart';
 import 'package:mdm_hris/features/requests/request_detail.dart';
 import 'package:mdm_hris/features/requests/request_form.dart';
 import 'package:mdm_hris/features/requests/request_notifications.dart';
-import 'package:mdm_hris/features/requests/presentation/models/mock_universal_requests.dart';
 import 'package:mdm_hris/features/requests/presentation/widgets/universal_request_card/universal_request_card.dart';
 import 'package:mdm_hris/features/requests/presentation/widgets/services_hub/module_stat_card.dart';
 import 'package:mdm_hris/features/requests/presentation/widgets/services_hub/submission_status_filter_dropdown.dart';
@@ -53,18 +52,11 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
     final rows = w.mine('requests');
     final List<UniversalRequestModel> items = [];
 
-    // 1. Data riil dari workspace
+    // Data riil dari workspace
     for (final r in rows) {
       final model = UniversalRequestModel.fromMap(r);
       if (model.kind == widget.kind) {
         items.add(model);
-      }
-    }
-
-    // 2. Data mock jika belum ada data riil serupa
-    for (final m in mockUniversalRequests) {
-      if (m.kind == widget.kind && !items.any((x) => x.title == m.title)) {
-        items.add(m);
       }
     }
 

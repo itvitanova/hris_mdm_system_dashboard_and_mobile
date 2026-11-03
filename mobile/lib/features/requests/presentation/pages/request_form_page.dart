@@ -927,122 +927,20 @@ class _RequestFormState extends State<RequestForm> {
   }
 
 
-  void _showAttachmentPicker() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) {
-        final mockFiles = [
-          {
-            'name': 'surat_keterangan_dokter.pdf',
-            'size': '1.2 MB',
-            'icon': Icons.picture_as_pdf_rounded,
-          },
-          {
-            'name': 'bukti_resep_obat.jpg',
-            'size': '850 KB',
-            'icon': Icons.image_rounded,
-          },
-          {
-            'name': 'surat_undangan_resmi.pdf',
-            'size': '620 KB',
-            'icon': Icons.picture_as_pdf_rounded,
-          },
-          {
-            'name': 'dokumen_pendukung_izin.pdf',
-            'size': '430 KB',
-            'icon': Icons.description_rounded,
-          },
-        ];
-
-        return Material(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-          clipBehavior: Clip.antiAlias,
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(18.w, 14.h, 18.w, 24.h),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 38.w,
-                    height: 4.h,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFCBD5E1),
-                      borderRadius: BorderRadius.circular(2.r),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 14.h),
-                Text(
-                  'Pilih Berkas Lampiran',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF0F172A),
-                  ),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  'Format PDF, JPG, atau PNG (Maks. 2MB)',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 11.5.sp,
-                    color: const Color(0xFF64748B),
-                  ),
-                ),
-                SizedBox(height: 12.h),
-                ...mockFiles.map((file) {
-                  return ListTile(
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
-                    leading: Container(
-                      width: 38.w,
-                      height: 38.w,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF0FDFA),
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      child: Icon(
-                        file['icon'] as IconData,
-                        size: 20.sp,
-                        color: const Color(0xFF0D9488),
-                      ),
-                    ),
-                    title: Text(
-                      file['name'] as String,
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 12.5.sp,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF0F172A),
-                      ),
-                    ),
-                    subtitle: Text(
-                      file['size'] as String,
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 10.5.sp,
-                        color: const Color(0xFF94A3B8),
-                      ),
-                    ),
-                    onTap: () {
-                      setState(() {
-                        _selectedAttachmentName = file['name'] as String;
-                      });
-                      Navigator.pop(ctx);
-                    },
-                  );
-                }),
-              ],
-            ),
-          ),
-        );
-      },
-    );
+  Future<void> _showAttachmentPicker() async {
+    try {
+      final file = await FilePicker.pickFile(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+      );
+      if (file != null && mounted) {
+        setState(() {
+          _selectedAttachmentName = file.name;
+        });
+      }
+    } catch (_) {
+      // Pick canceled or error handled gracefully
+    }
   }
 
   Widget _buildAttachmentCard() {
@@ -1413,15 +1311,6 @@ class _RequestFormState extends State<RequestForm> {
       ),
     );
   }
-
-  IconData _getKindIcon(String k) => switch (k) {
-    'Cuti' => Icons.event_available_rounded,
-    'Lembur' => Icons.more_time_rounded,
-    'Reimbursement' => Icons.receipt_long_rounded,
-    'Petty Cash' => Icons.account_balance_wallet_rounded,
-    'General Affair' => Icons.business_center_rounded,
-    _ => Icons.assignment_outlined,
-  };
 
   Widget expenseFields(ExpenseDraft item, int index) => Panel(
     key: ObjectKey(item),
