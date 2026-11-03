@@ -23,12 +23,26 @@ class PayrollTab extends StatefulWidget {
 }
 
 class _PayrollTabState extends State<PayrollTab> {
-  String selectedPeriod = 'Semua Periode';
+  String selectedPeriod = 'Semua periode';
+  String query = '';
+  late final TextEditingController _searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   Workspace get w => widget.workspace;
 
   Widget _buildHeroSummaryBanner(num latestSalary, String latestPeriod, int totalSlips) {
-    final hasFilter = selectedPeriod != 'Semua Periode';
+    final hasFilter = selectedPeriod != 'Semua periode';
     final chipLabel = hasFilter
         ? 'Filter: $selectedPeriod'
         : (latestPeriod.isNotEmpty
@@ -162,94 +176,250 @@ class _PayrollTabState extends State<PayrollTab> {
     );
   }
 
-  Widget _buildPeriodFilterBar(List<String> periods) {
-    if (periods.length <= 1) return const SizedBox.shrink();
+  Widget _buildSearchBar() {
+    return Container(
+      height: 42.h,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x06000000),
+            blurRadius: 4,
+            offset: Offset(0, 1),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: _searchController,
+        decoration: InputDecoration(
+          hintText: 'Cari slip gaji…',
+          hintStyle: const TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 12,
+            color: Color(0xFF94A3B8),
+          ),
+          prefixIcon: const Icon(
+            Icons.search_rounded,
+            size: 19,
+            color: Color(0xFF94A3B8),
+          ),
+          suffixIcon: query.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.close_rounded, size: 17, color: Color(0xFF94A3B8)),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() => query = '');
+                  },
+                )
+              : null,
+          filled: true,
+          fillColor: Colors.white,
+          isDense: true,
+          contentPadding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12.r),
+            borderSide: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12.r),
+            borderSide: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12.r),
+            borderSide: const BorderSide(color: Color(0xFF0F766E), width: 1.5),
+          ),
+        ),
+        style: const TextStyle(
+          fontFamily: 'Inter',
+          fontSize: 12.5,
+          color: Color(0xFF0F172A),
+        ),
+        onChanged: (v) => setState(() => query = v),
+      ),
+    );
+  }
 
-    return SizedBox(
-      height: 34.h,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: periods.length,
-        separatorBuilder: (context, index) => SizedBox(width: 8.w),
-        itemBuilder: (context, index) {
-          final p = periods[index];
-          final isSelected = p == selectedPeriod;
-          return Material(
-            color: Colors.transparent,
-            child: InkWell(
-              key: ValueKey('payroll_period_filter_$p'),
-              borderRadius: BorderRadius.circular(20.r),
-              onTap: () => setState(() => selectedPeriod = p),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 160),
-                padding: EdgeInsets.symmetric(horizontal: 13.w, vertical: 6.h),
-                decoration: BoxDecoration(
-                  gradient: isSelected
-                      ? const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Color(0xFF0F766E), // Teal 700
-                            Color(0xFF14B8A6), // Teal 500
-                          ],
-                        )
-                      : null,
-                  color: isSelected ? null : Colors.white,
-                  borderRadius: BorderRadius.circular(20.r),
-                  border: Border.all(
-                    color: isSelected
-                        ? const Color(0xFF0F766E)
-                        : const Color(0xFFE2E8F0),
-                    width: 1,
+  Widget _buildPeriodDropdownTrigger(List<String> uniquePeriods) {
+    final isCustomPeriod = selectedPeriod != 'Semua periode';
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        key: const Key('payroll_period_dropdown_btn'),
+        borderRadius: BorderRadius.circular(12.r),
+        onTap: () => _showPeriodPickerModal(context, uniquePeriods),
+        child: Container(
+          height: 42.h,
+          padding: EdgeInsets.symmetric(horizontal: 11.w),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(
+              color: isCustomPeriod ? const Color(0xFF0F766E) : const Color(0xFFE2E8F0),
+              width: isCustomPeriod ? 1.5 : 1,
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x06000000),
+                blurRadius: 4,
+                offset: Offset(0, 1),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.calendar_today_rounded,
+                size: 15.sp,
+                color: isCustomPeriod ? const Color(0xFF0F766E) : const Color(0xFF64748B),
+              ),
+              SizedBox(width: 6.w),
+              ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: 96.w),
+                child: Text(
+                  selectedPeriod,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 12.sp,
+                    fontWeight: isCustomPeriod ? FontWeight.w700 : FontWeight.w600,
+                    color: isCustomPeriod ? const Color(0xFF0F766E) : const Color(0xFF1E293B),
                   ),
-                  boxShadow: isSelected
-                      ? [
-                          BoxShadow(
-                            color: const Color(0xFF0F766E)
-                                .withValues(alpha: 0.25),
-                            blurRadius: 4,
-                            offset: const Offset(0, 1.5),
-                          ),
-                        ]
-                      : [
-                          const BoxShadow(
-                            color: Color(0x050F172A),
-                            blurRadius: 3,
-                            offset: Offset(0, 1),
-                          ),
-                        ],
-                ),
-                alignment: Alignment.center,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (p != 'Semua Periode') ...[
-                      Icon(
-                        Icons.calendar_today_rounded,
-                        size: 11.sp,
-                        color: isSelected ? Colors.white : const Color(0xFF64748B),
-                      ),
-                      SizedBox(width: 5.w),
-                    ],
-                    Text(
-                      p,
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 11.5.sp,
-                        fontWeight:
-                            isSelected ? FontWeight.w700 : FontWeight.w500,
-                        color: isSelected
-                            ? Colors.white
-                            : const Color(0xFF64748B),
-                      ),
-                    ),
-                  ],
                 ),
               ),
-            ),
-          );
-        },
+              SizedBox(width: 4.w),
+              Icon(
+                Icons.keyboard_arrow_down_rounded,
+                size: 18.sp,
+                color: isCustomPeriod ? const Color(0xFF0F766E) : const Color(0xFF64748B),
+              ),
+            ],
+          ),
+        ),
       ),
+    );
+  }
+
+  void _showPeriodPickerModal(BuildContext context, List<String> uniquePeriods) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(20.w, 14.h, 20.w, 20.h),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 38.w,
+                    height: 4.h,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFCBD5E1),
+                      borderRadius: BorderRadius.circular(2.r),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 14.h),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Periode payroll',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF0F172A),
+                      ),
+                    ),
+                    if (selectedPeriod != 'Semua periode')
+                      TextButton(
+                        onPressed: () {
+                          setState(() => selectedPeriod = 'Semua periode');
+                          Navigator.pop(ctx);
+                        },
+                        child: Text(
+                          'Reset',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF0F766E),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                SizedBox(height: 10.h),
+                ...uniquePeriods.map((period) {
+                  final isSelected = period == selectedPeriod;
+                  return Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      key: ValueKey('period_option_$period'),
+                      borderRadius: BorderRadius.circular(10.r),
+                      onTap: () {
+                        setState(() => selectedPeriod = period);
+                        Navigator.pop(ctx);
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
+                        margin: EdgeInsets.only(bottom: 6.h),
+                        decoration: BoxDecoration(
+                          color: isSelected ? const Color(0xFFF0FDFA) : Colors.transparent,
+                          borderRadius: BorderRadius.circular(10.r),
+                          border: Border.all(
+                            color: isSelected ? const Color(0xFF0F766E) : const Color(0xFFF1F5F9),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              period == 'Semua periode'
+                                  ? Icons.date_range_rounded
+                                  : Icons.calendar_today_rounded,
+                              size: 16.sp,
+                              color: isSelected ? const Color(0xFF0F766E) : const Color(0xFF64748B),
+                            ),
+                            SizedBox(width: 10.w),
+                            Expanded(
+                              child: Text(
+                                period,
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 13.sp,
+                                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                  color: isSelected ? const Color(0xFF0F766E) : const Color(0xFF0F172A),
+                                ),
+                              ),
+                            ),
+                            if (isSelected)
+                              Icon(
+                                Icons.check_circle_rounded,
+                                size: 18.sp,
+                                color: const Color(0xFF0F766E),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -320,7 +490,7 @@ class _PayrollTabState extends State<PayrollTab> {
           ),
           SizedBox(height: 12.h),
           Text(
-            isFiltered ? 'Tidak Ada Slip untuk Periode Ini' : 'Slip Gaji Belum Tersedia',
+            isFiltered ? 'Tidak Ada Slip yang Sesuai' : 'Slip Gaji Belum Tersedia',
             style: TextStyle(
               fontFamily: 'Inter',
               fontSize: 14.5.sp,
@@ -331,7 +501,7 @@ class _PayrollTabState extends State<PayrollTab> {
           SizedBox(height: 4.h),
           Text(
             isFiltered
-                ? 'Tidak ditemukan dokumen slip gaji pada periode $selectedPeriod.'
+                ? 'Tidak ditemukan dokumen slip gaji yang sesuai dengan filter pencarian atau periode terpilih.'
                 : 'Data slip gaji Anda untuk periode ini belum diterbitkan oleh bagian Finance/HR.',
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -345,9 +515,15 @@ class _PayrollTabState extends State<PayrollTab> {
           SizedBox(height: 16.h),
           if (isFiltered)
             ElevatedButton.icon(
-              onPressed: () => setState(() => selectedPeriod = 'Semua Periode'),
+              onPressed: () {
+                _searchController.clear();
+                setState(() {
+                  selectedPeriod = 'Semua periode';
+                  query = '';
+                });
+              },
               icon: const Icon(Icons.clear_all_rounded, size: 16),
-              label: const Text('Tampilkan Semua Periode'),
+              label: const Text('Reset Filter & Pencarian'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF0F766E),
                 foregroundColor: Colors.white,
@@ -552,20 +728,30 @@ class _PayrollTabState extends State<PayrollTab> {
     final allRows = w.mine('payroll')
       ..sort((a, b) => text(b, 'period').compareTo(text(a, 'period')));
 
-    // Extract unique periods for filter bar
+    // Extract unique periods for filter dropdown
     final uniquePeriods = [
-      'Semua Periode',
+      'Semua periode',
       ...allRows.map((r) => text(r, 'period')).where((p) => p.isNotEmpty).toSet()
     ];
 
     if (!uniquePeriods.contains(selectedPeriod)) {
-      selectedPeriod = 'Semua Periode';
+      selectedPeriod = 'Semua periode';
     }
 
-    // Filter rows based on selectedPeriod
-    final filteredRows = selectedPeriod == 'Semua Periode'
-        ? allRows
-        : allRows.where((r) => text(r, 'period') == selectedPeriod).toList();
+    // Filter rows based on selectedPeriod and search query
+    final filteredRows = allRows.where((r) {
+      final matchesPeriod = selectedPeriod == 'Semua periode' || text(r, 'period') == selectedPeriod;
+      if (!matchesPeriod) return false;
+
+      if (query.trim().isEmpty) return true;
+      final q = query.trim().toLowerCase();
+      final periodStr = text(r, 'period').toLowerCase();
+      final companyStr = text(r, 'companyName').toLowerCase();
+      final deptStr = text(r, 'department').toLowerCase();
+      final statusStr = text(r, 'status').toLowerCase();
+
+      return periodStr.contains(q) || companyStr.contains(q) || deptStr.contains(q) || statusStr.contains(q);
+    }).toList();
 
     final latestSlip = filteredRows.isNotEmpty ? filteredRows.first : null;
     final latestSalary = latestSlip != null ? number(latestSlip, 'netSalary') : 0;
@@ -643,10 +829,16 @@ class _PayrollTabState extends State<PayrollTab> {
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
             children: [
               _buildHeroSummaryBanner(latestSalary, latestPeriod, filteredRows.length),
-              if (uniquePeriods.length > 2) ...[
-                SizedBox(height: 14.h),
-                _buildPeriodFilterBar(uniquePeriods),
-              ],
+              SizedBox(height: 14.h),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildSearchBar(),
+                  ),
+                  SizedBox(width: 8.w),
+                  _buildPeriodDropdownTrigger(uniquePeriods),
+                ],
+              ),
               SizedBox(height: 16.h),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -677,7 +869,7 @@ class _PayrollTabState extends State<PayrollTab> {
                         ),
                       ),
                       child: Text(
-                        '${filteredRows.length} Periode',
+                        '${filteredRows.length} Dokumen',
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 10.5.sp,
@@ -690,7 +882,7 @@ class _PayrollTabState extends State<PayrollTab> {
               ),
               SizedBox(height: 12.h),
               if (filteredRows.isEmpty)
-                _buildEmptyState(isFiltered: selectedPeriod != 'Semua Periode')
+                _buildEmptyState(isFiltered: selectedPeriod != 'Semua periode' || query.isNotEmpty)
               else
                 ...filteredRows.map((r) => _buildPayslipCard(context, r)),
             ],

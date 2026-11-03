@@ -18,7 +18,7 @@ void main() {
   }
 
   group('PayrollTab & PayslipScreen Tests', () {
-    testWidgets('renders PayrollTab header, hero banner, and payslip card, and opens PayslipScreen on tap', (
+    testWidgets('renders PayrollTab header, hero banner, search, and dropdown, and opens PayslipScreen on tap', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(390 * 3, 1200 * 3);
@@ -79,22 +79,26 @@ void main() {
       // 2. Verify Hero Banner with latest period and net salary
       expect(find.textContaining('Periode Terkini: Oktober 2026'), findsOneWidget);
       expect(find.text('Riwayat Pembayaran'), findsOneWidget);
-      expect(find.text('1 Periode'), findsOneWidget);
+      expect(find.text('1 Dokumen'), findsOneWidget);
 
-      // 3. Verify Payslip Card
+      // 3. Verify Search and Dropdown Button
+      expect(find.byType(TextField), findsOneWidget);
+      expect(find.byKey(const Key('payroll_period_dropdown_btn')), findsOneWidget);
+
+      // 4. Verify Payslip Card
       expect(find.text('Oktober 2026'), findsWidgets);
       expect(find.text('Final'), findsOneWidget);
       expect(find.text('Gaji Bersih (Take Home Pay)'), findsOneWidget);
       expect(find.text('Rincian'), findsOneWidget);
 
-      // 4. Tap Card -> opens PayslipScreen
+      // 5. Tap Card -> opens PayslipScreen
       await tester.tap(find.text('Rincian'));
       await tester.pumpAndSettle();
 
       expect(openedScreen, isA<PayslipScreen>());
     });
 
-    testWidgets('Period filter bar allows switching between periods', (
+    testWidgets('Search and Period Dropdown allow filtering payroll records', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(390 * 3, 1200 * 3);
@@ -147,29 +151,42 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Filter chips should exist
-      expect(find.byKey(const ValueKey('payroll_period_filter_Semua Periode')), findsOneWidget);
-      expect(find.byKey(const ValueKey('payroll_period_filter_2026-10')), findsOneWidget);
-      expect(find.byKey(const ValueKey('payroll_period_filter_2026-09')), findsOneWidget);
+      // Search and Dropdown trigger should exist
+      expect(find.byType(TextField), findsOneWidget);
+      expect(find.byKey(const Key('payroll_period_dropdown_btn')), findsOneWidget);
+      expect(find.text('Semua periode'), findsOneWidget);
 
-      // Both cards visible in 'Semua Periode'
+      // Both cards visible initially
       expect(find.text('2026-10'), findsWidgets);
       expect(find.text('2026-09'), findsWidgets);
-      expect(find.text('2 Periode'), findsOneWidget);
+      expect(find.text('2 Dokumen'), findsOneWidget);
 
-      // Tap '2026-09' filter chip
-      await tester.tap(find.byKey(const ValueKey('payroll_period_filter_2026-09')));
+      // Tap Period Dropdown Trigger -> opens modal
+      await tester.tap(find.byKey(const Key('payroll_period_dropdown_btn')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Periode payroll'), findsOneWidget);
+      expect(find.byKey(const ValueKey('period_option_2026-09')), findsOneWidget);
+
+      // Tap '2026-09' option in modal
+      await tester.tap(find.byKey(const ValueKey('period_option_2026-09')));
       await tester.pumpAndSettle();
 
       // Only 2026-09 card is visible
-      expect(find.text('1 Periode'), findsOneWidget);
+      expect(find.text('1 Dokumen'), findsOneWidget);
       expect(find.text('Filter: 2026-09'), findsOneWidget);
 
-      // Tap 'Semua Periode'
-      await tester.tap(find.byKey(const ValueKey('payroll_period_filter_Semua Periode')));
+      // Test Search filtering
+      await tester.enterText(find.byType(TextField), 'TidakCocok');
       await tester.pumpAndSettle();
 
-      expect(find.text('2 Periode'), findsOneWidget);
+      expect(find.text('Tidak Ada Slip yang Sesuai'), findsOneWidget);
+
+      // Clear search
+      await tester.tap(find.byIcon(Icons.close_rounded));
+      await tester.pumpAndSettle();
+
+      expect(find.text('1 Dokumen'), findsOneWidget);
     });
 
     testWidgets('renders empty state when there are no payroll records', (
