@@ -604,8 +604,7 @@ class _PayslipScreenState extends State<PayslipScreen> {
         centerTitle: false,
         leading: IconButton(
           icon: const Icon(
-            Icons.arrow_back_ios_new_rounded,
-            size: 18,
+            Icons.arrow_back_rounded,
             color: Color(0xFF0F172A),
           ),
           onPressed: () => Navigator.pop(context),
