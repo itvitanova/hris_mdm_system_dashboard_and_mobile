@@ -32,6 +32,7 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
   String? error;
   String _selectedFilter = 'Semua';
   final Set<String> _readIds = {};
+  bool _markingAsRead = false;
 
   Future<void> refresh() async {
     try {
@@ -116,13 +117,85 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
     return realItems;
   }
 
-  void _markAllAsRead() {
+  Future<void> _markAllAsRead() async {
+    final all = _getCombinedNotifications();
+    final unreadItems = all.where((it) => it.isUnread).toList();
+    if (unreadItems.isEmpty || _markingAsRead) return;
+
     setState(() {
-      final all = _getCombinedNotifications();
-      for (final item in all) {
+      _markingAsRead = true;
+      for (final item in unreadItems) {
         _readIds.add(item.id);
       }
     });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(
+                Icons.check_circle_rounded,
+                color: Colors.white,
+                size: 18,
+              ),
+              SizedBox(width: 8.w),
+              const Expanded(
+                child: Text(
+                  'Semua notifikasi telah ditandai dibaca',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 12,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFF0F766E),
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10.r),
+          ),
+        ),
+      );
+    }
+
+    try {
+      final unreadRequests =
+          data.mine('requests').where((r) => r['unread'] == true).toList();
+      for (final r in unreadRequests) {
+        final id = text(r, 'id');
+        final token = text(r, 'updateToken');
+        if (id.isNotEmpty && token.isNotEmpty) {
+          try {
+            await widget.api.post(
+              '/requests/${Uri.encodeComponent(id)}/seen',
+              {'token': token},
+            );
+          } catch (_) {
+            // Abaikan kegagalan individual
+          }
+        }
+      }
+      final next = Workspace(await widget.api.workspace());
+      if (mounted) {
+        setState(() {
+          data = next;
+          error = null;
+        });
+      }
+    } catch (_) {
+      // Graceful fallback for offline / network errors
+    } finally {
+      if (mounted) {
+        setState(() {
+          _markingAsRead = false;
+        });
+      }
+    }
   }
 
   Future<void> _openItem(RequestNotificationItem item) async {
@@ -741,50 +814,59 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
           ],
         ),
         actions: [
-          if (unreadCount > 0)
-            Container(
-              margin: EdgeInsets.only(right: 16.w),
-              child: Material(
-                color: const Color(0xFFF0FDFA),
+          Container(
+            margin: EdgeInsets.only(right: 16.w),
+            child: Material(
+              color: unreadCount > 0
+                  ? const Color(0xFFF0FDFA)
+                  : const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(8.r),
+              child: InkWell(
+                key: const Key('notif_mark_all_read_btn'),
+                onTap: unreadCount > 0 && !_markingAsRead
+                    ? _markAllAsRead
+                    : null,
                 borderRadius: BorderRadius.circular(8.r),
-                child: InkWell(
-                  key: const Key('notif_mark_all_read_btn'),
-                  onTap: _markAllAsRead,
-                  borderRadius: BorderRadius.circular(8.r),
-                  child: Container(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8.r),
-                      border: Border.all(
-                        color: const Color(0xFFCCFBF1),
-                        width: 0.8,
+                child: Container(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8.r),
+                    border: Border.all(
+                      color: unreadCount > 0
+                          ? const Color(0xFFCCFBF1)
+                          : const Color(0xFFE2E8F0),
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.done_all_rounded,
+                        size: 14.sp,
+                        color: unreadCount > 0
+                            ? const Color(0xFF0F766E)
+                            : const Color(0xFF94A3B8),
                       ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.done_all_rounded,
-                          size: 14.sp,
-                          color: const Color(0xFF0F766E),
+                      SizedBox(width: 4.w),
+                      Text(
+                        'Tandai Dibaca',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w600,
+                          color: unreadCount > 0
+                              ? const Color(0xFF0F766E)
+                              : const Color(0xFF94A3B8),
                         ),
-                        SizedBox(width: 4.w),
-                        Text(
-                          'Tandai Dibaca',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 11.sp,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF0F766E),
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
+          ),
         ],
       ),
       body: SafeArea(
