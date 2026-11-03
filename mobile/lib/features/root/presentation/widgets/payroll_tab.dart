@@ -178,11 +178,9 @@ class _PayrollTabState extends State<PayrollTab> {
 
   Widget _buildSearchBar() {
     return Container(
-      height: 40.w,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(10.w),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+        borderRadius: BorderRadius.circular(12.r),
         boxShadow: const [
           BoxShadow(
             color: Color(0x05000000),
@@ -194,20 +192,20 @@ class _PayrollTabState extends State<PayrollTab> {
       child: TextField(
         controller: _searchController,
         decoration: InputDecoration(
-          hintText: 'Cari slip gaji…',
+          hintText: 'Cari slip gaji...',
           hintStyle: const TextStyle(
             fontFamily: 'Inter',
-            fontSize: 12,
+            fontSize: 12.5,
             color: Color(0xFF94A3B8),
           ),
           prefixIcon: const Icon(
             Icons.search_rounded,
-            size: 18,
+            size: 20,
             color: Color(0xFF94A3B8),
           ),
           suffixIcon: query.isNotEmpty
               ? IconButton(
-                  icon: const Icon(Icons.close_rounded, size: 16, color: Color(0xFF94A3B8)),
+                  icon: const Icon(Icons.close_rounded, size: 18, color: Color(0xFF94A3B8)),
                   onPressed: () {
                     _searchController.clear();
                     setState(() => query = '');
@@ -216,15 +214,23 @@ class _PayrollTabState extends State<PayrollTab> {
               : null,
           filled: true,
           fillColor: Colors.white,
-          isDense: true,
-          contentPadding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 9.h),
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          focusedBorder: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 11.h),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12.r),
+            borderSide: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12.r),
+            borderSide: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12.r),
+            borderSide: const BorderSide(color: Color(0xFF0F766E), width: 1.5),
+          ),
         ),
         style: const TextStyle(
           fontFamily: 'Inter',
-          fontSize: 12.5,
+          fontSize: 13,
           color: Color(0xFF0F172A),
         ),
         onChanged: (v) => setState(() => query = v),
@@ -639,21 +645,24 @@ class _PayrollTabState extends State<PayrollTab> {
             children: [
               _buildHeroSummaryBanner(latestSalary, latestPeriod, filteredRows.length),
               SizedBox(height: 14.h),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildSearchBar(),
-                  ),
-                  SizedBox(width: 8.w),
-                  PeriodFilterDropdown(
-                    key: const Key('payroll_period_dropdown_btn'),
-                    selected: selectedPeriod,
-                    options: uniquePeriods,
-                    onChanged: (val) {
-                      setState(() => selectedPeriod = val);
-                    },
-                  ),
-                ],
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: _buildSearchBar(),
+                    ),
+                    SizedBox(width: 8.w),
+                    PeriodFilterDropdown(
+                      key: const Key('payroll_period_dropdown_btn'),
+                      selected: selectedPeriod,
+                      options: uniquePeriods,
+                      onChanged: (val) {
+                        setState(() => selectedPeriod = val);
+                      },
+                    ),
+                  ],
+                ),
               ),
               SizedBox(height: 16.h),
               Row(
@@ -856,27 +865,35 @@ class _PeriodFilterDropdownState extends State<PeriodFilterDropdown> {
       key: _triggerKey,
       onTap: _toggle,
       child: Container(
-        height: 40.w,
-        padding: EdgeInsets.symmetric(horizontal: 10.w),
+        alignment: Alignment.center,
+        padding: EdgeInsets.symmetric(horizontal: 11.w),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10.w),
-          color: isActive ? const Color(0xFFE1F2F5) : const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(12.r),
+          color: isActive ? const Color(0xFFE1F2F5) : Colors.white,
           border: Border.all(
             color: isActive ? const Color(0xFF0F766E) : const Color(0xFFE2E8F0),
             width: isActive ? 1.5 : 1,
           ),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x05000000),
+              blurRadius: 4,
+              offset: Offset(0, 1),
+            ),
+          ],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Icon(
               Icons.calendar_today_outlined,
-              size: 14.w,
+              size: 15.sp,
               color: isActive ? const Color(0xFF0F766E) : const Color(0xFF64748B),
             ),
             SizedBox(width: 6.w),
             ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: 95.w),
+              constraints: BoxConstraints(maxWidth: 96.w),
               child: Text(
                 widget.selected,
                 maxLines: 1,
@@ -892,7 +909,7 @@ class _PeriodFilterDropdownState extends State<PeriodFilterDropdown> {
             SizedBox(width: 4.w),
             Icon(
               _isOpen ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
-              size: 18.w,
+              size: 18.sp,
               color: isActive ? const Color(0xFF0F766E) : const Color(0xFF64748B),
             ),
           ],
