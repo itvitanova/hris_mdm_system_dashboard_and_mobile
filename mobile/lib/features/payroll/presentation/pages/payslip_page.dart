@@ -226,12 +226,11 @@ class _PayslipScreenState extends State<PayslipScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x060F172A),
-            blurRadius: 6,
-            offset: Offset(0, 2),
+            color: const Color(0xFF0F172A).withValues(alpha: 0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -318,12 +317,11 @@ class _PayslipScreenState extends State<PayslipScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x060F172A),
-            blurRadius: 6,
-            offset: Offset(0, 2),
+            color: const Color(0xFF0F172A).withValues(alpha: 0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -441,12 +439,11 @@ class _PayslipScreenState extends State<PayslipScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x060F172A),
-            blurRadius: 6,
-            offset: Offset(0, 2),
+            color: const Color(0xFF0F172A).withValues(alpha: 0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
