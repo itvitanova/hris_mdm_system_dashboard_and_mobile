@@ -94,6 +94,84 @@ void main() {
       expect(openedScreen, isA<PayslipScreen>());
     });
 
+    testWidgets('Period filter bar allows switching between periods', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390 * 3, 1200 * 3);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final workspace = Workspace({
+        'payroll': [
+          {
+            'id': 'PAY-1',
+            'employeeId': 'EMP-01',
+            'employeeName': 'Budi Santoso',
+            'companyName': 'PT MDM Human Resource',
+            'period': '2026-10',
+            'status': 'Final',
+            'version': 2,
+            'baseSalary': 10000000,
+            'deductions': 500000,
+            'netSalary': 9500000,
+          },
+          {
+            'id': 'PAY-2',
+            'employeeId': 'EMP-01',
+            'employeeName': 'Budi Santoso',
+            'companyName': 'PT MDM Human Resource',
+            'period': '2026-09',
+            'status': 'Final',
+            'version': 2,
+            'baseSalary': 9000000,
+            'deductions': 400000,
+            'netSalary': 8600000,
+          },
+        ],
+        'employees': [
+          {'id': 'EMP-01', 'name': 'Budi Santoso'},
+        ],
+        'actor': {'employeeId': 'EMP-01', 'name': 'Budi Santoso'},
+      });
+
+      await tester.pumpWidget(
+        wrapWithScreenUtil(
+          PayrollTab(
+            api: ApiClient(),
+            workspace: workspace,
+            onRefresh: () async {},
+            open: (_) async {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Filter chips should exist
+      expect(find.byKey(const ValueKey('payroll_period_filter_Semua Periode')), findsOneWidget);
+      expect(find.byKey(const ValueKey('payroll_period_filter_2026-10')), findsOneWidget);
+      expect(find.byKey(const ValueKey('payroll_period_filter_2026-09')), findsOneWidget);
+
+      // Both cards visible in 'Semua Periode'
+      expect(find.text('2026-10'), findsWidgets);
+      expect(find.text('2026-09'), findsWidgets);
+      expect(find.text('2 Periode'), findsOneWidget);
+
+      // Tap '2026-09' filter chip
+      await tester.tap(find.byKey(const ValueKey('payroll_period_filter_2026-09')));
+      await tester.pumpAndSettle();
+
+      // Only 2026-09 card is visible
+      expect(find.text('1 Periode'), findsOneWidget);
+      expect(find.text('Filter: 2026-09'), findsOneWidget);
+
+      // Tap 'Semua Periode'
+      await tester.tap(find.byKey(const ValueKey('payroll_period_filter_Semua Periode')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('2 Periode'), findsOneWidget);
+    });
+
     testWidgets('renders empty state when there are no payroll records', (
       tester,
     ) async {

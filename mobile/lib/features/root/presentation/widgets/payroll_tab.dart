@@ -4,7 +4,7 @@ import '../../../../core/api_client.dart';
 import '../../../../core/workspace.dart';
 import '../../../payroll/payslip_screen.dart';
 
-class PayrollTab extends StatelessWidget {
+class PayrollTab extends StatefulWidget {
   const PayrollTab({
     super.key,
     required this.api,
@@ -18,9 +18,23 @@ class PayrollTab extends StatelessWidget {
   final Future<void> Function() onRefresh;
   final Future<void> Function(Widget) open;
 
-  Workspace get w => workspace;
+  @override
+  State<PayrollTab> createState() => _PayrollTabState();
+}
+
+class _PayrollTabState extends State<PayrollTab> {
+  String selectedPeriod = 'Semua Periode';
+
+  Workspace get w => widget.workspace;
 
   Widget _buildHeroSummaryBanner(num latestSalary, String latestPeriod, int totalSlips) {
+    final hasFilter = selectedPeriod != 'Semua Periode';
+    final chipLabel = hasFilter
+        ? 'Filter: $selectedPeriod'
+        : (latestPeriod.isNotEmpty
+            ? 'Periode Terkini: $latestPeriod'
+            : 'Portal Slip Gaji Karyawan');
+
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -99,9 +113,7 @@ class PayrollTab extends StatelessWidget {
                       SizedBox(width: 5.w),
                       Flexible(
                         child: Text(
-                          latestPeriod.isNotEmpty
-                              ? 'Periode Terkini: $latestPeriod'
-                              : 'Portal Slip Gaji Karyawan',
+                          chipLabel,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -129,9 +141,11 @@ class PayrollTab extends StatelessWidget {
                 ),
                 SizedBox(height: 3.h),
                 Text(
-                  latestSalary > 0
-                      ? 'Total take-home pay penerimaan gaji terakhir Anda.'
-                      : 'Data slip gaji resmi diterbitkan secara periodik oleh Finance.',
+                  hasFilter
+                      ? 'Total penerimaan take-home pay pada periode $selectedPeriod.'
+                      : (latestSalary > 0
+                          ? 'Total take-home pay penerimaan gaji terakhir Anda.'
+                          : 'Data slip gaji resmi diterbitkan secara periodik oleh Finance.'),
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 11.5.sp,
@@ -144,6 +158,97 @@ class PayrollTab extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPeriodFilterBar(List<String> periods) {
+    if (periods.length <= 1) return const SizedBox.shrink();
+
+    return SizedBox(
+      height: 34.h,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: periods.length,
+        separatorBuilder: (context, index) => SizedBox(width: 8.w),
+        itemBuilder: (context, index) {
+          final p = periods[index];
+          final isSelected = p == selectedPeriod;
+          return Material(
+            color: Colors.transparent,
+            child: InkWell(
+              key: ValueKey('payroll_period_filter_$p'),
+              borderRadius: BorderRadius.circular(20.r),
+              onTap: () => setState(() => selectedPeriod = p),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 160),
+                padding: EdgeInsets.symmetric(horizontal: 13.w, vertical: 6.h),
+                decoration: BoxDecoration(
+                  gradient: isSelected
+                      ? const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFF0F766E), // Teal 700
+                            Color(0xFF14B8A6), // Teal 500
+                          ],
+                        )
+                      : null,
+                  color: isSelected ? null : Colors.white,
+                  borderRadius: BorderRadius.circular(20.r),
+                  border: Border.all(
+                    color: isSelected
+                        ? const Color(0xFF0F766E)
+                        : const Color(0xFFE2E8F0),
+                    width: 1,
+                  ),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: const Color(0xFF0F766E)
+                                .withValues(alpha: 0.25),
+                            blurRadius: 4,
+                            offset: const Offset(0, 1.5),
+                          ),
+                        ]
+                      : [
+                          const BoxShadow(
+                            color: Color(0x050F172A),
+                            blurRadius: 3,
+                            offset: Offset(0, 1),
+                          ),
+                        ],
+                ),
+                alignment: Alignment.center,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (p != 'Semua Periode') ...[
+                      Icon(
+                        Icons.calendar_today_rounded,
+                        size: 11.sp,
+                        color: isSelected ? Colors.white : const Color(0xFF64748B),
+                      ),
+                      SizedBox(width: 5.w),
+                    ],
+                    Text(
+                      p,
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 11.5.sp,
+                        fontWeight:
+                            isSelected ? FontWeight.w700 : FontWeight.w500,
+                        color: isSelected
+                            ? Colors.white
+                            : const Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -181,7 +286,7 @@ class PayrollTab extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState({required bool isFiltered}) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 36.h),
       decoration: BoxDecoration(
@@ -215,7 +320,7 @@ class PayrollTab extends StatelessWidget {
           ),
           SizedBox(height: 12.h),
           Text(
-            'Slip Gaji Belum Tersedia',
+            isFiltered ? 'Tidak Ada Slip untuk Periode Ini' : 'Slip Gaji Belum Tersedia',
             style: TextStyle(
               fontFamily: 'Inter',
               fontSize: 14.5.sp,
@@ -225,7 +330,9 @@ class PayrollTab extends StatelessWidget {
           ),
           SizedBox(height: 4.h),
           Text(
-            'Data slip gaji Anda untuk periode ini belum diterbitkan oleh bagian Finance/HR.',
+            isFiltered
+                ? 'Tidak ditemukan dokumen slip gaji pada periode $selectedPeriod.'
+                : 'Data slip gaji Anda untuk periode ini belum diterbitkan oleh bagian Finance/HR.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: 'Inter',
@@ -236,19 +343,34 @@ class PayrollTab extends StatelessWidget {
             ),
           ),
           SizedBox(height: 16.h),
-          OutlinedButton.icon(
-            onPressed: onRefresh,
-            icon: const Icon(Icons.refresh_rounded, size: 15),
-            label: const Text('Muat Ulang Data'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF0F766E),
-              side: const BorderSide(color: Color(0xFF0F766E), width: 1),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.r),
+          if (isFiltered)
+            ElevatedButton.icon(
+              onPressed: () => setState(() => selectedPeriod = 'Semua Periode'),
+              icon: const Icon(Icons.clear_all_rounded, size: 16),
+              label: const Text('Tampilkan Semua Periode'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0F766E),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
               ),
-              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+            )
+          else
+            OutlinedButton.icon(
+              onPressed: widget.onRefresh,
+              icon: const Icon(Icons.refresh_rounded, size: 15),
+              label: const Text('Muat Ulang Data'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF0F766E),
+                side: const BorderSide(color: Color(0xFF0F766E), width: 1),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -283,7 +405,7 @@ class PayrollTab extends StatelessWidget {
         borderRadius: BorderRadius.circular(14.r),
         child: InkWell(
           borderRadius: BorderRadius.circular(14.r),
-          onTap: () => open(PayslipScreen(api: api, slip: r)),
+          onTap: () => widget.open(PayslipScreen(api: widget.api, slip: r)),
           child: Padding(
             padding: EdgeInsets.all(14.w),
             child: Column(
@@ -427,10 +549,25 @@ class PayrollTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final rows = w.mine('payroll')
+    final allRows = w.mine('payroll')
       ..sort((a, b) => text(b, 'period').compareTo(text(a, 'period')));
 
-    final latestSlip = rows.isNotEmpty ? rows.first : null;
+    // Extract unique periods for filter bar
+    final uniquePeriods = [
+      'Semua Periode',
+      ...allRows.map((r) => text(r, 'period')).where((p) => p.isNotEmpty).toSet()
+    ];
+
+    if (!uniquePeriods.contains(selectedPeriod)) {
+      selectedPeriod = 'Semua Periode';
+    }
+
+    // Filter rows based on selectedPeriod
+    final filteredRows = selectedPeriod == 'Semua Periode'
+        ? allRows
+        : allRows.where((r) => text(r, 'period') == selectedPeriod).toList();
+
+    final latestSlip = filteredRows.isNotEmpty ? filteredRows.first : null;
     final latestSalary = latestSlip != null ? number(latestSlip, 'netSalary') : 0;
     final latestPeriod = latestSlip != null ? text(latestSlip, 'period') : '';
 
@@ -491,7 +628,7 @@ class PayrollTab extends StatelessWidget {
               ),
               padding: EdgeInsets.zero,
               tooltip: 'Segarkan data',
-              onPressed: onRefresh,
+              onPressed: widget.onRefresh,
             ),
           ),
         ],
@@ -500,13 +637,17 @@ class PayrollTab extends StatelessWidget {
         top: false,
         child: RefreshIndicator(
           color: const Color(0xFF0F766E),
-          onRefresh: onRefresh,
+          onRefresh: widget.onRefresh,
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
             children: [
-              _buildHeroSummaryBanner(latestSalary, latestPeriod, rows.length),
-              SizedBox(height: 18.h),
+              _buildHeroSummaryBanner(latestSalary, latestPeriod, filteredRows.length),
+              if (uniquePeriods.length > 2) ...[
+                SizedBox(height: 14.h),
+                _buildPeriodFilterBar(uniquePeriods),
+              ],
+              SizedBox(height: 16.h),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -524,7 +665,7 @@ class PayrollTab extends StatelessWidget {
                     ),
                   ),
                   SizedBox(width: 8.w),
-                  if (rows.isNotEmpty)
+                  if (filteredRows.isNotEmpty)
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 2.5.h),
                       decoration: BoxDecoration(
@@ -536,7 +677,7 @@ class PayrollTab extends StatelessWidget {
                         ),
                       ),
                       child: Text(
-                        '${rows.length} Periode',
+                        '${filteredRows.length} Periode',
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 10.5.sp,
@@ -548,10 +689,10 @@ class PayrollTab extends StatelessWidget {
                 ],
               ),
               SizedBox(height: 12.h),
-              if (rows.isEmpty)
-                _buildEmptyState()
+              if (filteredRows.isEmpty)
+                _buildEmptyState(isFiltered: selectedPeriod != 'Semua Periode')
               else
-                ...rows.map((r) => _buildPayslipCard(context, r)),
+                ...filteredRows.map((r) => _buildPayslipCard(context, r)),
             ],
           ),
         ),
