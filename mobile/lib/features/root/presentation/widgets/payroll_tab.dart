@@ -178,13 +178,14 @@ class _PayrollTabState extends State<PayrollTab> {
 
   Widget _buildSearchBar() {
     return Container(
-      height: 42.h,
+      height: 40.w,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(10.w),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x06000000),
+            color: Color(0x05000000),
             blurRadius: 4,
             offset: Offset(0, 1),
           ),
@@ -201,12 +202,12 @@ class _PayrollTabState extends State<PayrollTab> {
           ),
           prefixIcon: const Icon(
             Icons.search_rounded,
-            size: 19,
+            size: 18,
             color: Color(0xFF94A3B8),
           ),
           suffixIcon: query.isNotEmpty
               ? IconButton(
-                  icon: const Icon(Icons.close_rounded, size: 17, color: Color(0xFF94A3B8)),
+                  icon: const Icon(Icons.close_rounded, size: 16, color: Color(0xFF94A3B8)),
                   onPressed: () {
                     _searchController.clear();
                     setState(() => query = '');
@@ -216,19 +217,10 @@ class _PayrollTabState extends State<PayrollTab> {
           filled: true,
           fillColor: Colors.white,
           isDense: true,
-          contentPadding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12.r),
-            borderSide: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12.r),
-            borderSide: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12.r),
-            borderSide: const BorderSide(color: Color(0xFF0F766E), width: 1.5),
-          ),
+          contentPadding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 9.h),
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
         ),
         style: const TextStyle(
           fontFamily: 'Inter',
@@ -237,189 +229,6 @@ class _PayrollTabState extends State<PayrollTab> {
         ),
         onChanged: (v) => setState(() => query = v),
       ),
-    );
-  }
-
-  Widget _buildPeriodDropdownTrigger(List<String> uniquePeriods) {
-    final isCustomPeriod = selectedPeriod != 'Semua periode';
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        key: const Key('payroll_period_dropdown_btn'),
-        borderRadius: BorderRadius.circular(12.r),
-        onTap: () => _showPeriodPickerModal(context, uniquePeriods),
-        child: Container(
-          height: 42.h,
-          padding: EdgeInsets.symmetric(horizontal: 11.w),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(
-              color: isCustomPeriod ? const Color(0xFF0F766E) : const Color(0xFFE2E8F0),
-              width: isCustomPeriod ? 1.5 : 1,
-            ),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x06000000),
-                blurRadius: 4,
-                offset: Offset(0, 1),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.calendar_today_rounded,
-                size: 15.sp,
-                color: isCustomPeriod ? const Color(0xFF0F766E) : const Color(0xFF64748B),
-              ),
-              SizedBox(width: 6.w),
-              ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: 96.w),
-                child: Text(
-                  selectedPeriod,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 12.sp,
-                    fontWeight: isCustomPeriod ? FontWeight.w700 : FontWeight.w600,
-                    color: isCustomPeriod ? const Color(0xFF0F766E) : const Color(0xFF1E293B),
-                  ),
-                ),
-              ),
-              SizedBox(width: 4.w),
-              Icon(
-                Icons.keyboard_arrow_down_rounded,
-                size: 18.sp,
-                color: isCustomPeriod ? const Color(0xFF0F766E) : const Color(0xFF64748B),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showPeriodPickerModal(BuildContext context, List<String> uniquePeriods) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-      ),
-      builder: (ctx) {
-        return SafeArea(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(20.w, 14.h, 20.w, 20.h),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 38.w,
-                    height: 4.h,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFCBD5E1),
-                      borderRadius: BorderRadius.circular(2.r),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 14.h),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Periode payroll',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 15.sp,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF0F172A),
-                      ),
-                    ),
-                    if (selectedPeriod != 'Semua periode')
-                      TextButton(
-                        onPressed: () {
-                          setState(() => selectedPeriod = 'Semua periode');
-                          Navigator.pop(ctx);
-                        },
-                        child: Text(
-                          'Reset',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF0F766E),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                SizedBox(height: 10.h),
-                ...uniquePeriods.map((period) {
-                  final isSelected = period == selectedPeriod;
-                  return Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      key: ValueKey('period_option_$period'),
-                      borderRadius: BorderRadius.circular(10.r),
-                      onTap: () {
-                        setState(() => selectedPeriod = period);
-                        Navigator.pop(ctx);
-                      },
-                      child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
-                        margin: EdgeInsets.only(bottom: 6.h),
-                        decoration: BoxDecoration(
-                          color: isSelected ? const Color(0xFFF0FDFA) : Colors.transparent,
-                          borderRadius: BorderRadius.circular(10.r),
-                          border: Border.all(
-                            color: isSelected ? const Color(0xFF0F766E) : const Color(0xFFF1F5F9),
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              period == 'Semua periode'
-                                  ? Icons.date_range_rounded
-                                  : Icons.calendar_today_rounded,
-                              size: 16.sp,
-                              color: isSelected ? const Color(0xFF0F766E) : const Color(0xFF64748B),
-                            ),
-                            SizedBox(width: 10.w),
-                            Expanded(
-                              child: Text(
-                                period,
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 13.sp,
-                                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                  color: isSelected ? const Color(0xFF0F766E) : const Color(0xFF0F172A),
-                                ),
-                              ),
-                            ),
-                            if (isSelected)
-                              Icon(
-                                Icons.check_circle_rounded,
-                                size: 18.sp,
-                                color: const Color(0xFF0F766E),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 
@@ -836,7 +645,14 @@ class _PayrollTabState extends State<PayrollTab> {
                     child: _buildSearchBar(),
                   ),
                   SizedBox(width: 8.w),
-                  _buildPeriodDropdownTrigger(uniquePeriods),
+                  PeriodFilterDropdown(
+                    key: const Key('payroll_period_dropdown_btn'),
+                    selected: selectedPeriod,
+                    options: uniquePeriods,
+                    onChanged: (val) {
+                      setState(() => selectedPeriod = val);
+                    },
+                  ),
                 ],
               ),
               SizedBox(height: 16.h),
@@ -889,6 +705,225 @@ class _PayrollTabState extends State<PayrollTab> {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  PERIOD FILTER DROPDOWN (Overlay Panel Pattern)
+// ═══════════════════════════════════════════════════════════════════════════════
+class PeriodFilterDropdown extends StatefulWidget {
+  final String selected;
+  final List<String> options;
+  final ValueChanged<String> onChanged;
+
+  const PeriodFilterDropdown({
+    super.key,
+    required this.selected,
+    required this.options,
+    required this.onChanged,
+  });
+
+  @override
+  State<PeriodFilterDropdown> createState() => _PeriodFilterDropdownState();
+}
+
+class _PeriodFilterDropdownState extends State<PeriodFilterDropdown> {
+  final _triggerKey = GlobalKey();
+  OverlayEntry? _overlayEntry;
+  bool _isOpen = false;
+
+  void _toggle() {
+    if (_isOpen) {
+      _close();
+    } else {
+      _open();
+    }
+  }
+
+  void _open() {
+    final renderBox = _triggerKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+    final offset = renderBox.localToGlobal(Offset.zero);
+    final size = renderBox.size;
+
+    _overlayEntry = OverlayEntry(
+      builder: (context) => _OverlayDismiss(
+        onDismiss: _close,
+        child: Positioned(
+          left: (offset.dx - (180.w - size.width)).clamp(16.w, offset.dx),
+          top: offset.dy + size.height + 6.w,
+          width: 180.w > size.width ? 180.w : size.width,
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12.w),
+                border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF0F172A).withValues(alpha: 0.12),
+                    offset: const Offset(0, 4),
+                    blurRadius: 16,
+                  ),
+                ],
+              ),
+              padding: EdgeInsets.all(8.w),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: 220.h),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  padding: EdgeInsets.zero,
+                  itemCount: widget.options.length,
+                  separatorBuilder: (context, index) => SizedBox(height: 5.w),
+                  itemBuilder: (context, index) {
+                    final period = widget.options[index];
+                    final isSelected = period == widget.selected;
+                    return GestureDetector(
+                      key: ValueKey('period_option_$period'),
+                      onTap: () {
+                        _close();
+                        widget.onChanged(period);
+                      },
+                      child: Container(
+                        height: 36.w,
+                        padding: EdgeInsets.symmetric(horizontal: 10.w),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8.w),
+                          color: isSelected ? const Color(0xFFE1F2F5) : const Color(0xFFF8FAFC),
+                          border: isSelected
+                              ? Border.all(color: const Color(0xFF0F766E), width: 1)
+                              : null,
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              period == 'Semua periode'
+                                  ? Icons.date_range_rounded
+                                  : Icons.calendar_today_outlined,
+                              size: 14.w,
+                              color: isSelected ? const Color(0xFF0F766E) : const Color(0xFF64748B),
+                            ),
+                            SizedBox(width: 8.w),
+                            Expanded(
+                              child: Text(
+                                period,
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 12.sp,
+                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                  color: isSelected ? const Color(0xFF0F766E) : const Color(0xFF334155),
+                                ),
+                              ),
+                            ),
+                            if (isSelected)
+                              Icon(Icons.check, size: 14.w, color: const Color(0xFF0F766E)),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    Overlay.of(context).insert(_overlayEntry!);
+    setState(() => _isOpen = true);
+  }
+
+  void _close() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+    if (mounted) setState(() => _isOpen = false);
+  }
+
+  @override
+  void dispose() {
+    _close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isActive = _isOpen || widget.selected != 'Semua periode';
+
+    return GestureDetector(
+      key: _triggerKey,
+      onTap: _toggle,
+      child: Container(
+        height: 40.w,
+        padding: EdgeInsets.symmetric(horizontal: 10.w),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10.w),
+          color: isActive ? const Color(0xFFE1F2F5) : const Color(0xFFF1F5F9),
+          border: Border.all(
+            color: isActive ? const Color(0xFF0F766E) : const Color(0xFFE2E8F0),
+            width: isActive ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.calendar_today_outlined,
+              size: 14.w,
+              color: isActive ? const Color(0xFF0F766E) : const Color(0xFF64748B),
+            ),
+            SizedBox(width: 6.w),
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: 95.w),
+              child: Text(
+                widget.selected,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w600,
+                  color: isActive ? const Color(0xFF0F766E) : const Color(0xFF1E293B),
+                ),
+              ),
+            ),
+            SizedBox(width: 4.w),
+            Icon(
+              _isOpen ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+              size: 18.w,
+              color: isActive ? const Color(0xFF0F766E) : const Color(0xFF64748B),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  OVERLAY DISMISS BARRIER
+// ═══════════════════════════════════════════════════════════════════════════════
+class _OverlayDismiss extends StatelessWidget {
+  final VoidCallback onDismiss;
+  final Widget child;
+
+  const _OverlayDismiss({required this.onDismiss, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: GestureDetector(
+            onTap: onDismiss,
+            behavior: HitTestBehavior.opaque,
+            child: const ColoredBox(color: Colors.transparent),
+          ),
+        ),
+        child,
+      ],
     );
   }
 }
