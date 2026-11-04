@@ -134,20 +134,23 @@ void main() {
       await tester.pumpAndSettle();
 
       // Dialog appears
+      expect(find.text('Keluar dari Akun?'), findsOneWidget);
       expect(
-        find.text(
-          'Apakah Anda yakin ingin keluar dari akun ini? Anda harus memasukkan kredensial kembali untuk masuk.',
-        ),
+        find.text('Apakah Anda yakin ingin mengakhiri sesi ini?'),
         findsOneWidget,
       );
-      expect(find.text('Batal'), findsOneWidget);
-      expect(find.text('Ya, Keluar'), findsOneWidget);
+      expect(
+        find.text('Data sesi dan absensi Anda akan tetap aman.'),
+        findsOneWidget,
+      );
+      expect(find.text('Batal, Tetap Masuk'), findsOneWidget);
+      expect(find.text('Ya, Keluar Akun'), findsOneWidget);
 
       // Dismiss dialog
-      await tester.tap(find.text('Batal'));
+      await tester.tap(find.text('Batal, Tetap Masuk'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Batal'), findsNothing);
+      expect(find.text('Batal, Tetap Masuk'), findsNothing);
     });
   });
 }
