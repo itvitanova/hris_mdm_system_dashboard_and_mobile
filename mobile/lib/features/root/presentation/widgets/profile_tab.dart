@@ -8,6 +8,7 @@ import '../../../../core/theme/app_shadows.dart';
 import '../../../../shared/widgets.dart';
 import '../../../auth/change_password_screen.dart';
 import '../../../requests/presentation/pages/request_notifications_page.dart';
+import 'logout_confirmation_bottom_sheet.dart';
 
 class ProfileTab extends StatefulWidget {
   const ProfileTab({
@@ -75,62 +76,10 @@ class _ProfileTabState extends State<ProfileTab> {
 
   Future<void> _confirmLogout() async {
     if (loggingOut) return;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20.r),
-        ),
-        title: Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(8.w),
-              decoration: const BoxDecoration(
-                color: Color(0xFFFEE2E2),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.logout_rounded,
-                color: const Color(0xFFEF4444),
-                size: 20.sp,
-              ),
-            ),
-            SizedBox(width: 10.w),
-            const Expanded(
-              child: Text(
-                'Keluar Akun',
-                style: TextStyle(fontWeight: FontWeight.w700),
-              ),
-            ),
-          ],
-        ),
-        content: const Text(
-          'Apakah Anda yakin ingin keluar dari akun ini? Anda harus memasukkan kredensial kembali untuk masuk.',
-          style: TextStyle(color: Color(0xFF475569)),
-        ),
-        actionsPadding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFEF4444),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.r),
-              ),
-            ),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Ya, Keluar'),
-          ),
-        ],
-      ),
+    await LogoutConfirmationBottomSheet.show(
+      context,
+      onConfirmLogout: logout,
     );
-
-    if (confirmed == true && mounted) {
-      await logout();
-    }
   }
 
   void _showEmployeeDetailsModal({
