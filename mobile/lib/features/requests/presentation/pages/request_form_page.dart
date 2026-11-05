@@ -1597,71 +1597,113 @@ class _RequestFormState extends State<RequestForm> {
   }
 
   Widget _buildPettyCashAmountCard() {
-    return _buildInputCard(
-      child: TextFormField(
-        controller: amount,
-        keyboardType: TextInputType.number,
-        inputFormatters: [
-          FilteringTextInputFormatter.digitsOnly,
+    return Container(
+      padding: EdgeInsets.fromLTRB(14.w, 12.h, 14.w, 10.h),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10.r),
+        color: Colors.white,
+        border: Border.all(
+          color: const Color(0xFFE2E8F0),
+          width: 1.2,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x06000000),
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
         ],
-        style: TextStyle(
-          fontFamily: 'Inter',
-          fontSize: 13.5.sp,
-          fontWeight: FontWeight.w600,
-          color: const Color(0xFF0F172A),
-        ),
-        decoration: InputDecoration(
-          labelText: 'Nominal (Rp)',
-          labelStyle: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 12.sp,
-            color: const Color(0xFF64748B),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'Rp',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF0D9488),
+                ),
+              ),
+              SizedBox(width: 8.w),
+              Expanded(
+                child: TextFormField(
+                  controller: amount,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                  ],
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF0F172A),
+                  ),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    errorBorder: InputBorder.none,
+                    focusedErrorBorder: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                    hintText: '0',
+                    hintStyle: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFF94A3B8),
+                    ),
+                    labelText: 'Nominal (Rp)',
+                    floatingLabelBehavior: FloatingLabelBehavior.never,
+                    labelStyle: const TextStyle(
+                      fontSize: 0,
+                      color: Colors.transparent,
+                    ),
+                  ),
+                  onChanged: (_) => setState(() {}),
+                  validator: (v) {
+                    final clean = (v ?? '').replaceAll(RegExp(r'[^0-9]'), '');
+                    final n = int.tryParse(clean) ?? 0;
+                    return n < 1 || n > 1000000000000
+                        ? 'Nominal tidak valid'
+                        : null;
+                  },
+                ),
+              ),
+            ],
           ),
-          hintText: '0',
-          helperText: currentAmount > 0
-              ? 'Terbilang: ${rupiah(currentAmount)}'
-              : 'Masukkan angka tanpa titik atau koma.',
-          helperStyle: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 11.sp,
-            fontWeight:
-                currentAmount > 0 ? FontWeight.w600 : FontWeight.w400,
-            color: currentAmount > 0
-                ? const Color(0xFF0D9488)
-                : const Color(0xFF64748B),
+          SizedBox(height: 8.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  currentAmount > 0
+                      ? 'Terbilang: ${rupiah(currentAmount)}'
+                      : 'Masukkan nominal tanpa titik atau koma',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 11.sp,
+                    fontWeight: currentAmount > 0
+                        ? FontWeight.w500
+                        : FontWeight.w400,
+                    color: currentAmount > 0
+                        ? const Color(0xFF0D9488)
+                        : const Color(0xFF94A3B8),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
-          prefixText: 'Rp ',
-          prefixStyle: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 13.5.sp,
-            fontWeight: FontWeight.w700,
-            color: const Color(0xFF0D9488),
-          ),
-          contentPadding: EdgeInsets.all(12.w),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10.r),
-            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10.r),
-            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10.r),
-            borderSide: const BorderSide(
-              color: Color(0xFF0D9488),
-              width: 1.5,
-            ),
-          ),
-        ),
-        onChanged: (_) => setState(() {}),
-        validator: (v) {
-          final clean = (v ?? '').replaceAll(RegExp(r'[^0-9]'), '');
-          final n = int.tryParse(clean) ?? 0;
-          return n < 1 || n > 1000000000000
-              ? 'Nominal tidak valid'
-              : null;
-        },
+        ],
       ),
     );
   }
