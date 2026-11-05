@@ -64,7 +64,7 @@ class UniversalRequestModel {
       return null;
     }
 
-    final kindStr = map['kind']?.toString() ?? 'Cuti';
+    final kindStr = (map['kind'] ?? map['type'])?.toString() ?? 'Cuti';
     final statusStr = map['status']?.toString() ?? 'Menunggu';
 
     return UniversalRequestModel(

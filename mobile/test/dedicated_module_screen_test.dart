@@ -206,6 +206,7 @@ void main() {
         expect(find.text('Cuti Menikah'), findsOneWidget);
       },
     );
+
     testWidgets(
       'renders dedicated petty cash module and calculates real accumulated total on card 4',
       (tester) async {
@@ -255,6 +256,67 @@ void main() {
         expect(find.text('Pengajuan Petty Cash'), findsOneWidget);
         expect(find.text('KAS KECIL'), findsOneWidget);
         expect(find.text(rupiah(375000)), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'renders dedicated general affair module and computes real requests from workspace on card 4',
+      (tester) async {
+        final workspace = Workspace({
+          'requests': [
+            {
+              'id': 'ga-1',
+              'kind': 'General Affair',
+              'title': 'Pengadaan Kursi Kerja',
+              'status': 'disetujui',
+              'startDate': '2026-11-01',
+              'endDate': '2026-11-01',
+            },
+            {
+              'id': 'ga-2',
+              'kind': 'General Affair',
+              'title': 'Perbaikan AC Ruang Meeting',
+              'status': 'menunggu',
+              'startDate': '2026-11-05',
+              'endDate': '2026-11-05',
+            },
+            {
+              'id': 'cuti-1',
+              'kind': 'Cuti',
+              'title': 'Cuti Tahunan',
+              'status': 'disetujui',
+              'startDate': '2026-11-10',
+              'endDate': '2026-11-12',
+            },
+          ],
+          'employees': [],
+        });
+
+        await tester.pumpWidget(
+          ScreenUtilInit(
+            designSize: const Size(375, 812),
+            minTextAdapt: true,
+            builder: (context, child) => MaterialApp(
+              home: DedicatedModuleScreen(
+                kind: SubmissionKind.generalAffair,
+                moduleTitle: 'General Affair',
+                keyMetricLabel: 'PERMOHONAN GA',
+                keyMetricValue: '1 Aktif',
+                keyMetricIcon: Icons.inventory_2_outlined,
+                api: ApiClient(),
+                workspace: workspace,
+                open: (w) async {},
+                onRefresh: () async {},
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Check card 4 calculates real GA requests (2 items, excluding cuti-1)
+        expect(find.text('Total Permohonan'), findsOneWidget);
+        expect(find.text('2 Permohonan'), findsOneWidget);
+        expect(find.text('PERMOHONAN GA'), findsOneWidget);
       },
     );
   });
