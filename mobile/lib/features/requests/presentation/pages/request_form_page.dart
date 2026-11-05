@@ -26,6 +26,64 @@ const requestKinds = [
   'Lembur',
 ];
 
+String formatThousands(dynamic value) {
+  final clean = value.toString().replaceAll(RegExp(r'[^0-9]'), '');
+  if (clean.isEmpty) return '';
+  final n = int.tryParse(clean);
+  if (n == null) return '';
+  return n.toString().replaceAllMapped(
+    RegExp(r'\B(?=(\d{3})+(?!\d))'),
+    (match) => '.',
+  );
+}
+
+class ThousandsSeparatorInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (newValue.text.isEmpty) {
+      return newValue;
+    }
+
+    final digitsOnly = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digitsOnly.isEmpty) {
+      return const TextEditingValue();
+    }
+
+    final number = int.tryParse(digitsOnly);
+    if (number == null) {
+      return oldValue;
+    }
+
+    final formatted = formatThousands(number);
+
+    int newOffset = formatted.length;
+    if (newValue.selection.end < newValue.text.length) {
+      final digitsBeforeCursor = newValue.text
+          .substring(0, newValue.selection.end)
+          .replaceAll(RegExp(r'[^0-9]'), '')
+          .length;
+      int count = 0;
+      for (int i = 0; i < formatted.length; i++) {
+        if (RegExp(r'[0-9]').hasMatch(formatted[i])) {
+          count++;
+          if (count == digitsBeforeCursor) {
+            newOffset = i + 1;
+            break;
+          }
+        }
+      }
+    }
+
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: newOffset),
+    );
+  }
+}
+
 class RequestForm extends StatefulWidget {
   const RequestForm({
     super.key,
@@ -111,7 +169,8 @@ class _RequestFormState extends State<RequestForm> {
     if (r != null) {
       title.text = text(r, 'title', '');
       description.text = text(r, 'description', '');
-      amount.text = number(r, 'amount').toInt().toString();
+      final initialAmt = number(r, 'amount').toInt();
+      amount.text = initialAmt > 0 ? formatThousands(initialAmt) : '';
       hours.text = number(r, 'hours').toString();
       start = DateTime.tryParse(text(r, 'startDate', '')) ?? start;
       end = DateTime.tryParse(text(r, 'endDate', '')) ?? end;
@@ -560,7 +619,7 @@ class _RequestFormState extends State<RequestForm> {
                         controller: amount,
                         keyboardType: TextInputType.number,
                         inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
+                          ThousandsSeparatorInputFormatter(),
                         ],
                         style: TextStyle(
                           fontSize: 13.sp,
@@ -573,8 +632,8 @@ class _RequestFormState extends State<RequestForm> {
                               ? 'Masukkan estimasi biaya jika diketahui (opsional)'
                               : null,
                           helperText: kind == 'General Affair'
-                              ? 'Opsional. Masukkan estimasi tanpa titik atau koma jika diketahui.'
-                              : 'Masukkan angka tanpa titik atau koma.',
+                              ? 'Opsional. Masukkan estimasi biaya (otomatis berformat titik).'
+                              : 'Masukkan angka nominal (otomatis berformat titik).',
                           helperStyle: const TextStyle(
                             fontFamily: 'Inter',
                             fontSize: 11,
@@ -1626,7 +1685,7 @@ class _RequestFormState extends State<RequestForm> {
                   controller: amount,
                   keyboardType: TextInputType.number,
                   inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
+                    ThousandsSeparatorInputFormatter(),
                   ],
                   style: TextStyle(
                     fontFamily: 'Inter',
@@ -1691,18 +1750,12 @@ class _RequestFormState extends State<RequestForm> {
             children: [
               Expanded(
                 child: Text(
-                  currentAmount > 0
-                      ? 'Terbilang: ${rupiah(currentAmount)}'
-                      : 'Masukkan nominal atau pilih nominal cepat di bawah:',
+                  'Pilih nominal cepat di bawah atau ketik nominal langsung:',
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 11.sp,
-                    fontWeight: currentAmount > 0
-                        ? FontWeight.w500
-                        : FontWeight.w400,
-                    color: currentAmount > 0
-                        ? const Color(0xFF0D9488)
-                        : const Color(0xFF94A3B8),
+                    fontWeight: FontWeight.w400,
+                    color: const Color(0xFF64748B),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -1729,7 +1782,7 @@ class _RequestFormState extends State<RequestForm> {
                 child: InkWell(
                   onTap: busy || uploading
                       ? null
-                      : () => setState(() => amount.text = preset.toString()),
+                      : () => setState(() => amount.text = formatThousands(preset)),
                   borderRadius: BorderRadius.circular(6.r),
                   child: Container(
                     padding: EdgeInsets.symmetric(
@@ -1798,124 +1851,144 @@ class _RequestFormState extends State<RequestForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header: Ikon + Judul Pengajuan di kiri, Badge Nominal Rupiah di kanan (SpaceBetween)
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Container(
-                width: 36.w,
-                height: 36.w,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0D9488),
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                child: const Icon(
-                  Icons.payments_rounded,
-                  size: 19,
-                  color: Colors.white,
-                ),
-              ),
-              SizedBox(width: 10.w),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Text(
-                      'Ringkasan Pengajuan Kas Kecil',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF0F766E),
+                    Container(
+                      width: 32.w,
+                      height: 32.w,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0D9488),
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      child: const Icon(
+                        Icons.payments_rounded,
+                        size: 18,
+                        color: Colors.white,
                       ),
                     ),
-                    SizedBox(height: 2.h),
-                    Text(
-                      '$_selectedPettyCashCategory · ${_formatDisplayDate(start)}',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 11.sp,
-                        color: const Color(0xFF64748B),
+                    SizedBox(width: 8.w),
+                    Expanded(
+                      child: Text(
+                        'Ringkasan Pengajuan Kas Kecil',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 12.5.sp,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF0F766E),
+                        ),
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 10.w,
-                    vertical: 5.h,
+              SizedBox(width: 8.w),
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: 10.w,
+                  vertical: 5.h,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(6.r),
+                  border: Border.all(
+                    color: const Color(0xFF99F6E4),
+                    width: 0.8,
                   ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(6.r),
-                    border: Border.all(
-                      color: const Color(0xFF99F6E4),
-                      width: 0.8,
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x06000000),
+                      blurRadius: 4,
+                      offset: Offset(0, 1),
                     ),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x06000000),
-                        blurRadius: 4,
-                        offset: Offset(0, 1),
-                      ),
-                    ],
-                  ),
-                  child: Text(
-                    rupiah(parsedAmount),
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 13.5.sp,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF0F766E),
-                    ),
+                  ],
+                ),
+                child: Text(
+                  rupiah(parsedAmount),
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF0F766E),
                   ),
                 ),
               ),
             ],
           ),
-          if (parsedAmount > 0) ...[
-            SizedBox(height: 10.h),
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-              decoration: BoxDecoration(
-                color: const Color(0xD9FFFFFF),
-                borderRadius: BorderRadius.circular(6.r),
-                border: Border.all(
-                  color: const Color(0xFFCCFBF1),
-                  width: 0.8,
+          SizedBox(height: 10.h),
+          const Divider(
+            height: 1,
+            thickness: 0.8,
+            color: Color(0xFFCCFBF1),
+          ),
+          SizedBox(height: 10.h),
+
+          // Detail 1: Kategori Kas Kecil (SpaceBetween, Zero Ellipsis)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                'Kategori Kebutuhan:',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 11.5.sp,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF64748B),
                 ),
               ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.sell_outlined,
-                    size: 13.sp,
-                    color: const Color(0xFF0D9488),
+              SizedBox(width: 8.w),
+              Flexible(
+                child: Text(
+                  _selectedPettyCashCategory,
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 11.5.sp,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF0F172A),
                   ),
-                  SizedBox(width: 6.w),
-                  Expanded(
-                    child: Text(
-                      'Terbilang: ${rupiah(parsedAmount)}',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 11.sp,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF0F766E),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
+          SizedBox(height: 6.h),
+
+          // Detail 2: Tanggal Kebutuhan (SpaceBetween, Zero Ellipsis)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                'Tanggal Kebutuhan:',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 11.5.sp,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF64748B),
+                ),
+              ),
+              SizedBox(width: 8.w),
+              Flexible(
+                child: Text(
+                  _formatDisplayDate(start),
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 11.5.sp,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF0F172A),
+                  ),
+                ),
+              ),
+            ],
+          ),
           SizedBox(height: 10.h),
           const Divider(
             height: 1,
