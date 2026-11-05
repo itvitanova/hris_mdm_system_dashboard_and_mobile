@@ -11,6 +11,13 @@ import '../widgets/receipt_preview.dart';
 import '../widgets/custom_date_picker_dialog.dart';
 import '../widgets/custom_duration_picker_dialog.dart';
 
+const pettyCashCategories = [
+  'Operasional Kantor',
+  'Konsumsi Rapat',
+  'ATK Darurat',
+  'Transportasi Lokal',
+];
+
 const requestKinds = [
   'Cuti',
   'Reimbursement',
@@ -59,8 +66,11 @@ class _RequestFormState extends State<RequestForm> {
   final expenses = <ExpenseDraft>[];
   String? error;
   String? _selectedAttachmentName;
+  String _selectedPettyCashCategory = 'Operasional Kantor';
 
   bool get hasAmount => ['Petty Cash', 'General Affair'].contains(kind);
+  int get currentAmount =>
+      int.tryParse(amount.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
 
   String get formTitle {
     if (widget.initialRequest != null) return 'Perbaiki pengajuan';
@@ -94,6 +104,14 @@ class _RequestFormState extends State<RequestForm> {
       hours.text = number(r, 'hours').toString();
       start = DateTime.tryParse(text(r, 'startDate', '')) ?? start;
       end = DateTime.tryParse(text(r, 'endDate', '')) ?? end;
+      final cat = text(r, 'category', '');
+      if (pettyCashCategories.contains(cat)) {
+        _selectedPettyCashCategory = cat;
+      }
+      final att = text(r, 'attachmentName', '');
+      if (att.isNotEmpty && att != '—') {
+        _selectedAttachmentName = att;
+      }
     }
     final items = (r?['items'] as List?) ?? [];
     for (final item in items) {
@@ -198,7 +216,9 @@ class _RequestFormState extends State<RequestForm> {
       initialDate: initial.isBefore(first) ? first : initial,
       firstDate: first,
       lastDate: last,
-      title: isStart ? 'PILIH TANGGAL MULAI' : 'PILIH TANGGAL SELESAI',
+      title: kind == 'Petty Cash'
+          ? 'PILIH TANGGAL KEBUTUHAN'
+          : (isStart ? 'PILIH TANGGAL MULAI' : 'PILIH TANGGAL SELESAI'),
     );
     if (picked != null && mounted) {
       setState(() {
@@ -208,7 +228,7 @@ class _RequestFormState extends State<RequestForm> {
         } else {
           end = picked;
         }
-        if (kind == 'Lembur') end = start;
+        if (kind == 'Lembur' || kind == 'Petty Cash') end = start;
       });
     }
   }
@@ -218,7 +238,7 @@ class _RequestFormState extends State<RequestForm> {
     setState(() {
       kind = newKind;
       kindSearch.text = newKind;
-      if (kind == 'Lembur') end = start;
+      if (kind == 'Lembur' || kind == 'Petty Cash') end = start;
     });
   }
 
@@ -249,17 +269,20 @@ class _RequestFormState extends State<RequestForm> {
         'title': title.text.trim(),
         'description': description.text.trim(),
         'startDate': dateOnly(start),
-        'endDate': dateOnly(kind == 'Lembur' ? start : end),
+        'endDate': dateOnly(kind == 'Lembur' || kind == 'Petty Cash' ? start : end),
         'amount': kind == 'Reimbursement'
             ? totalExpenses
             : hasAmount
-            ? int.tryParse(amount.text) ?? 0
+            ? currentAmount
             : 0,
         'hours': kind == 'Lembur'
             ? (int.tryParse(hours.text) ??
                 (double.tryParse(hours.text.replaceAll(',', '.'))?.toInt() ??
                     0))
             : 0,
+        if (kind == 'Petty Cash') 'category': _selectedPettyCashCategory,
+        if (_selectedAttachmentName != null)
+          'attachmentName': _selectedAttachmentName,
       });
       if (mounted) {
         notify(context, 'Pengajuan berhasil dikirim.');
@@ -437,12 +460,24 @@ class _RequestFormState extends State<RequestForm> {
                     ),
                   ),
 
+                  // FIELD KATEGORI PETTY CASH
+                  if (kind == 'Petty Cash') ...[
+                    _buildSectionTitle('Kategori Kas Kecil *'),
+                    SizedBox(height: 8.h),
+                    _buildPettyCashCategorySelector(),
+                    SizedBox(height: 16.h),
+                  ],
+
                   // FIELD 2: RENTANG TANGGAL
                   if (kind != 'Reimbursement') ...[
                     if (kind == 'Lembur') ...[
                       _buildSectionTitle('Tanggal & Durasi Lembur'),
                       SizedBox(height: 8.h),
                       _buildOvertimeDateDurationCard(),
+                    ] else if (kind == 'Petty Cash') ...[
+                      _buildSectionTitle('Tanggal Kebutuhan Kas Kecil *'),
+                      SizedBox(height: 8.h),
+                      _buildPettyCashDateCard(),
                     ] else ...[
                       _buildSectionTitle(
                         kind == 'Cuti'
@@ -461,7 +496,11 @@ class _RequestFormState extends State<RequestForm> {
 
                   // FIELD NOMINAL UNTUK PETTY CASH / GA
                   if (hasAmount) ...[
-                    _buildSectionLabel('Nominal Pengajuan (Rp) *'),
+                    _buildSectionLabel(
+                      kind == 'Petty Cash'
+                          ? 'Nominal Pengajuan Kas Kecil (Rp) *'
+                          : 'Nominal Pengajuan (Rp) *',
+                    ),
                     SizedBox(height: 6.h),
                     _buildInputCard(
                       child: TextFormField(
@@ -469,13 +508,33 @@ class _RequestFormState extends State<RequestForm> {
                         keyboardType: TextInputType.number,
                         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                         style: TextStyle(
-                          fontSize: 12.5.sp,
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w600,
                           color: const Color(0xFF0F172A),
                         ),
                         decoration: InputDecoration(
                           labelText: 'Nominal (Rp)',
-                          helperText: 'Masukkan angka tanpa titik atau koma.',
+                          helperText: kind == 'Petty Cash' && currentAmount > 0
+                              ? 'Terbilang: ${rupiah(currentAmount)}'
+                              : 'Masukkan angka tanpa titik atau koma.',
+                          helperStyle: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 11.sp,
+                            fontWeight:
+                                kind == 'Petty Cash' && currentAmount > 0
+                                    ? FontWeight.w600
+                                    : FontWeight.w400,
+                            color: kind == 'Petty Cash' && currentAmount > 0
+                                ? const Color(0xFF0D9488)
+                                : const Color(0xFF64748B),
+                          ),
                           prefixText: 'Rp ',
+                          prefixStyle: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 13.sp,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF0D9488),
+                          ),
                           contentPadding: EdgeInsets.all(12.w),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10.r),
@@ -487,10 +546,18 @@ class _RequestFormState extends State<RequestForm> {
                             borderSide:
                                 const BorderSide(color: Color(0xFFE2E8F0)),
                           ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10.r),
+                            borderSide: const BorderSide(
+                              color: Color(0xFF0D9488),
+                              width: 1.5,
+                            ),
+                          ),
                         ),
                         onChanged: (_) => setState(() {}),
                         validator: (v) {
-                          final n = int.tryParse(v ?? '') ?? 0;
+                          final clean = (v ?? '').replaceAll(RegExp(r'[^0-9]'), '');
+                          final n = int.tryParse(clean) ?? 0;
                           return n < (kind == 'General Affair' ? 0 : 1) ||
                                   n > 1000000000000
                               ? 'Nominal tidak valid'
@@ -499,6 +566,10 @@ class _RequestFormState extends State<RequestForm> {
                       ),
                     ),
                     SizedBox(height: 16.h),
+                    if (kind == 'Petty Cash') ...[
+                      _buildPettyCashSummaryCard(),
+                      SizedBox(height: 16.h),
+                    ],
                   ],
                   // REIMBURSEMENT FIELDS
                   if (kind == 'Reimbursement') ...[
@@ -685,14 +756,16 @@ class _RequestFormState extends State<RequestForm> {
                   SizedBox(height: 16.h),
 
                   // DOKUMEN PENDUKUNG
-                  if (kind == 'Cuti' || kind == 'Lembur') ...[
+                  if (kind == 'Cuti' || kind == 'Lembur' || kind == 'Petty Cash') ...[
                     Row(
                       children: [
                         Flexible(
                           child: _buildSectionLabel(
                             kind == 'Cuti'
                                 ? 'Dokumen Pendukung / Surat Dokter'
-                                : 'Dokumen Pendukung / Surat Tugas Lembur',
+                                : kind == 'Lembur'
+                                ? 'Dokumen Pendukung / Surat Tugas Lembur'
+                                : 'Dokumen Pendukung / Nota Estimasi',
                           ),
                         ),
                         SizedBox(width: 6.w),
@@ -1290,6 +1363,272 @@ class _RequestFormState extends State<RequestForm> {
                     fontSize: 12.sp,
                     fontWeight: FontWeight.w600,
                     color: const Color(0xFF0D9488),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPettyCashCategorySelector() {
+    return _buildCardContainer(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Pilih jenis kebutuhan kas kecil yang diajukan:',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 11.5.sp,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF64748B),
+            ),
+          ),
+          SizedBox(height: 10.h),
+          Wrap(
+            spacing: 8.w,
+            runSpacing: 8.h,
+            children: pettyCashCategories.map((cat) {
+              final isSelected = _selectedPettyCashCategory == cat;
+              final icon = switch (cat) {
+                'Operasional Kantor' => Icons.business_center_outlined,
+                'Konsumsi Rapat' => Icons.restaurant_outlined,
+                'ATK Darurat' => Icons.edit_note_rounded,
+                'Transportasi Lokal' => Icons.directions_car_outlined,
+                _ => Icons.category_outlined,
+              };
+              return Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: (busy || uploading)
+                      ? null
+                      : () {
+                          setState(() {
+                            _selectedPettyCashCategory = cat;
+                          });
+                        },
+                  borderRadius: BorderRadius.circular(8.r),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 11.w,
+                      vertical: 8.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? const Color(0xFFF0FDFA)
+                          : const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(8.r),
+                      border: Border.all(
+                        color: isSelected
+                            ? const Color(0xFF0D9488)
+                            : const Color(0xFFE2E8F0),
+                        width: isSelected ? 1.4 : 1.0,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          icon,
+                          size: 15.sp,
+                          color: isSelected
+                              ? const Color(0xFF0D9488)
+                              : const Color(0xFF64748B),
+                        ),
+                        SizedBox(width: 6.w),
+                        Text(
+                          cat,
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 11.5.sp,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.w500,
+                            color: isSelected
+                                ? const Color(0xFF0F766E)
+                                : const Color(0xFF334155),
+                          ),
+                        ),
+                        if (isSelected) ...[
+                          SizedBox(width: 5.w),
+                          Icon(
+                            Icons.check_circle_rounded,
+                            size: 13.sp,
+                            color: const Color(0xFF0D9488),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPettyCashDateCard() {
+    return _buildCardContainer(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildPickerBox(
+            label: 'Tanggal Kebutuhan Dana',
+            icon: Icons.calendar_today_rounded,
+            valueText: _formatDisplayDate(start),
+            onTap: () => pickDate(true),
+          ),
+          SizedBox(height: 10.h),
+          const Divider(
+            height: 1,
+            thickness: 1,
+            color: Color(0xFFF1F5F9),
+          ),
+          SizedBox(height: 8.h),
+          Row(
+            children: [
+              Icon(
+                Icons.info_outline_rounded,
+                size: 13.sp,
+                color: const Color(0xFF0D9488),
+              ),
+              SizedBox(width: 6.w),
+              Expanded(
+                child: Text(
+                  'Kas kecil diproses dan disiapkan sebelum tanggal kebutuhan.',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 11.sp,
+                    color: const Color(0xFF64748B),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPettyCashSummaryCard() {
+    final parsedAmount = currentAmount;
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(14.w),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0FDFA),
+        borderRadius: BorderRadius.circular(10.r),
+        border: Border.all(
+          color: const Color(0xFF99F6E4),
+          width: 1.2,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 36.w,
+                height: 36.w,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0D9488),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: const Icon(
+                  Icons.payments_rounded,
+                  size: 19,
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(width: 10.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Ringkasan Pengajuan Kas Kecil',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF0F766E),
+                      ),
+                    ),
+                    SizedBox(height: 2.h),
+                    Text(
+                      '$_selectedPettyCashCategory · ${_formatDisplayDate(start)}',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 11.sp,
+                        color: const Color(0xFF64748B),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 10.w,
+                    vertical: 5.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(6.r),
+                    border: Border.all(
+                      color: const Color(0xFF99F6E4),
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Text(
+                    rupiah(parsedAmount),
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 13.5.sp,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF0F766E),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 10.h),
+          const Divider(
+            height: 1,
+            thickness: 0.8,
+            color: Color(0xFFCCFBF1),
+          ),
+          SizedBox(height: 8.h),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(
+                Icons.info_outline_rounded,
+                size: 14,
+                color: Color(0xFF0D9488),
+              ),
+              SizedBox(width: 6.w),
+              Expanded(
+                child: Text(
+                  'Pencairan kas kecil wajib disertai pertanggungjawaban nota fisik / bon transaksi setelah penggunaan dana.',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 11.sp,
+                    color: const Color(0xFF475569),
+                    height: 1.35,
                   ),
                 ),
               ),

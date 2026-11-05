@@ -206,5 +206,56 @@ void main() {
         expect(find.text('Cuti Menikah'), findsOneWidget);
       },
     );
+    testWidgets(
+      'renders dedicated petty cash module and calculates real accumulated total on card 4',
+      (tester) async {
+        final workspace = Workspace({
+          'requests': [
+            {
+              'id': 'petty-fixture-1',
+              'kind': 'Petty Cash',
+              'title': 'Beli ATK darurat',
+              'status': 'disetujui',
+              'startDate': '2026-11-01',
+              'amount': 150000,
+            },
+            {
+              'id': 'petty-fixture-2',
+              'kind': 'Petty Cash',
+              'title': 'Konsumsi rapat klien',
+              'status': 'menunggu',
+              'startDate': '2026-11-03',
+              'amount': 225000,
+            },
+          ],
+          'employees': [],
+        });
+
+        await tester.pumpWidget(
+          ScreenUtilInit(
+            designSize: const Size(375, 812),
+            minTextAdapt: true,
+            builder: (context, child) => MaterialApp(
+              home: DedicatedModuleScreen(
+                kind: SubmissionKind.pettyCash,
+                moduleTitle: 'Pengajuan Petty Cash',
+                keyMetricLabel: 'KAS KECIL',
+                keyMetricValue: 'Rp 0',
+                keyMetricIcon: Icons.payments_outlined,
+                api: ApiClient(),
+                workspace: workspace,
+                open: (w) async {},
+                onRefresh: () async {},
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Pengajuan Petty Cash'), findsOneWidget);
+        expect(find.text('KAS KECIL'), findsOneWidget);
+        expect(find.text(rupiah(375000)), findsOneWidget);
+      },
+    );
   });
 }

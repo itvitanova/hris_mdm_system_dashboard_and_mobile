@@ -89,7 +89,50 @@ void main() {
           'receipt-fixture',
         );
       }
+      if (kind == 'Petty Cash') {
+        expect(api.payload?['category'], 'Operasional Kantor');
+        expect(api.payload?['startDate'], api.payload?['endDate']);
+      }
       expect(tester.takeException(), isNull);
     });
   }
+
+  testWidgets(
+    'Petty Cash form displays category selector, summary card, and attachment card',
+    (tester) async {
+      final api = CaptureApi();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: RequestForm(
+            api: api,
+            initialKind: 'Petty Cash',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Kategori Kas Kecil *'), findsOneWidget);
+      expect(find.text('Operasional Kantor'), findsWidgets);
+      expect(find.text('Konsumsi Rapat'), findsOneWidget);
+      expect(find.text('ATK Darurat'), findsOneWidget);
+      expect(find.text('Transportasi Lokal'), findsOneWidget);
+      expect(find.text('Tanggal Kebutuhan Kas Kecil *'), findsOneWidget);
+      expect(find.text('Pilih Berkas Lampiran'), findsOneWidget);
+      expect(find.text('Ringkasan Pengajuan Kas Kecil'), findsOneWidget);
+
+      await tester.scrollUntilVisible(
+        find.text('ATK Darurat'),
+        100,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.text('ATK Darurat'));
+      await tester.pumpAndSettle();
+
+      final field = find.widgetWithText(TextFormField, 'Nominal (Rp)');
+      await tester.enterText(field, '50000');
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('ATK Darurat'), findsWidgets);
+    },
+  );
 }
