@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../core/theme/app_colors.dart';
 
 /// Modal bottom sheet untuk konfirmasi keluar akun (logout)
 /// Menampilkan drag handle, squircle red badge icon logout,
-/// title "Keluar dari Akun?", alert box card peringatan sesi,
-/// serta stacked button "Ya, Keluar Akun" dengan inline loading dan "Batal, Tetap Masuk".
+/// title "Keluar dari Akun?", alert box card peringatan sesi aman,
+/// serta tombol aksi horizontal simetris berdampingan (50:50) "Batal"
+/// dan "Ya, Keluar Akun" yang disesuaikan dengan desain sistem aplikasi.
 class LogoutConfirmationBottomSheet extends StatefulWidget {
   const LogoutConfirmationBottomSheet({
     super.key,
@@ -59,7 +61,7 @@ class _LogoutConfirmationBottomSheetState
       canPop: !_isLoading,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.white,
           borderRadius: BorderRadius.vertical(
             top: Radius.circular(24.r),
           ),
@@ -67,52 +69,45 @@ class _LogoutConfirmationBottomSheetState
         child: SafeArea(
           top: false,
           child: Padding(
-            padding: EdgeInsets.fromLTRB(24.w, 12.h, 24.w, 20.h),
+            padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 20.h),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // 1. Drag Handle (#E2E8F0, w=38, h=4)
+                // 1. Drag Handle
                 Center(
                   child: Container(
                     width: 38.w,
                     height: 4.h,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE2E8F0),
+                      color: AppColors.filterSlateBorder,
                       borderRadius: BorderRadius.circular(2.r),
                     ),
                   ),
                 ),
-                SizedBox(height: 16.h),
+                SizedBox(height: 18.h),
 
-                // 2. Squircle icon badge (52x52, r=16, gradient #FFE4E6->#FEE2E2, border #FECDD3, icon #E11D48)
+                // 2. Squircle icon badge
                 Container(
                   width: 52.w,
                   height: 52.w,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Color(0xFFFFE4E6),
-                        Color(0xFFFEE2E2),
-                      ],
-                    ),
+                    color: AppColors.red50,
                     borderRadius: BorderRadius.circular(16.r),
                     border: Border.all(
-                      color: const Color(0xFFFECDD3),
+                      color: AppColors.red.withValues(alpha: 0.2),
                       width: 1.2,
                     ),
                   ),
                   alignment: Alignment.center,
                   child: Icon(
                     Icons.logout_rounded,
-                    color: const Color(0xFFE11D48),
+                    color: AppColors.red,
                     size: 24.sp,
                   ),
                 ),
                 SizedBox(height: 14.h),
 
-                // 3. Title 'Keluar dari Akun?' (#0F172A, 18.sp, w700)
+                // 3. Title 'Keluar dari Akun?'
                 Text(
                   'Keluar dari Akun?',
                   textAlign: TextAlign.center,
@@ -120,21 +115,21 @@ class _LogoutConfirmationBottomSheetState
                     fontFamily: 'Inter',
                     fontSize: 18.sp,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF0F172A),
+                    color: AppColors.textPrimary,
                     letterSpacing: -0.3,
                   ),
                 ),
                 SizedBox(height: 14.h),
 
-                // 4. Alert box card (bg #FFF1F2, border #FEE2E2, circle icon #FEE2E2/#E11D48, title 'Apakah Anda yakin ingin mengakhiri sesi ini?' #991B1B 12.sp w600, subtitle 'Data sesi dan absensi Anda akan tetap aman.' #B91C1C 11.5.sp)
+                // 4. Alert box card (harmonized with app design system)
                 Container(
                   width: double.infinity,
                   padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFF1F2),
+                    color: AppColors.red50,
                     borderRadius: BorderRadius.circular(12.r),
                     border: Border.all(
-                      color: const Color(0xFFFEE2E2),
+                      color: AppColors.red.withValues(alpha: 0.25),
                       width: 1,
                     ),
                   ),
@@ -144,14 +139,14 @@ class _LogoutConfirmationBottomSheetState
                       Container(
                         width: 20.w,
                         height: 20.w,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFFEE2E2),
+                        decoration: BoxDecoration(
+                          color: AppColors.red.withValues(alpha: 0.15),
                           shape: BoxShape.circle,
                         ),
                         alignment: Alignment.center,
                         child: Icon(
                           Icons.priority_high_rounded,
-                          color: const Color(0xFFE11D48),
+                          color: AppColors.red,
                           size: 13.sp,
                         ),
                       ),
@@ -167,7 +162,7 @@ class _LogoutConfirmationBottomSheetState
                                 fontFamily: 'Inter',
                                 fontSize: 12.sp,
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFF991B1B),
+                                color: const Color(0xFFC62828),
                               ),
                             ),
                             SizedBox(height: 2.h),
@@ -177,7 +172,7 @@ class _LogoutConfirmationBottomSheetState
                                 fontFamily: 'Inter',
                                 fontSize: 11.5.sp,
                                 fontWeight: FontWeight.w400,
-                                color: const Color(0xFFB91C1C),
+                                color: AppColors.textSecondary,
                               ),
                             ),
                           ],
@@ -186,112 +181,116 @@ class _LogoutConfirmationBottomSheetState
                     ],
                   ),
                 ),
-                SizedBox(height: 14.h),
+                SizedBox(height: 20.h),
 
-                // 5. Button primary 'Ya, Keluar Akun' (gradient #F43F5E->#E11D48->#BE123C, shadow #E11D48 22%, h=48, r=14, inline loading)
-                Container(
-                  width: double.infinity,
-                  height: 48.h,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                      colors: [
-                        Color(0xFFF43F5E),
-                        Color(0xFFE11D48),
-                        Color(0xFFBE123C),
-                      ],
-                      stops: [0.0, 0.5, 1.0],
-                    ),
-                    borderRadius: BorderRadius.circular(14.r),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFE11D48).withValues(alpha: 0.22),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
+                // 5. Symmetric Action Buttons (50:50 Side-by-Side: Batal di kiri, Keluar Akun di kanan)
+                Row(
+                  children: [
+                    // Tombol Secondary: Batal
+                    Expanded(
+                      child: SizedBox(
+                        height: 46.h,
+                        child: OutlinedButton(
+                          onPressed: _isLoading
+                              ? null
+                              : () => Navigator.of(context).pop(),
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: AppColors.filterSlateBg,
+                            foregroundColor: AppColors.textPrimary,
+                            side: const BorderSide(
+                              color: AppColors.filterSlateBorder,
+                              width: 1.2,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12.r),
+                            ),
+                            padding: EdgeInsets.symmetric(horizontal: 8.w),
+                            elevation: 0,
+                          ),
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              'Batal',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 14.sp,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                                letterSpacing: 0.1,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
-                    ],
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: _isLoading ? null : _handleConfirm,
-                      borderRadius: BorderRadius.circular(14.r),
-                      child: Center(
-                        child: _isLoading
-                            ? Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  SizedBox(
-                                    width: 18.w,
-                                    height: 18.w,
-                                    child: const CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
+                    ),
+                    SizedBox(width: 12.w),
+
+                    // Tombol Primary: Ya, Keluar Akun
+                    Expanded(
+                      child: SizedBox(
+                        height: 46.h,
+                        child: FilledButton(
+                          onPressed: _isLoading ? null : _handleConfirm,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.red,
+                            disabledBackgroundColor:
+                                AppColors.red.withValues(alpha: 0.6),
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12.r),
+                            ),
+                            padding: EdgeInsets.symmetric(horizontal: 8.w),
+                          ),
+                          child: _isLoading
+                              ? Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    SizedBox(
+                                      width: 16.w,
+                                      height: 16.w,
+                                      child: const CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                          Colors.white,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  SizedBox(width: 8.w),
-                                  Text(
+                                    SizedBox(width: 6.w),
+                                    FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(
+                                        'Ya, Keluar Akun',
+                                        style: TextStyle(
+                                          fontFamily: 'Inter',
+                                          fontSize: 13.5.sp,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.white,
+                                          letterSpacing: 0.1,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
                                     'Ya, Keluar Akun',
                                     style: TextStyle(
                                       fontFamily: 'Inter',
-                                      fontSize: 15.sp,
+                                      fontSize: 14.sp,
                                       fontWeight: FontWeight.w600,
                                       color: Colors.white,
-                                      letterSpacing: 0.2,
+                                      letterSpacing: 0.1,
                                     ),
                                   ),
-                                ],
-                              )
-                            : Text(
-                                'Ya, Keluar Akun',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 15.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                  letterSpacing: 0.2,
                                 ),
-                              ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-                SizedBox(height: 14.h),
-
-                // 6. Button secondary 'Batal, Tetap Masuk' (bg #F8FAFC, border #E2E8F0, text #475569, h=48, r=14)
-                SizedBox(
-                  width: double.infinity,
-                  height: 48.h,
-                  child: OutlinedButton(
-                    onPressed:
-                        _isLoading ? null : () => Navigator.of(context).pop(),
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: const Color(0xFFF8FAFC),
-                      foregroundColor: const Color(0xFF475569),
-                      side: const BorderSide(
-                        color: Color(0xFFE2E8F0),
-                        width: 1.2,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14.r),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: Text(
-                      'Batal, Tetap Masuk',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 15.sp,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF475569),
-                        letterSpacing: 0.1,
-                      ),
-                    ),
-                  ),
+                  ],
                 ),
               ],
             ),

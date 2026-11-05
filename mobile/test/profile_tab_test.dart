@@ -143,14 +143,14 @@ void main() {
         find.text('Data sesi dan absensi Anda akan tetap aman.'),
         findsOneWidget,
       );
-      expect(find.text('Batal, Tetap Masuk'), findsOneWidget);
+      expect(find.text('Batal'), findsOneWidget);
       expect(find.text('Ya, Keluar Akun'), findsOneWidget);
 
       // Dismiss dialog
-      await tester.tap(find.text('Batal, Tetap Masuk'));
+      await tester.tap(find.text('Batal'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Batal, Tetap Masuk'), findsNothing);
+      expect(find.text('Batal'), findsNothing);
     });
   });
 }
