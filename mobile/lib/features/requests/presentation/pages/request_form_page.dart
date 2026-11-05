@@ -513,8 +513,6 @@ class _RequestFormState extends State<RequestForm> {
                       _buildSectionTitle('Nominal Pengajuan Kas Kecil (Rp) *'),
                       SizedBox(height: 8.h),
                       _buildPettyCashAmountCard(),
-                      SizedBox(height: 14.h),
-                      _buildPettyCashSummaryCard(),
                     ] else if (kind == 'General Affair') ...[
                       _buildSectionTitle('Tanggal Kebutuhan Sarana *'),
                       SizedBox(height: 8.h),
@@ -842,6 +840,12 @@ class _RequestFormState extends State<RequestForm> {
                     ),
                     SizedBox(height: 6.h),
                     _buildAttachmentCard(),
+                    SizedBox(height: 16.h),
+                  ],
+
+                  // SUMMARY BOX KEBUTUHAN PETTY CASH (Pre-Submission Summary)
+                  if (kind == 'Petty Cash') ...[
+                    _buildPettyCashSummaryCard(),
                     SizedBox(height: 16.h),
                   ],
 
@@ -1597,8 +1601,10 @@ class _RequestFormState extends State<RequestForm> {
   }
 
   Widget _buildPettyCashAmountCard() {
+    const quickPresets = [50000, 100000, 250000, 500000];
+
     return Container(
-      padding: EdgeInsets.fromLTRB(14.w, 12.h, 14.w, 10.h),
+      padding: EdgeInsets.fromLTRB(14.w, 12.h, 14.w, 12.h),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10.r),
         color: Colors.white,
@@ -1623,7 +1629,7 @@ class _RequestFormState extends State<RequestForm> {
                 'Rp',
                 style: TextStyle(
                   fontFamily: 'Inter',
-                  fontSize: 14.sp,
+                  fontSize: 15.sp,
                   fontWeight: FontWeight.w700,
                   color: const Color(0xFF0D9488),
                 ),
@@ -1638,8 +1644,8 @@ class _RequestFormState extends State<RequestForm> {
                   ],
                   style: TextStyle(
                     fontFamily: 'Inter',
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w700,
                     color: const Color(0xFF0F172A),
                   ),
                   decoration: InputDecoration(
@@ -1655,7 +1661,7 @@ class _RequestFormState extends State<RequestForm> {
                     hintText: '0',
                     hintStyle: TextStyle(
                       fontFamily: 'Inter',
-                      fontSize: 14.sp,
+                      fontSize: 15.sp,
                       fontWeight: FontWeight.w400,
                       color: const Color(0xFF94A3B8),
                     ),
@@ -1676,17 +1682,32 @@ class _RequestFormState extends State<RequestForm> {
                   },
                 ),
               ),
+              if (currentAmount > 0)
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => setState(() => amount.text = ''),
+                    borderRadius: BorderRadius.circular(12.r),
+                    child: Padding(
+                      padding: EdgeInsets.all(4.w),
+                      child: Icon(
+                        Icons.close_rounded,
+                        size: 16.sp,
+                        color: const Color(0xFF94A3B8),
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
           SizedBox(height: 8.h),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
                 child: Text(
                   currentAmount > 0
                       ? 'Terbilang: ${rupiah(currentAmount)}'
-                      : 'Masukkan nominal tanpa titik atau koma',
+                      : 'Masukkan nominal atau pilih nominal cepat di bawah:',
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 11.sp,
@@ -1702,6 +1723,62 @@ class _RequestFormState extends State<RequestForm> {
                 ),
               ),
             ],
+          ),
+          SizedBox(height: 10.h),
+          // Quick Preset Amount Chips
+          Wrap(
+            spacing: 6.w,
+            runSpacing: 6.h,
+            children: quickPresets.map((preset) {
+              final isMatch = currentAmount == preset;
+              final label = switch (preset) {
+                50000 => 'Rp 50 rb',
+                100000 => 'Rp 100 rb',
+                250000 => 'Rp 250 rb',
+                500000 => 'Rp 500 rb',
+                _ => rupiah(preset),
+              };
+              return Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: busy || uploading
+                      ? null
+                      : () => setState(() => amount.text = preset.toString()),
+                  borderRadius: BorderRadius.circular(6.r),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8.w,
+                      vertical: 4.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isMatch
+                          ? const Color(0xFF0D9488)
+                          : const Color(0xFFF0FDFA),
+                      borderRadius: BorderRadius.circular(6.r),
+                      border: Border.all(
+                        color: isMatch
+                            ? const Color(0xFF0D9488)
+                            : const Color(0xFF99F6E4),
+                        width: 0.8,
+                      ),
+                    ),
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 10.5.sp,
+                        fontWeight: isMatch
+                            ? FontWeight.w700
+                            : FontWeight.w600,
+                        color: isMatch
+                            ? Colors.white
+                            : const Color(0xFF0F766E),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
           ),
         ],
       ),
