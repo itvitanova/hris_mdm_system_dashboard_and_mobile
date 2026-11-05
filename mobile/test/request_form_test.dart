@@ -65,7 +65,7 @@ void main() {
           200,
           scrollable: find.byType(Scrollable).first,
         );
-        await tester.enterText(field, '1,5');
+        await tester.enterText(field, '2');
       }
       final send = find.text('Kirim pengajuan');
       await tester.scrollUntilVisible(
@@ -78,7 +78,7 @@ void main() {
       expect(api.payload?['kind'], kind);
       expect(api.payload?.containsKey('employeeId'), isFalse);
       if (kind == 'Lembur') {
-        expect(api.payload?['hours'], 1.5);
+        expect(api.payload?['hours'], 2);
         expect(api.payload?['startDate'], api.payload?['endDate']);
       }
       if (kind == 'Cuti') expect(api.payload?['amount'], 0);
