@@ -60,6 +60,17 @@ class _RequestFormState extends State<RequestForm> {
   String? error;
   String? _selectedAttachmentName;
 
+  static const gaCategories = [
+    'Pengadaan Barang',
+    'Perbaikan & Servis',
+    'Kebutuhan ATK',
+    'Pemeliharaan Fasilitas',
+  ];
+  String gaCategory = 'Pengadaan Barang';
+
+  static const gaPriorities = ['Normal', 'Mendesak'];
+  String gaPriority = 'Normal';
+
   bool get hasAmount => ['Petty Cash', 'General Affair'].contains(kind);
 
   String get formTitle {
@@ -94,6 +105,17 @@ class _RequestFormState extends State<RequestForm> {
       hours.text = number(r, 'hours').toString();
       start = DateTime.tryParse(text(r, 'startDate', '')) ?? start;
       end = DateTime.tryParse(text(r, 'endDate', '')) ?? end;
+      final cat = text(r, 'category', '');
+      if (gaCategories.contains(cat)) {
+        gaCategory = cat;
+      }
+      final prio = text(r, 'priority', '');
+      if (gaPriorities.contains(prio)) {
+        gaPriority = prio;
+      }
+    }
+    if (kind == 'General Affair') {
+      end = start;
     }
     final items = (r?['items'] as List?) ?? [];
     for (final item in items) {
@@ -198,17 +220,21 @@ class _RequestFormState extends State<RequestForm> {
       initialDate: initial.isBefore(first) ? first : initial,
       firstDate: first,
       lastDate: last,
-      title: isStart ? 'PILIH TANGGAL MULAI' : 'PILIH TANGGAL SELESAI',
+      title: isStart
+          ? (kind == 'General Affair'
+              ? 'PILIH TANGGAL KEBUTUHAN'
+              : 'PILIH TANGGAL MULAI')
+          : 'PILIH TANGGAL SELESAI',
     );
     if (picked != null && mounted) {
       setState(() {
         if (isStart) {
           start = picked;
-          if (end.isBefore(start)) end = start;
+          if (end.isBefore(start) || kind == 'General Affair') end = start;
         } else {
           end = picked;
         }
-        if (kind == 'Lembur') end = start;
+        if (kind == 'Lembur' || kind == 'General Affair') end = start;
       });
     }
   }
@@ -218,7 +244,7 @@ class _RequestFormState extends State<RequestForm> {
     setState(() {
       kind = newKind;
       kindSearch.text = newKind;
-      if (kind == 'Lembur') end = start;
+      if (kind == 'Lembur' || kind == 'General Affair') end = start;
     });
   }
 
@@ -249,7 +275,7 @@ class _RequestFormState extends State<RequestForm> {
         'title': title.text.trim(),
         'description': description.text.trim(),
         'startDate': dateOnly(start),
-        'endDate': dateOnly(kind == 'Lembur' ? start : end),
+        'endDate': dateOnly(kind == 'Lembur' || kind == 'General Affair' ? start : end),
         'amount': kind == 'Reimbursement'
             ? totalExpenses
             : hasAmount
@@ -388,7 +414,9 @@ class _RequestFormState extends State<RequestForm> {
                                   '3',
                                   kind == 'Reimbursement'
                                       ? 'Finance'
-                                      : 'HR / Final',
+                                      : kind == 'General Affair'
+                                          ? 'GA / Final'
+                                          : 'HR / Final',
                                   isCurrent: false,
                                 ),
                               ),
@@ -437,12 +465,24 @@ class _RequestFormState extends State<RequestForm> {
                     ),
                   ),
 
-                  // FIELD 2: RENTANG TANGGAL
+                  // KHUSUS GENERAL AFFAIR: SELECTOR KATEGORI & PRIORITAS
+                  if (kind == 'General Affair') ...[
+                    _buildGaCategorySelector(),
+                    SizedBox(height: 16.h),
+                    _buildGaPrioritySelector(),
+                    SizedBox(height: 16.h),
+                  ],
+
+                  // FIELD 2: RENTANG TANGGAL / TANGGAL KEBUTUHAN
                   if (kind != 'Reimbursement') ...[
                     if (kind == 'Lembur') ...[
                       _buildSectionTitle('Tanggal & Durasi Lembur'),
                       SizedBox(height: 8.h),
                       _buildOvertimeDateDurationCard(),
+                    ] else if (kind == 'General Affair') ...[
+                      _buildSectionTitle('Tanggal Kebutuhan Sarana *'),
+                      SizedBox(height: 8.h),
+                      _buildGeneralAffairDateCard(),
                     ] else ...[
                       _buildSectionTitle(
                         kind == 'Cuti'
@@ -461,20 +501,48 @@ class _RequestFormState extends State<RequestForm> {
 
                   // FIELD NOMINAL UNTUK PETTY CASH / GA
                   if (hasAmount) ...[
-                    _buildSectionLabel('Nominal Pengajuan (Rp) *'),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: _buildSectionLabel(
+                            kind == 'General Affair'
+                                ? 'Estimasi Biaya / Anggaran (Rp)'
+                                : 'Nominal Pengajuan (Rp) *',
+                          ),
+                        ),
+                        if (kind == 'General Affair') ...[
+                          SizedBox(width: 6.w),
+                          Text(
+                            '(Opsional)',
+                            style: TextStyle(
+                              fontSize: 10.5.sp,
+                              fontWeight: FontWeight.w500,
+                              color: const Color(0xFF94A3B8),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                     SizedBox(height: 6.h),
                     _buildInputCard(
                       child: TextFormField(
                         controller: amount,
                         keyboardType: TextInputType.number,
-                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
                         style: TextStyle(
                           fontSize: 12.5.sp,
                           color: const Color(0xFF0F172A),
                         ),
                         decoration: InputDecoration(
                           labelText: 'Nominal (Rp)',
-                          helperText: 'Masukkan angka tanpa titik atau koma.',
+                          hintText: kind == 'General Affair'
+                              ? 'Masukkan estimasi biaya jika diketahui (opsional)'
+                              : null,
+                          helperText: kind == 'General Affair'
+                              ? 'Opsional. Masukkan estimasi tanpa titik atau koma jika diketahui.'
+                              : 'Masukkan angka tanpa titik atau koma.',
                           prefixText: 'Rp ',
                           contentPadding: EdgeInsets.all(12.w),
                           border: OutlineInputBorder(
@@ -490,6 +558,10 @@ class _RequestFormState extends State<RequestForm> {
                         ),
                         onChanged: (_) => setState(() {}),
                         validator: (v) {
+                          if (kind == 'General Affair' &&
+                              (v == null || v.trim().isEmpty)) {
+                            return null;
+                          }
                           final n = int.tryParse(v ?? '') ?? 0;
                           return n < (kind == 'General Affair' ? 0 : 1) ||
                                   n > 1000000000000
@@ -684,15 +756,19 @@ class _RequestFormState extends State<RequestForm> {
 
                   SizedBox(height: 16.h),
 
-                  // DOKUMEN PENDUKUNG
-                  if (kind == 'Cuti' || kind == 'Lembur') ...[
+                  // DOKUMEN PENDUKUNG / LAMPIRAN
+                  if (kind == 'Cuti' ||
+                      kind == 'Lembur' ||
+                      kind == 'General Affair') ...[
                     Row(
                       children: [
                         Flexible(
                           child: _buildSectionLabel(
                             kind == 'Cuti'
                                 ? 'Dokumen Pendukung / Surat Dokter'
-                                : 'Dokumen Pendukung / Surat Tugas Lembur',
+                                : kind == 'Lembur'
+                                    ? 'Dokumen Pendukung / Surat Tugas Lembur'
+                                    : 'Lampiran Dokumen / Foto Kondisi',
                           ),
                         ),
                         SizedBox(width: 6.w),
@@ -708,6 +784,12 @@ class _RequestFormState extends State<RequestForm> {
                     ),
                     SizedBox(height: 6.h),
                     _buildAttachmentCard(),
+                    SizedBox(height: 16.h),
+                  ],
+
+                  // SUMMARY BOX KEBUTUHAN GA
+                  if (kind == 'General Affair') ...[
+                    _buildGeneralAffairSummaryBox(),
                     SizedBox(height: 16.h),
                   ],
 
@@ -1300,6 +1382,443 @@ class _RequestFormState extends State<RequestForm> {
     );
   }
 
+  Widget _buildGaCategorySelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle('Kategori Kebutuhan GA *'),
+        SizedBox(height: 8.h),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final itemWidth = (constraints.maxWidth - 8.w) / 2;
+            return Wrap(
+              spacing: 8.w,
+              runSpacing: 8.h,
+              children: gaCategories.map((cat) {
+                final isSelected = gaCategory == cat;
+                final icon = switch (cat) {
+                  'Pengadaan Barang' => Icons.shopping_bag_outlined,
+                  'Perbaikan & Servis' => Icons.build_outlined,
+                  'Kebutuhan ATK' => Icons.edit_note_rounded,
+                  'Pemeliharaan Fasilitas' => Icons.home_repair_service_outlined,
+                  _ => Icons.category_outlined,
+                };
+                return SizedBox(
+                  width: itemWidth,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: busy || uploading
+                          ? null
+                          : () => setState(() => gaCategory = cat),
+                      borderRadius: BorderRadius.circular(10.r),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 10.w,
+                          vertical: 10.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? const Color(0xFFF0FDFA)
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(10.r),
+                          border: Border.all(
+                            color: isSelected
+                                ? const Color(0xFF0D9488)
+                                : const Color(0xFFE2E8F0),
+                            width: isSelected ? 1.4 : 1.0,
+                          ),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x06000000),
+                              blurRadius: 4,
+                              offset: Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              icon,
+                              size: 16.sp,
+                              color: isSelected
+                                  ? const Color(0xFF0D9488)
+                                  : const Color(0xFF64748B),
+                            ),
+                            SizedBox(width: 8.w),
+                            Expanded(
+                              child: Text(
+                                cat,
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 11.5.sp,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
+                                  color: isSelected
+                                      ? const Color(0xFF0F766E)
+                                      : const Color(0xFF334155),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGaPrioritySelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle('Tingkat Prioritas *'),
+        SizedBox(height: 8.h),
+        Row(
+          children: gaPriorities.map((p) {
+            final isSelected = gaPriority == p;
+            final isUrgent = p == 'Mendesak';
+            final activeColor = isUrgent
+                ? const Color(0xFFEF4444)
+                : const Color(0xFF0D9488);
+            final activeBg = isUrgent
+                ? const Color(0xFFFEF2F2)
+                : const Color(0xFFF0FDFA);
+            final icon = isUrgent
+                ? Icons.flash_on_rounded
+                : Icons.access_time_rounded;
+
+            return Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  right: p == 'Normal' ? 8.w : 0,
+                  left: p == 'Mendesak' ? 8.w : 0,
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: busy || uploading
+                        ? null
+                        : () => setState(() => gaPriority = p),
+                    borderRadius: BorderRadius.circular(10.r),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12.w,
+                        vertical: 11.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected ? activeBg : Colors.white,
+                        borderRadius: BorderRadius.circular(10.r),
+                        border: Border.all(
+                          color: isSelected
+                              ? activeColor
+                              : const Color(0xFFE2E8F0),
+                          width: isSelected ? 1.4 : 1.0,
+                        ),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x06000000),
+                            blurRadius: 4,
+                            offset: Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            icon,
+                            size: 16.sp,
+                            color: isSelected
+                                ? activeColor
+                                : const Color(0xFF64748B),
+                          ),
+                          SizedBox(width: 8.w),
+                          Text(
+                            p,
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 12.5.sp,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                              color: isSelected
+                                  ? (isUrgent
+                                      ? const Color(0xFFB91C1C)
+                                      : const Color(0xFF0F766E))
+                                  : const Color(0xFF334155),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGeneralAffairDateCard() {
+    return _buildCardContainer(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildPickerBox(
+            label: 'Tanggal Kebutuhan',
+            icon: Icons.calendar_today_rounded,
+            valueText: _formatDisplayDate(start),
+            onTap: () => pickDate(true),
+          ),
+          SizedBox(height: 12.h),
+          const Divider(
+            height: 1,
+            thickness: 1,
+            color: Color(0xFFF1F5F9),
+          ),
+          SizedBox(height: 10.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.event_available_rounded,
+                      size: 15.sp,
+                      color: const Color(0xFF64748B),
+                    ),
+                    SizedBox(width: 6.w),
+                    Flexible(
+                      child: Text(
+                        'Target Kebutuhan:',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 12.sp,
+                          color: const Color(0xFF64748B),
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(width: 8.w),
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: 8.w,
+                  vertical: 3.h,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0FDFA),
+                  borderRadius: BorderRadius.circular(6.r),
+                ),
+                child: Text(
+                  _formatDisplayDate(start),
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF0D9488),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGeneralAffairSummaryBox() {
+    final parsedAmount = int.tryParse(amount.text) ?? 0;
+    final isUrgent = gaPriority == 'Mendesak';
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(14.w),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0FDFA),
+        borderRadius: BorderRadius.circular(10.r),
+        border: Border.all(
+          color: const Color(0xFF99F6E4),
+          width: 1.2,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 34.w,
+                height: 34.w,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0D9488),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: const Icon(
+                  Icons.inventory_2_rounded,
+                  size: 18,
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(width: 10.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Ringkasan Kebutuhan GA',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 12.5.sp,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF0F766E),
+                      ),
+                    ),
+                    SizedBox(height: 2.h),
+                    Text(
+                      gaCategory,
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: 8.w,
+                  vertical: 3.h,
+                ),
+                decoration: BoxDecoration(
+                  color: isUrgent ? const Color(0xFFFEE2E2) : Colors.white,
+                  borderRadius: BorderRadius.circular(6.r),
+                  border: Border.all(
+                    color: isUrgent
+                        ? const Color(0xFFFCA5A5)
+                        : const Color(0xFF99F6E4),
+                    width: 0.8,
+                  ),
+                ),
+                child: Text(
+                  gaPriority,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 11.sp,
+                    fontWeight: FontWeight.w700,
+                    color: isUrgent
+                        ? const Color(0xFFDC2626)
+                        : const Color(0xFF0F766E),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          const Divider(
+            height: 1,
+            thickness: 0.8,
+            color: Color(0xFFCCFBF1),
+          ),
+          SizedBox(height: 10.h),
+          _buildSummaryRow(
+            label: 'Tanggal Kebutuhan',
+            value: _formatDisplayDate(start),
+          ),
+          SizedBox(height: 6.h),
+          _buildSummaryRow(
+            label: 'Estimasi Biaya',
+            value: parsedAmount > 0 ? rupiah(parsedAmount) : 'Tidak diestimasi',
+          ),
+          SizedBox(height: 6.h),
+          _buildSummaryRow(
+            label: 'Lampiran Berkas',
+            value: _selectedAttachmentName ?? 'Belum ada lampiran',
+          ),
+          SizedBox(height: 10.h),
+          const Divider(
+            height: 1,
+            thickness: 0.8,
+            color: Color(0xFFCCFBF1),
+          ),
+          SizedBox(height: 8.h),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(
+                Icons.info_outline_rounded,
+                size: 14,
+                color: Color(0xFF0D9488),
+              ),
+              SizedBox(width: 6.w),
+              Expanded(
+                child: Text(
+                  'Permohonan GA akan diverifikasi oleh tim operasional fasilitas sesuai ketersediaan sarana kantor.',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 11.sp,
+                    color: const Color(0xFF475569),
+                    height: 1.35,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryRow({required String label, required String value}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 11.5.sp,
+            color: const Color(0xFF64748B),
+          ),
+        ),
+        SizedBox(width: 8.w),
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 11.5.sp,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF0F172A),
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildReimbursementAccountInfo() {
     final emp = widget.workspace?.employee;
     final bankName = text(emp ?? {}, 'bankName', 'Belum lengkap');
@@ -1541,6 +2060,8 @@ class _RequestFormState extends State<RequestForm> {
         '• Bukti transaksi wajib disertakan pada setiap baris pengeluaran.\n• Ketentuan template: pengajuan maksimal 14 hari kerja setelah transaksi.',
       'Petty Cash' =>
         '• Kas kecil digunakan untuk keperluan operasional mendesak unit kerja.\n• Pencairan dilakukan setelah disetujui kasir dan pimpinan.',
+      'General Affair' =>
+        '• Pengadaan dan servis sarana kantor mengikuti alur verifikasi unit General Affair.\n• Prioritas mendesak ditinjau khusus untuk kebutuhan operasional kritikal.',
       _ =>
         '• Pengadaan sarana kantor mengikuti alur verifikasi unit GA.\n• Persetujuan tidak otomatis melakukan pengadaan langsung.',
     };

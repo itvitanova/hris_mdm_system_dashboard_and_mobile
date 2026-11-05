@@ -542,12 +542,18 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                   SizedBox(width: 10.w),
                   Expanded(
                     child: ModuleStatCard(
-                      title: _toTitleCase(widget.keyMetricLabel),
+                      title: widget.kind == SubmissionKind.generalAffair
+                          ? 'Total Permohonan'
+                          : _toTitleCase(widget.keyMetricLabel),
                       subTitle: widget.kind == SubmissionKind.lembur
                           ? 'jam disetujui'
-                          : 'saldo aktif',
+                          : widget.kind == SubmissionKind.generalAffair
+                              ? 'total diajukan'
+                              : 'saldo aktif',
                       label: widget.keyMetricLabel,
-                      value: widget.keyMetricValue,
+                      value: widget.kind == SubmissionKind.generalAffair
+                          ? '${allRequests.length} Permohonan'
+                          : widget.keyMetricValue,
                       icon: widget.keyMetricIcon,
                     ),
                   ),

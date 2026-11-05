@@ -92,4 +92,45 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  testWidgets(
+    'General Affair renders category selector, priority, date card, optional amount, attachment, and summary box',
+    (tester) async {
+      final api = CaptureApi();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: RequestForm(
+            api: api,
+            initialKind: 'General Affair',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // 1. Check Category selector
+      expect(find.text('Kategori Kebutuhan GA *'), findsOneWidget);
+      expect(find.text('Pengadaan Barang'), findsWidgets);
+      expect(find.text('Perbaikan & Servis'), findsOneWidget);
+      expect(find.text('Kebutuhan ATK'), findsOneWidget);
+      expect(find.text('Pemeliharaan Fasilitas'), findsOneWidget);
+
+      // 2. Check Priority selector
+      expect(find.text('Tingkat Prioritas *'), findsOneWidget);
+      expect(find.text('Normal'), findsWidgets);
+      expect(find.text('Mendesak'), findsOneWidget);
+
+      // 3. Check Structured Date Picker
+      expect(find.text('Tanggal Kebutuhan Sarana *'), findsOneWidget);
+      expect(find.text('Tanggal Kebutuhan'), findsWidgets);
+
+      // 4. Check Optional Amount
+      expect(find.text('Estimasi Biaya / Anggaran (Rp)'), findsOneWidget);
+
+      // 5. Check Attachment card
+      expect(find.text('Lampiran Dokumen / Foto Kondisi'), findsOneWidget);
+
+      // 6. Check Summary box
+      expect(find.text('Ringkasan Kebutuhan GA'), findsOneWidget);
+    },
+  );
 }
