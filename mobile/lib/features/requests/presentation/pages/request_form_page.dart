@@ -380,12 +380,11 @@ class _RequestFormState extends State<RequestForm> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(10.r),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
                       boxShadow: const [
                         BoxShadow(
-                          color: Color(0x08000000),
-                          blurRadius: 8,
-                          offset: Offset(0, 2),
+                          color: Color.fromRGBO(0, 0, 0, 0.04),
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
                         ),
                       ],
                     ),
@@ -679,15 +678,11 @@ class _RequestFormState extends State<RequestForm> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10.r),
                       color: Colors.white,
-                      border: Border.all(
-                        color: const Color(0xFFE2E8F0),
-                        width: 1.2,
-                      ),
                       boxShadow: const [
                         BoxShadow(
-                          color: Color(0x06000000),
-                          blurRadius: 6,
-                          offset: Offset(0, 2),
+                          color: Color.fromRGBO(0, 0, 0, 0.04),
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
                         ),
                       ],
                     ),
@@ -738,15 +733,11 @@ class _RequestFormState extends State<RequestForm> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10.r),
                       color: Colors.white,
-                      border: Border.all(
-                        color: const Color(0xFFE2E8F0),
-                        width: 1.2,
-                      ),
                       boxShadow: const [
                         BoxShadow(
-                          color: Color(0x06000000),
-                          blurRadius: 6,
-                          offset: Offset(0, 2),
+                          color: Color.fromRGBO(0, 0, 0, 0.04),
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
                         ),
                       ],
                     ),
@@ -1010,7 +1001,6 @@ class _RequestFormState extends State<RequestForm> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10.r),
-        border: Border.all(color: Colors.white, width: 1.5.w),
         boxShadow: const [
           BoxShadow(
             color: Color.fromRGBO(0, 0, 0, 0.04),
@@ -1608,15 +1598,11 @@ class _RequestFormState extends State<RequestForm> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10.r),
         color: Colors.white,
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-          width: 1.2,
-        ),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x06000000),
-            blurRadius: 6,
-            offset: Offset(0, 2),
+            color: Color.fromRGBO(0, 0, 0, 0.04),
+            blurRadius: 10,
+            offset: Offset(0, 4),
           ),
         ],
       ),
@@ -2620,7 +2606,6 @@ class _RequestFormState extends State<RequestForm> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10.r),
-        border: Border.all(color: Colors.white, width: 1.5.w),
         boxShadow: const [
           BoxShadow(
             color: Color.fromRGBO(0, 0, 0, 0.04),
