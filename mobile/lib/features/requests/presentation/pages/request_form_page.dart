@@ -509,6 +509,10 @@ class _RequestFormState extends State<RequestForm> {
                       _buildSectionTitle('Tanggal Kebutuhan Kas Kecil *'),
                       SizedBox(height: 8.h),
                       _buildPettyCashDateCard(),
+                      SizedBox(height: 16.h),
+                      _buildSectionTitle('Nominal Pengajuan Kas Kecil (Rp) *'),
+                      SizedBox(height: 8.h),
+                      _buildPettyCashAmountCard(),
                       SizedBox(height: 14.h),
                       _buildPettyCashSummaryCard(),
                     ] else if (kind == 'General Affair') ...[
@@ -1554,173 +1558,17 @@ class _RequestFormState extends State<RequestForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Kolom 1: Tanggal Kebutuhan Kas Kecil (Kiri)
-              Expanded(
-                child: _buildPickerBox(
-                  label: 'Tanggal Kebutuhan',
-                  icon: Icons.calendar_today_rounded,
-                  valueText: _formatDisplayDate(start),
-                  onTap: () => pickDate(true),
-                ),
-              ),
-              SizedBox(width: 10.w),
-              // Kolom 2: Nominal Kas Kecil (Kanan - Twin-Box 100% Simetris Kembar Identik)
-              Expanded(
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 10.w,
-                    vertical: 8.h,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Nominal Kas Kecil *',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 11.sp,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF64748B),
-                        ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.payments_outlined,
-                            size: 14.sp,
-                            color: const Color(0xFF0D9488),
-                          ),
-                          SizedBox(width: 5.w),
-                          Text(
-                            'Rp',
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF0D9488),
-                            ),
-                          ),
-                          SizedBox(width: 4.w),
-                          Expanded(
-                            child: TextFormField(
-                              controller: amount,
-                              keyboardType: TextInputType.number,
-                              inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly,
-                              ],
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF0F172A),
-                              ),
-                              decoration: const InputDecoration(
-                                isDense: true,
-                                border: InputBorder.none,
-                                enabledBorder: InputBorder.none,
-                                focusedBorder: InputBorder.none,
-                                errorBorder: InputBorder.none,
-                                focusedErrorBorder: InputBorder.none,
-                                contentPadding: EdgeInsets.zero,
-                                labelText: 'Nominal (Rp)',
-                                floatingLabelBehavior:
-                                    FloatingLabelBehavior.never,
-                                hintText: '0',
-                                hintStyle: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 12,
-                                  color: Color(0xFF94A3B8),
-                                ),
-                              ),
-                              onChanged: (_) => setState(() {}),
-                              validator: (v) {
-                                final clean = (v ?? '').replaceAll(
-                                  RegExp(r'[^0-9]'),
-                                  '',
-                                );
-                                final n = int.tryParse(clean) ?? 0;
-                                return n < 1 || n > 1000000000000
-                                    ? 'Nominal tidak valid'
-                                    : null;
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+          _buildPickerBox(
+            label: 'Tanggal Kebutuhan Dana',
+            icon: Icons.calendar_today_rounded,
+            valueText: _formatDisplayDate(start),
+            onTap: () => pickDate(true),
           ),
-          SizedBox(height: 12.h),
+          SizedBox(height: 10.h),
           const Divider(
             height: 1,
             thickness: 1,
             color: Color(0xFFF1F5F9),
-          ),
-          SizedBox(height: 10.h),
-          // Total Pengajuan Kas Kecil Status Bar
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Flexible(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.receipt_long_rounded,
-                      size: 15.sp,
-                      color: const Color(0xFF64748B),
-                    ),
-                    SizedBox(width: 6.w),
-                    Flexible(
-                      child: Text(
-                        'Total Pengajuan Kas Kecil:',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 12.sp,
-                          color: const Color(0xFF64748B),
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(width: 8.w),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: 8.w,
-                  vertical: 3.h,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF0FDFA),
-                  borderRadius: BorderRadius.circular(6.r),
-                  border: Border.all(
-                    color: const Color(0xFF99F6E4),
-                    width: 0.8,
-                  ),
-                ),
-                child: Text(
-                  rupiah(currentAmount),
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF0D9488),
-                  ),
-                ),
-              ),
-            ],
           ),
           SizedBox(height: 8.h),
           Row(
@@ -1744,6 +1592,76 @@ class _RequestFormState extends State<RequestForm> {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPettyCashAmountCard() {
+    return _buildInputCard(
+      child: TextFormField(
+        controller: amount,
+        keyboardType: TextInputType.number,
+        inputFormatters: [
+          FilteringTextInputFormatter.digitsOnly,
+        ],
+        style: TextStyle(
+          fontFamily: 'Inter',
+          fontSize: 13.5.sp,
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFF0F172A),
+        ),
+        decoration: InputDecoration(
+          labelText: 'Nominal (Rp)',
+          labelStyle: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 12.sp,
+            color: const Color(0xFF64748B),
+          ),
+          hintText: '0',
+          helperText: currentAmount > 0
+              ? 'Terbilang: ${rupiah(currentAmount)}'
+              : 'Masukkan angka tanpa titik atau koma.',
+          helperStyle: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 11.sp,
+            fontWeight:
+                currentAmount > 0 ? FontWeight.w600 : FontWeight.w400,
+            color: currentAmount > 0
+                ? const Color(0xFF0D9488)
+                : const Color(0xFF64748B),
+          ),
+          prefixText: 'Rp ',
+          prefixStyle: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 13.5.sp,
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF0D9488),
+          ),
+          contentPadding: EdgeInsets.all(12.w),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10.r),
+            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10.r),
+            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10.r),
+            borderSide: const BorderSide(
+              color: Color(0xFF0D9488),
+              width: 1.5,
+            ),
+          ),
+        ),
+        onChanged: (_) => setState(() {}),
+        validator: (v) {
+          final clean = (v ?? '').replaceAll(RegExp(r'[^0-9]'), '');
+          final n = int.tryParse(clean) ?? 0;
+          return n < 1 || n > 1000000000000
+              ? 'Nominal tidak valid'
+              : null;
+        },
       ),
     );
   }
