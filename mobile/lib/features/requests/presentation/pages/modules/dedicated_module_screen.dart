@@ -543,7 +543,9 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                   Expanded(
                     child: ModuleStatCard(
                       title: _toTitleCase(widget.keyMetricLabel),
-                      subTitle: 'saldo aktif',
+                      subTitle: widget.kind == SubmissionKind.lembur
+                          ? 'jam disetujui'
+                          : 'saldo aktif',
                       label: widget.keyMetricLabel,
                       value: widget.keyMetricValue,
                       icon: widget.keyMetricIcon,

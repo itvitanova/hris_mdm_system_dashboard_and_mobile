@@ -6,8 +6,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/workspace.dart';
 import '../../../../core/widgets/core_widgets.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../widgets/receipt_preview.dart';
 import '../widgets/custom_date_picker_dialog.dart';
+import '../widgets/custom_duration_picker_dialog.dart';
 
 const requestKinds = [
   'Cuti',
@@ -254,7 +256,9 @@ class _RequestFormState extends State<RequestForm> {
             ? int.tryParse(amount.text) ?? 0
             : 0,
         'hours': kind == 'Lembur'
-            ? double.parse(hours.text.replaceAll(',', '.'))
+            ? (int.tryParse(hours.text) ??
+                (double.tryParse(hours.text.replaceAll(',', '.'))?.toInt() ??
+                    0))
             : 0,
       });
       if (mounted) {
@@ -436,56 +440,9 @@ class _RequestFormState extends State<RequestForm> {
                   // FIELD 2: RENTANG TANGGAL
                   if (kind != 'Reimbursement') ...[
                     if (kind == 'Lembur') ...[
-                      _buildSectionTitle('Tanggal Pelaksanaan Lembur *'),
+                      _buildSectionTitle('Tanggal & Durasi Lembur'),
                       SizedBox(height: 8.h),
-                      _buildSingleDateCard(
-                        label: 'Tanggal Lembur',
-                        note:
-                            'Gunakan tanggal mulai dan selesai yang sama. Buat pengajuan terpisah untuk hari berbeda.',
-                      ),
-                      SizedBox(height: 14.h),
-                      _buildSectionLabel('Durasi Lembur (jam) *'),
-                      SizedBox(height: 6.h),
-                      _buildInputCard(
-                        child: TextFormField(
-                          controller: hours,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          style: TextStyle(
-                            fontSize: 12.5.sp,
-                            color: const Color(0xFF0F172A),
-                          ),
-                          decoration: InputDecoration(
-                            labelText: 'Durasi lembur (jam)',
-                            hintText: 'Contoh: 2',
-                            helperText:
-                                'Satu tanggal per pengajuan; maksimal 24 jam.',
-                            contentPadding: EdgeInsets.all(12.w),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10.r),
-                              borderSide:
-                                  const BorderSide(color: Color(0xFFE2E8F0)),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10.r),
-                              borderSide:
-                                  const BorderSide(color: Color(0xFFE2E8F0)),
-                            ),
-                          ),
-                          onChanged: (_) => setState(() {}),
-                          validator: (v) {
-                            final n = double.tryParse(
-                                (v ?? '').replaceAll(',', '.'));
-                            return n == null ||
-                                    !n.isFinite ||
-                                    n <= 0 ||
-                                    n > 24
-                                ? 'Isi durasi lebih dari 0 hingga 24 jam'
-                                : null;
-                          },
-                        ),
-                      ),
+                      _buildOvertimeDateDurationCard(),
                     ] else ...[
                       _buildSectionTitle(
                         kind == 'Cuti'
@@ -543,38 +500,49 @@ class _RequestFormState extends State<RequestForm> {
                     ),
                     SizedBox(height: 16.h),
                   ],
-
                   // REIMBURSEMENT FIELDS
                   if (kind == 'Reimbursement') ...[
-                    _buildSectionLabel('Rekening Reimbursement'),
-                    SizedBox(height: 6.h),
+                    _buildSectionTitle('Rekening Reimbursement'),
+                    SizedBox(height: 8.h),
                     _buildReimbursementAccountInfo(),
                     SizedBox(height: 16.h),
-                    _buildSectionLabel('Rincian Pengeluaran *'),
+                    _buildSectionTitle('Rincian Pengeluaran *'),
                     SizedBox(height: 8.h),
                     for (var i = 0; i < expenses.length; i++)
                       expenseFields(expenses[i], i),
-                    SizedBox(height: 8.h),
+                    SizedBox(height: 4.h),
                     OutlinedButton.icon(
                       onPressed: busy || uploading || expenses.length >= 150
                           ? null
                           : () => setState(() => expenses.add(ExpenseDraft({}))),
-                      icon: const Icon(Icons.add),
-                      label: const Text('Tambah rincian'),
+                      icon: Icon(
+                        Icons.add_circle_outline_rounded,
+                        size: 16.sp,
+                        color: const Color(0xFF0D9488),
+                      ),
+                      label: Text(
+                        'Tambah rincian',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF0D9488),
+                        ),
+                      ),
                       style: OutlinedButton.styleFrom(
-                        minimumSize: Size(double.infinity, 42.h),
+                        minimumSize: Size(double.infinity, 44.h),
+                        backgroundColor: const Color(0xFFF0FDFA),
+                        side: const BorderSide(
+                          color: Color(0xFF99F6E4),
+                          width: 1.2,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10.r),
                         ),
                       ),
                     ),
-                    SizedBox(height: 8.h),
-                    DetailLine('Total klaim', rupiah(totalExpenses)),
-                    SizedBox(height: 6.h),
-                    const Text(
-                      'Setiap rincian wajib disertai bukti transaksi. Ketentuan template: maksimal 14 hari kerja setelah transaksi; peninjau memeriksa kesesuaiannya.',
-                      style: TextStyle(color: muted, fontSize: 11),
-                    ),
+                    SizedBox(height: 14.h),
+                    _buildReimbursementSummaryCard(),
                     SizedBox(height: 16.h),
                   ],
 
@@ -717,12 +685,14 @@ class _RequestFormState extends State<RequestForm> {
                   SizedBox(height: 16.h),
 
                   // DOKUMEN PENDUKUNG
-                  if (kind == 'Cuti') ...[
+                  if (kind == 'Cuti' || kind == 'Lembur') ...[
                     Row(
                       children: [
                         Flexible(
                           child: _buildSectionLabel(
-                            'Dokumen Pendukung / Surat Dokter',
+                            kind == 'Cuti'
+                                ? 'Dokumen Pendukung / Surat Dokter'
+                                : 'Dokumen Pendukung / Surat Tugas Lembur',
                           ),
                         ),
                         SizedBox(width: 6.w),
@@ -1025,9 +995,10 @@ class _RequestFormState extends State<RequestForm> {
     );
   }
 
-  Widget _buildDateItem({
+  Widget _buildPickerBox({
     required String label,
-    required DateTime date,
+    required IconData icon,
+    required String valueText,
     required VoidCallback onTap,
   }) {
     return Material(
@@ -1057,14 +1028,14 @@ class _RequestFormState extends State<RequestForm> {
               Row(
                 children: [
                   Icon(
-                    Icons.calendar_today_rounded,
+                    icon,
                     size: 14.sp,
                     color: const Color(0xFF0D9488),
                   ),
                   SizedBox(width: 6.w),
                   Expanded(
                     child: Text(
-                      _formatDisplayDate(date),
+                      valueText,
                       style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 12.sp,
@@ -1081,6 +1052,19 @@ class _RequestFormState extends State<RequestForm> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildDateItem({
+    required String label,
+    required DateTime date,
+    required VoidCallback onTap,
+  }) {
+    return _buildPickerBox(
+      label: label,
+      icon: Icons.calendar_today_rounded,
+      valueText: _formatDisplayDate(date),
+      onTap: onTap,
     );
   }
 
@@ -1175,26 +1159,141 @@ class _RequestFormState extends State<RequestForm> {
     );
   }
 
-  Widget _buildSingleDateCard({
-    required String label,
-    required String note,
-  }) {
+  Future<void> _showDurationPicker() async {
+    final current = int.tryParse(hours.text) ?? 1;
+    final selected = await showCustomDurationPickerDialog(
+      context: context,
+      initialHours: current,
+    );
+
+    if (selected != null && mounted) {
+      setState(() {
+        hours.text = selected.toString();
+      });
+    }
+  }
+
+  Widget _buildOvertimeDateDurationCard() {
+    final parsedHours = int.tryParse(hours.text) ??
+        (double.tryParse(hours.text.replaceAll(',', '.'))?.round() ?? 0);
+    final displayHours = parsedHours > 0
+        ? '$parsedHours Jam'
+        : (hours.text.isNotEmpty ? '${hours.text} Jam' : 'Pilih jam');
+
     return _buildCardContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildDateItem(
-            label: label,
-            date: start,
-            onTap: () => pickDate(true),
+          Row(
+            children: [
+              // Kolom 1: Tanggal Lembur (Kiri)
+              Expanded(
+                child: _buildPickerBox(
+                  label: 'Tanggal Lembur',
+                  icon: Icons.calendar_today_rounded,
+                  valueText: _formatDisplayDate(start),
+                  onTap: () => pickDate(true),
+                ),
+              ),
+              SizedBox(width: 12.w),
+              // Kolom 2: Durasi Lembur (Kanan - Twin-Box 100% Simetris Kembar Identik)
+              Expanded(
+                child: Stack(
+                  children: [
+                    _buildPickerBox(
+                      label: 'Durasi Lembur',
+                      icon: Icons.access_time_rounded,
+                      valueText: displayHours,
+                      onTap: _showDurationPicker,
+                    ),
+                    // Hidden TextFormField to retain form validation & testing contracts
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      top: 0,
+                      height: 0,
+                      child: Opacity(
+                        opacity: 0.0,
+                        child: TextFormField(
+                          controller: hours,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          decoration: const InputDecoration(
+                            labelText: 'Durasi lembur (jam)',
+                          ),
+                          onChanged: (_) => setState(() {}),
+                          validator: (v) {
+                            final n = int.tryParse(v ?? '');
+                            return n == null || n < 1 || n > 24
+                                ? 'Isi durasi 1 hingga 24 jam'
+                                : null;
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          SizedBox(height: 8.h),
-          Text(
-            note,
-            style: TextStyle(
-              fontSize: 11.sp,
-              color: const Color(0xFF64748B),
-            ),
+          SizedBox(height: 12.h),
+          const Divider(
+            height: 1,
+            thickness: 1,
+            color: Color(0xFFF1F5F9),
+          ),
+          SizedBox(height: 10.h),
+          // Total Durasi Summary Bar (Identik dengan Cuti)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.access_time_rounded,
+                      size: 15.sp,
+                      color: const Color(0xFF64748B),
+                    ),
+                    SizedBox(width: 6.w),
+                    Flexible(
+                      child: Text(
+                        'Total Durasi:',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 12.sp,
+                          color: const Color(0xFF64748B),
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(width: 8.w),
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: 8.w,
+                  vertical: 3.h,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0FDFA),
+                  borderRadius: BorderRadius.circular(6.r),
+                ),
+                child: Text(
+                  displayHours,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF0D9488),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -1207,41 +1306,185 @@ class _RequestFormState extends State<RequestForm> {
     final accountName = text(emp ?? {}, 'bankAccountName', '-');
     final accountNumber = text(emp ?? {}, 'bankAccountNumber', '-');
 
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(12.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10.r),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x08000000),
-            blurRadius: 8,
-            offset: Offset(0, 2),
+    return _buildCardContainer(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 36.w,
+                height: 36.w,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0FDFA),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: const Icon(
+                  Icons.account_balance_rounded,
+                  size: 18,
+                  color: Color(0xFF0D9488),
+                ),
+              ),
+              SizedBox(width: 10.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Rekening Tujuan Pencairan',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 12.5.sp,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF0F172A),
+                      ),
+                    ),
+                    SizedBox(height: 2.h),
+                    Text(
+                      widget.workspace == null
+                          ? 'Rekening diambil dari data karyawan di sistem HRIS'
+                          : "$bankName Â· $accountNumber ($accountName)",
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 11.5.sp,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF475569),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            'Dana reimbursement akan ditransfer langsung ke rekening terdaftar di atas. Hubungi HR jika terdapat perubahan nomor rekening.',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 10.5.sp,
+              color: const Color(0xFF94A3B8),
+              height: 1.35,
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildReimbursementSummaryCard() {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(14.w),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0FDFA),
+        borderRadius: BorderRadius.circular(10.r),
+        border: Border.all(
+          color: const Color(0xFF99F6E4),
+          width: 1.2,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Rekening Tujuan Pencairan',
-            style: TextStyle(
-              fontSize: 12.sp,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF1E293B),
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 34.w,
+                height: 34.w,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0D9488),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: const Icon(
+                  Icons.account_balance_wallet_rounded,
+                  size: 18,
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(width: 10.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Total klaim',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF0F766E),
+                      ),
+                    ),
+                    Text(
+                      "${expenses.length} rincian pengeluaran",
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 11.sp,
+                        color: const Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 10.w,
+                    vertical: 5.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(6.r),
+                    border: Border.all(
+                      color: const Color(0xFF99F6E4),
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Text(
+                    rupiah(totalExpenses),
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF0F766E),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-          SizedBox(height: 4.h),
-          Text(
-            widget.workspace == null
-                ? 'Rekening diambil dari data karyawan. Hubungi HR jika belum lengkap.'
-                : '$bankName · $accountName · $accountNumber. Hubungi HR untuk perubahan rekening.',
-            style: TextStyle(
-              fontSize: 11.5.sp,
-              color: const Color(0xFF475569),
-            ),
+          SizedBox(height: 10.h),
+          const Divider(
+            height: 1,
+            thickness: 0.8,
+            color: Color(0xFFCCFBF1),
+          ),
+          SizedBox(height: 8.h),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(
+                Icons.info_outline_rounded,
+                size: 14,
+                color: Color(0xFF0D9488),
+              ),
+              SizedBox(width: 6.w),
+              Expanded(
+                child: Text(
+                  'Setiap rincian wajib disertai bukti transaksi. Ketentuan template: pengajuan maksimal 14 hari kerja setelah transaksi.',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 11.sp,
+                    color: const Color(0xFF475569),
+                    height: 1.35,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -1311,111 +1554,410 @@ class _RequestFormState extends State<RequestForm> {
       ),
     );
   }
+  Widget expenseFields(ExpenseDraft item, int index) {
+    return Container(
+      key: ObjectKey(item),
+      margin: EdgeInsets.only(bottom: 12.h),
+      width: double.infinity,
+      padding: EdgeInsets.all(14.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10.r),
+        border: Border.all(color: Colors.white, width: 1.5.w),
+        boxShadow: const [
+          BoxShadow(
+            color: Color.fromRGBO(0, 0, 0, 0.04),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Header: Number Badge and Title 'Pengeluaran N'
+          Row(
+            children: [
+              Container(
+                width: 22.w,
+                height: 22.w,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF0D9488),
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  "${index + 1}",
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 11.sp,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              SizedBox(width: 8.w),
+              Expanded(
+                child: Text(
+                  "Pengeluaran ${index + 1}",
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF0F172A),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (expenses.length > 1) ...[
+            SizedBox(height: 6.h),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: busy || uploading
+                    ? null
+                    : () {
+                        setState(() => expenses.remove(item));
+                        item.dispose();
+                      },
+                icon: const Icon(
+                  Icons.delete_outline_rounded,
+                  size: 15,
+                  color: AppColors.red,
+                ),
+                label: Text(
+                  "Hapus rincian ${index + 1}",
+                  style: const TextStyle(
+                    color: AppColors.red,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+            ),
+          ],
+          SizedBox(height: 12.h),
 
-  Widget expenseFields(ExpenseDraft item, int index) => Panel(
-    key: ObjectKey(item),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SectionHeading('Pengeluaran ${index + 1}'),
-        const SizedBox(height: 12),
-        OutlinedButton.icon(
-          onPressed: busy || uploading ? null : () => expenseDate(item),
-          icon: const Icon(
-            Icons.calendar_today_rounded,
-            size: 15,
-            color: Color(0xFF0D9488),
-          ),
-          label: Text('Tanggal transaksi: ${_formatDisplayDate(item.date)}'),
-          style: OutlinedButton.styleFrom(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.r),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        TextFormField(
-          controller: item.description,
-          enabled: !busy && !uploading,
-          maxLength: 500,
-          decoration: const InputDecoration(labelText: 'Deskripsi pengeluaran'),
-          validator: requiredText,
-        ),
-        const SizedBox(height: 12),
-        TextFormField(
-          controller: item.category,
-          enabled: !busy && !uploading,
-          maxLength: 80,
-          decoration: const InputDecoration(labelText: 'Kategori pengeluaran'),
-          validator: requiredText,
-        ),
-        const SizedBox(height: 12),
-        TextFormField(
-          controller: item.amount,
-          enabled: !busy && !uploading,
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          decoration: const InputDecoration(
-            labelText: 'Jumlah pengeluaran (Rp)',
-          ),
-          onChanged: (_) => setState(() {}),
-          validator: (v) {
-            final n = int.tryParse(v ?? '') ?? 0;
-            return n < 1 || n > 1000000000000 ? 'Isi jumlah yang valid' : null;
-          },
-        ),
-        const SizedBox(height: 12),
-        OutlinedButton.icon(
-          onPressed: busy || uploading ? null : () => upload(item),
-          icon: const Icon(Icons.attach_file),
-          label: Text(
-            item.receiptId.isEmpty
-                ? 'Unggah bukti transaksi'
-                : 'Ganti bukti transaksi',
-          ),
-          style: OutlinedButton.styleFrom(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.r),
-            ),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          item.receiptId.isEmpty
-              ? 'JPEG, PNG, atau PDF; maksimal 2 MB'
-              : item.receiptName,
-          style: TextStyle(fontSize: 12.sp, color: const Color(0xFF64748B)),
-        ),
-        if (item.receiptId.isNotEmpty)
-          TextButton.icon(
-            onPressed: busy || uploading
-                ? null
-                : () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ReceiptPreview(
-                        api: widget.api,
-                        path:
-                            '/request-receipts/${Uri.encodeComponent(item.receiptId)}',
+          // 1. Tanggal Transaksi (Mengikuti UI Best Practice Date Card Cuti)
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: busy || uploading ? null : () => expenseDate(item),
+              borderRadius: BorderRadius.circular(8.r),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Tanggal Transaksi',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF64748B),
                       ),
                     ),
+                    SizedBox(height: 4.h),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.calendar_today_rounded,
+                          size: 14,
+                          color: Color(0xFF0D9488),
+                        ),
+                        SizedBox(width: 6.w),
+                        Expanded(
+                          child: Text(
+                            "Tanggal transaksi: ${_formatDisplayDate(item.date)}",
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF0F172A),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const Icon(
+                          Icons.keyboard_arrow_right_rounded,
+                          size: 18,
+                          color: Color(0xFF94A3B8),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          SizedBox(height: 12.h),
+
+          // 2. Deskripsi Pengeluaran
+          _buildInputCard(
+            child: TextFormField(
+              controller: item.description,
+              enabled: !busy && !uploading,
+              maxLength: 500,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 12.5.sp,
+                color: const Color(0xFF0F172A),
+              ),
+              decoration: InputDecoration(
+                labelText: 'Deskripsi pengeluaran',
+                hintText: 'Misal: Makan malam meeting client, bensin dinas',
+                contentPadding: EdgeInsets.all(12.w),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.r),
+                  borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.r),
+                  borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.r),
+                  borderSide:
+                      const BorderSide(color: Color(0xFF0D9488), width: 1.5),
+                ),
+              ),
+              validator: requiredText,
+            ),
+          ),
+          SizedBox(height: 12.h),
+
+          // 3. Kategori Pengeluaran
+          _buildInputCard(
+            child: TextFormField(
+              controller: item.category,
+              enabled: !busy && !uploading,
+              maxLength: 80,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 12.5.sp,
+                color: const Color(0xFF0F172A),
+              ),
+              decoration: InputDecoration(
+                labelText: 'Kategori pengeluaran',
+                hintText: 'Misal: Transportasi, Konsumsi, Medis, Logistik',
+                contentPadding: EdgeInsets.all(12.w),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.r),
+                  borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.r),
+                  borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.r),
+                  borderSide:
+                      const BorderSide(color: Color(0xFF0D9488), width: 1.5),
+                ),
+              ),
+              validator: requiredText,
+            ),
+          ),
+          SizedBox(height: 12.h),
+
+          // 4. Jumlah Pengeluaran (Rp)
+          _buildInputCard(
+            child: TextFormField(
+              controller: item.amount,
+              enabled: !busy && !uploading,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 12.5.sp,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF0F172A),
+              ),
+              decoration: InputDecoration(
+                labelText: 'Jumlah pengeluaran (Rp)',
+                hintText: '0',
+                prefixText: 'Rp ',
+                prefixStyle: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 12.5.sp,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF0D9488),
+                ),
+                contentPadding: EdgeInsets.all(12.w),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.r),
+                  borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.r),
+                  borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.r),
+                  borderSide:
+                      const BorderSide(color: Color(0xFF0D9488), width: 1.5),
+                ),
+              ),
+              onChanged: (_) => setState(() {}),
+              validator: (v) {
+                final n = int.tryParse(v ?? '') ?? 0;
+                return n < 1 || n > 1000000000000
+                    ? 'Isi jumlah yang valid'
+                    : null;
+              },
+            ),
+          ),
+          SizedBox(height: 12.h),
+
+          // 5. Bukti Transaksi Attachment Card (Pattern Best Practice dari Cuti Attachment Card)
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: busy || uploading ? null : () => upload(item),
+              borderRadius: BorderRadius.circular(8.r),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+                decoration: BoxDecoration(
+                  color: item.receiptId.isNotEmpty
+                      ? const Color(0xFFF0FDFA)
+                      : const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(
+                    color: item.receiptId.isNotEmpty
+                        ? const Color(0xFF99F6E4)
+                        : const Color(0xFFE2E8F0),
+                    width: 1,
                   ),
-            icon: const Icon(Icons.image_search_outlined),
-            label: const Text('Lihat bukti yang diunggah'),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 38.w,
+                      height: 38.w,
+                      decoration: BoxDecoration(
+                        color: item.receiptId.isNotEmpty
+                            ? const Color(0xFF0D9488)
+                            : const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      child: Icon(
+                        item.receiptId.isNotEmpty
+                            ? Icons.file_present_rounded
+                            : Icons.upload_file_rounded,
+                        size: 20,
+                        color: item.receiptId.isNotEmpty
+                            ? Colors.white
+                            : const Color(0xFF64748B),
+                      ),
+                    ),
+                    SizedBox(width: 10.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.receiptId.isEmpty
+                                ? 'Unggah bukti transaksi'
+                                : 'Ganti bukti transaksi',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 12.5.sp,
+                              fontWeight: FontWeight.w600,
+                              color: item.receiptId.isNotEmpty
+                                  ? const Color(0xFF0D9488)
+                                  : const Color(0xFF0F172A),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          SizedBox(height: 2.h),
+                          Text(
+                            item.receiptId.isEmpty
+                                ? 'JPEG, PNG, atau PDF; maksimal 2 MB'
+                                : item.receiptName,
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 11.sp,
+                              color: item.receiptId.isNotEmpty
+                                  ? const Color(0xFF0F766E)
+                                  : const Color(0xFF64748B),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (item.receiptId.isNotEmpty)
+                      const Icon(
+                        Icons.check_circle_rounded,
+                        color: Color(0xFF0D9488),
+                        size: 18,
+                      )
+                    else
+                      const Icon(
+                        Icons.add_circle_outline_rounded,
+                        color: Color(0xFF94A3B8),
+                        size: 18,
+                      ),
+                  ],
+                ),
+              ),
+            ),
           ),
-        if (expenses.length > 1)
-          TextButton(
-            onPressed: busy || uploading
-                ? null
-                : () {
-                    setState(() => expenses.remove(item));
-                    item.dispose();
-                  },
-            child: Text('Hapus rincian ${index + 1}'),
-          ),
-      ],
-    ),
-  );
+          if (item.receiptId.isNotEmpty) ...[
+            SizedBox(height: 6.h),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: busy || uploading
+                    ? null
+                    : () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ReceiptPreview(
+                            api: widget.api,
+                            path:
+                                '/request-receipts/${Uri.encodeComponent(item.receiptId)}',
+                          ),
+                        ),
+                      ),
+                icon: const Icon(
+                  Icons.image_search_outlined,
+                  size: 15,
+                  color: Color(0xFF0D9488),
+                ),
+                label: const Text(
+                  'Lihat bukti yang diunggah',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF0D9488),
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 
   String? requiredText(String? value) =>
       value == null || value.trim().isEmpty ? 'Wajib diisi' : null;

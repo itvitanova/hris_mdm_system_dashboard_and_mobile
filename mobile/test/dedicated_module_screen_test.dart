@@ -14,7 +14,16 @@ void main() {
       'renders dedicated cuti module with 2x2 stats, dropdown filter, and header (+) action',
       (tester) async {
         final workspace = Workspace({
-          'requests': [],
+          'requests': [
+            {
+              'id': 'cuti-fixture-1',
+              'type': 'Cuti',
+              'title': 'Cuti tahunan',
+              'status': 'menunggu',
+              'start_date': '2026-11-02',
+              'end_date': '2026-11-03',
+            },
+          ],
           'employees': [],
         });
         Widget? openedWidget;
