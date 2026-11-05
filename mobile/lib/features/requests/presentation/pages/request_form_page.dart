@@ -1754,12 +1754,23 @@ class _RequestFormState extends State<RequestForm> {
       width: double.infinity,
       padding: EdgeInsets.all(14.w),
       decoration: BoxDecoration(
-        color: const Color(0xFFF0FDFA),
+        gradient: const LinearGradient(
+          colors: [Color(0xFFF0FDFA), Color(0xFFE6FFFA)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(10.r),
         border: Border.all(
           color: const Color(0xFF99F6E4),
           width: 1.2,
         ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x080D9488),
+            blurRadius: 8,
+            offset: Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1790,7 +1801,7 @@ class _RequestFormState extends State<RequestForm> {
                       style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 12.sp,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         color: const Color(0xFF0F766E),
                       ),
                     ),
@@ -1822,6 +1833,13 @@ class _RequestFormState extends State<RequestForm> {
                       color: const Color(0xFF99F6E4),
                       width: 0.8,
                     ),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x06000000),
+                        blurRadius: 4,
+                        offset: Offset(0, 1),
+                      ),
+                    ],
                   ),
                   child: Text(
                     rupiah(parsedAmount),
@@ -1837,6 +1855,44 @@ class _RequestFormState extends State<RequestForm> {
               ),
             ],
           ),
+          if (parsedAmount > 0) ...[
+            SizedBox(height: 10.h),
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+              decoration: BoxDecoration(
+                color: const Color(0xD9FFFFFF),
+                borderRadius: BorderRadius.circular(6.r),
+                border: Border.all(
+                  color: const Color(0xFFCCFBF1),
+                  width: 0.8,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.sell_outlined,
+                    size: 13.sp,
+                    color: const Color(0xFF0D9488),
+                  ),
+                  SizedBox(width: 6.w),
+                  Expanded(
+                    child: Text(
+                      'Terbilang: ${rupiah(parsedAmount)}',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF0F766E),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           SizedBox(height: 10.h),
           const Divider(
             height: 1,
