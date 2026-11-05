@@ -509,6 +509,8 @@ class _RequestFormState extends State<RequestForm> {
                       _buildSectionTitle('Tanggal Kebutuhan Kas Kecil *'),
                       SizedBox(height: 8.h),
                       _buildPettyCashDateCard(),
+                      SizedBox(height: 14.h),
+                      _buildPettyCashSummaryCard(),
                     ] else if (kind == 'General Affair') ...[
                       _buildSectionTitle('Tanggal Kebutuhan Sarana *'),
                       SizedBox(height: 8.h),
@@ -529,17 +531,13 @@ class _RequestFormState extends State<RequestForm> {
                     SizedBox(height: 16.h),
                   ],
 
-                  // FIELD NOMINAL UNTUK PETTY CASH / GA
-                  if (hasAmount) ...[
-Row(
+                  // FIELD ESTIMASI BIAYA UNTUK GENERAL AFFAIR (Nominal Petty Cash sudah menyatu di Twin-Box)
+                  if (hasAmount && kind != 'Petty Cash') ...[
+                    Row(
                       children: [
                         Flexible(
                           child: _buildSectionLabel(
-                            kind == 'Petty Cash'
-                                ? 'Nominal Pengajuan Kas Kecil (Rp) *'
-                                : kind == 'General Affair'
-                                    ? 'Estimasi Biaya / Anggaran (Rp)'
-                                    : 'Nominal Pengajuan (Rp) *',
+                            'Estimasi Biaya / Anggaran (Rp)',
                           ),
                         ),
                         if (kind == 'General Affair') ...[
@@ -570,24 +568,17 @@ Row(
                         ),
                         decoration: InputDecoration(
                           labelText: 'Nominal (Rp)',
-hintText: kind == 'General Affair'
+                          hintText: kind == 'General Affair'
                               ? 'Masukkan estimasi biaya jika diketahui (opsional)'
                               : null,
-                          helperText: kind == 'Petty Cash' && currentAmount > 0
-                              ? 'Terbilang: ${rupiah(currentAmount)}'
-                              : kind == 'General Affair'
-                                  ? 'Opsional. Masukkan estimasi tanpa titik atau koma jika diketahui.'
-                                  : 'Masukkan angka tanpa titik atau koma.',
-                          helperStyle: TextStyle(
+                          helperText: kind == 'General Affair'
+                              ? 'Opsional. Masukkan estimasi tanpa titik atau koma jika diketahui.'
+                              : 'Masukkan angka tanpa titik atau koma.',
+                          helperStyle: const TextStyle(
                             fontFamily: 'Inter',
-                            fontSize: 11.sp,
-                            fontWeight:
-                                kind == 'Petty Cash' && currentAmount > 0
-                                    ? FontWeight.w600
-                                    : FontWeight.w400,
-                            color: kind == 'Petty Cash' && currentAmount > 0
-                                ? const Color(0xFF0D9488)
-                                : const Color(0xFF64748B),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w400,
+                            color: Color(0xFF64748B),
                           ),
                           prefixText: 'Rp ',
                           prefixStyle: TextStyle(
@@ -617,7 +608,7 @@ hintText: kind == 'General Affair'
                         ),
                         onChanged: (_) => setState(() {}),
                         validator: (v) {
-if (kind == 'General Affair' &&
+                          if (kind == 'General Affair' &&
                               (v == null || v.trim().isEmpty)) {
                             return null;
                           }
@@ -631,10 +622,6 @@ if (kind == 'General Affair' &&
                       ),
                     ),
                     SizedBox(height: 16.h),
-                    if (kind == 'Petty Cash') ...[
-                      _buildPettyCashSummaryCard(),
-                      SizedBox(height: 16.h),
-                    ],
                   ],
                   // REIMBURSEMENT FIELDS
                   if (kind == 'Reimbursement') ...[
@@ -1449,7 +1436,73 @@ if (kind == 'General Affair' &&
     );
   }
 
-Widget _buildPettyCashCategorySelector() {
+  Widget _buildPettyCashCategoryTile(String cat, IconData icon) {
+    final isSelected = _selectedPettyCashCategory == cat;
+    return Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: busy || uploading
+              ? null
+              : () => setState(() => _selectedPettyCashCategory = cat),
+          borderRadius: BorderRadius.circular(10.r),
+          child: Container(
+            height: 48.h,
+            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? const Color(0xFFF0FDFA)
+                  : const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(10.r),
+              border: Border.all(
+                color: isSelected
+                    ? const Color(0xFF0D9488)
+                    : const Color(0xFFE2E8F0),
+                width: isSelected ? 1.2 : 0.8,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  size: 16.sp,
+                  color: isSelected
+                      ? const Color(0xFF0D9488)
+                      : const Color(0xFF64748B),
+                ),
+                SizedBox(width: 8.w),
+                Expanded(
+                  child: Text(
+                    cat,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 11.sp,
+                      fontWeight:
+                          isSelected ? FontWeight.w700 : FontWeight.w500,
+                      color: isSelected
+                          ? const Color(0xFF0F766E)
+                          : const Color(0xFF334155),
+                      height: 1.15,
+                    ),
+                  ),
+                ),
+                if (isSelected)
+                  Icon(
+                    Icons.check_circle_rounded,
+                    size: 14.sp,
+                    color: const Color(0xFF0D9488),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPettyCashCategorySelector() {
     return _buildCardContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1464,80 +1517,32 @@ Widget _buildPettyCashCategorySelector() {
             ),
           ),
           SizedBox(height: 10.h),
-          Wrap(
-            spacing: 8.w,
-            runSpacing: 8.h,
-            children: pettyCashCategories.map((cat) {
-              final isSelected = _selectedPettyCashCategory == cat;
-              final icon = switch (cat) {
-                'Operasional Kantor' => Icons.business_center_outlined,
-                'Konsumsi Rapat' => Icons.restaurant_outlined,
-                'ATK Darurat' => Icons.edit_note_rounded,
-                'Transportasi Lokal' => Icons.directions_car_outlined,
-                _ => Icons.category_outlined,
-              };
-              return Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: busy || uploading
-                      ? null
-                      : () => setState(() => _selectedPettyCashCategory = cat),
-                  borderRadius: BorderRadius.circular(10.r),
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 10.w,
-                      vertical: 6.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? const Color(0xFFF0FDFA)
-                          : const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(10.r),
-                      border: Border.all(
-                        color: isSelected
-                            ? const Color(0xFF0D9488)
-                            : const Color(0xFFE2E8F0),
-                        width: isSelected ? 1.2 : 0.8,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          icon,
-                          size: 14.sp,
-                          color: isSelected
-                              ? const Color(0xFF0D9488)
-                              : const Color(0xFF64748B),
-                        ),
-                        SizedBox(width: 5.w),
-                        Text(
-                          cat,
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 11.5.sp,
-                            fontWeight: isSelected
-                                ? FontWeight.w700
-                                : FontWeight.w500,
-                            color: isSelected
-                                ? const Color(0xFF0F766E)
-                                : const Color(0xFF334155),
-                          ),
-                        ),
-                        if (isSelected) ...[
-                          SizedBox(width: 5.w),
-                          Icon(
-                            Icons.check_circle_rounded,
-                            size: 13.sp,
-                            color: const Color(0xFF0D9488),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
+          Row(
+            children: [
+              _buildPettyCashCategoryTile(
+                'Operasional Kantor',
+                Icons.business_center_outlined,
+              ),
+              SizedBox(width: 8.w),
+              _buildPettyCashCategoryTile(
+                'Konsumsi Rapat',
+                Icons.restaurant_outlined,
+              ),
+            ],
+          ),
+          SizedBox(height: 8.h),
+          Row(
+            children: [
+              _buildPettyCashCategoryTile(
+                'ATK Darurat',
+                Icons.edit_note_rounded,
+              ),
+              SizedBox(width: 8.w),
+              _buildPettyCashCategoryTile(
+                'Transportasi Lokal',
+                Icons.directions_car_outlined,
+              ),
+            ],
           ),
         ],
       ),
@@ -1549,17 +1554,173 @@ Widget _buildPettyCashCategorySelector() {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildPickerBox(
-            label: 'Tanggal Kebutuhan Dana',
-            icon: Icons.calendar_today_rounded,
-            valueText: _formatDisplayDate(start),
-            onTap: () => pickDate(true),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Kolom 1: Tanggal Kebutuhan Kas Kecil (Kiri)
+              Expanded(
+                child: _buildPickerBox(
+                  label: 'Tanggal Kebutuhan',
+                  icon: Icons.calendar_today_rounded,
+                  valueText: _formatDisplayDate(start),
+                  onTap: () => pickDate(true),
+                ),
+              ),
+              SizedBox(width: 10.w),
+              // Kolom 2: Nominal Kas Kecil (Kanan - Twin-Box 100% Simetris Kembar Identik)
+              Expanded(
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 10.w,
+                    vertical: 8.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Nominal Kas Kecil *',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF64748B),
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.payments_outlined,
+                            size: 14.sp,
+                            color: const Color(0xFF0D9488),
+                          ),
+                          SizedBox(width: 5.w),
+                          Text(
+                            'Rp',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF0D9488),
+                            ),
+                          ),
+                          SizedBox(width: 4.w),
+                          Expanded(
+                            child: TextFormField(
+                              controller: amount,
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF0F172A),
+                              ),
+                              decoration: const InputDecoration(
+                                isDense: true,
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                errorBorder: InputBorder.none,
+                                focusedErrorBorder: InputBorder.none,
+                                contentPadding: EdgeInsets.zero,
+                                labelText: 'Nominal (Rp)',
+                                floatingLabelBehavior:
+                                    FloatingLabelBehavior.never,
+                                hintText: '0',
+                                hintStyle: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 12,
+                                  color: Color(0xFF94A3B8),
+                                ),
+                              ),
+                              onChanged: (_) => setState(() {}),
+                              validator: (v) {
+                                final clean = (v ?? '').replaceAll(
+                                  RegExp(r'[^0-9]'),
+                                  '',
+                                );
+                                final n = int.tryParse(clean) ?? 0;
+                                return n < 1 || n > 1000000000000
+                                    ? 'Nominal tidak valid'
+                                    : null;
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-          SizedBox(height: 10.h),
+          SizedBox(height: 12.h),
           const Divider(
             height: 1,
             thickness: 1,
             color: Color(0xFFF1F5F9),
+          ),
+          SizedBox(height: 10.h),
+          // Total Pengajuan Kas Kecil Status Bar
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.receipt_long_rounded,
+                      size: 15.sp,
+                      color: const Color(0xFF64748B),
+                    ),
+                    SizedBox(width: 6.w),
+                    Flexible(
+                      child: Text(
+                        'Total Pengajuan Kas Kecil:',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 12.sp,
+                          color: const Color(0xFF64748B),
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(width: 8.w),
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: 8.w,
+                  vertical: 3.h,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0FDFA),
+                  borderRadius: BorderRadius.circular(6.r),
+                  border: Border.all(
+                    color: const Color(0xFF99F6E4),
+                    width: 0.8,
+                  ),
+                ),
+                child: Text(
+                  rupiah(currentAmount),
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF0D9488),
+                  ),
+                ),
+              ),
+            ],
           ),
           SizedBox(height: 8.h),
           Row(
