@@ -54,7 +54,17 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
 
     // Data riil dari workspace
     for (final r in rows) {
-      final model = UniversalRequestModel.fromMap(r);
+      final normalized = Map<String, dynamic>.from(r);
+      if (normalized['kind'] == null && normalized['type'] != null) {
+        normalized['kind'] = normalized['type'];
+      }
+      final rawAmount =
+          normalized['amount'] ?? normalized['nominal'] ?? normalized['total'];
+      if (rawAmount is String) {
+        final parsed = int.tryParse(rawAmount);
+        if (parsed != null) normalized['amount'] = parsed;
+      }
+      final model = UniversalRequestModel.fromMap(normalized);
       if (model.kind == widget.kind) {
         items.add(model);
       }
@@ -312,6 +322,13 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
             r.status == SubmissionStatus.perluRevisi)
         .length;
 
+    final pettyCashTotal = widget.kind == SubmissionKind.pettyCash
+        ? allRequests.fold<int>(
+            0,
+            (sum, r) => sum + (r.amount ?? 0),
+          )
+        : 0;
+
     final unreadCount =
         w.mine('requests').where((r) => r['unread'] == true).length;
 
@@ -545,9 +562,13 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                       title: _toTitleCase(widget.keyMetricLabel),
                       subTitle: widget.kind == SubmissionKind.lembur
                           ? 'jam disetujui'
-                          : 'saldo aktif',
+                          : (widget.kind == SubmissionKind.pettyCash
+                              ? 'total nominal'
+                              : 'saldo aktif'),
                       label: widget.keyMetricLabel,
-                      value: widget.keyMetricValue,
+                      value: widget.kind == SubmissionKind.pettyCash
+                          ? rupiah(pettyCashTotal)
+                          : widget.keyMetricValue,
                       icon: widget.keyMetricIcon,
                     ),
                   ),
