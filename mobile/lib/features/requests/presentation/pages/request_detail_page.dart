@@ -556,9 +556,14 @@ class _RequestDetailState extends State<RequestDetailScreen> {
     );
   }
 
+  bool _isStatusRevision(dynamic status) {
+    final s = (status ?? '').toString().toLowerCase().replaceAll(' ', '');
+    return s == 'perlurevisi' || s == 'revisi' || s == 'needs_revision';
+  }
+
   Widget? _buildStickyBottomActionBar(Json r, List<Json> steps, String id) {
     final canReview = r['canReview'] == true;
-    final needsRevision = widget.own && r['status'] == 'Perlu revisi';
+    final needsRevision = widget.own && _isStatusRevision(r['status']);
     final canDownload = r['canDownload'] == true;
 
     if (!canReview && !needsRevision && !canDownload) return null;
@@ -755,7 +760,7 @@ class _RequestDetailState extends State<RequestDetailScreen> {
     final hours = (r['hours'] as num?)?.toInt();
     final days = (r['days'] as num?)?.toInt();
 
-    final isRevision = r['status'] == 'Perlu revisi' || text(r, 'reviewNote', '').isNotEmpty;
+    final isRevision = _isStatusRevision(r['status']) || text(r, 'reviewNote', '').isNotEmpty;
     final pendingWithText = text(r, 'pendingWith', '');
 
     return ScreenUtilInit(
@@ -1121,7 +1126,7 @@ class _RequestDetailState extends State<RequestDetailScreen> {
                             ),
                             SizedBox(width: 6.w),
                             Text(
-                              r['status'] == 'Perlu revisi'
+                              _isStatusRevision(r['status'])
                                   ? 'Perlu Diperbaiki'
                                   : 'Catatan Peninjau',
                               style: TextStyle(
@@ -1496,8 +1501,8 @@ class _RequestDetailState extends State<RequestDetailScreen> {
                                   decisions.any((d) => d['decision'] == 'Disetujui');
                               final isStepRejected = steps[i]['status'] == 'Ditolak' ||
                                   decisions.any((d) => d['decision'] == 'Ditolak');
-                              final isStepRevision = steps[i]['status'] == 'Perlu revisi' ||
-                                  decisions.any((d) => d['decision'] == 'Perlu revisi');
+                              final isStepRevision = _isStatusRevision(steps[i]['status']) ||
+                                  decisions.any((d) => _isStatusRevision(d['decision']));
                               final isCurrentActive = currentStepIdx == i && r['status'] == 'Menunggu';
 
                               Color nodeColor = const Color(0xFFCBD5E1);

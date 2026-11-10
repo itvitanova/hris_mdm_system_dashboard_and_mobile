@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mdm_hris/core/api_client.dart';
 import 'package:mdm_hris/core/workspace.dart';
 import 'package:mdm_hris/features/requests/presentation/pages/request_detail_page.dart';
+import 'package:mdm_hris/features/requests/presentation/pages/request_form_page.dart';
 import 'package:mdm_hris/features/requests/presentation/pages/request_notifications_page.dart';
 
 void main() {
@@ -244,6 +245,48 @@ void main() {
       // Kemarin should have 1 item (REQ-YESTERDAY, even if less than 24h ago)
       expect(find.text('KEMARIN'), findsOneWidget);
       expect(find.text('Kemarin'), findsOneWidget);
+    });
+
+    testWidgets('tapping "Perbaiki Sekarang" launches RequestForm revision flow', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390 * 3, 1200 * 3);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final workspace = Workspace({
+        'requests': [
+          {
+            'id': 'REQ-REV-1',
+            'kind': 'Cuti',
+            'title': 'Cuti Sakit Rawat Inap',
+            'status': 'Perlu Revisi',
+            'unread': true,
+            'reviewNote': 'Lampirkan surat keterangan rawat inap dokter',
+            'reviewedBy': 'HR',
+            'updatedAt': DateTime.now().toIso8601String(),
+          },
+        ],
+        'employees': [],
+      });
+
+      await tester.pumpWidget(
+        wrapWithScreenUtil(
+          RequestNotificationsScreen(
+            api: ApiClient(),
+            workspace: workspace,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Perbaiki Sekarang'), findsOneWidget);
+      await tester.tap(find.text('Perbaiki Sekarang'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(RequestForm), findsOneWidget);
+      expect(find.text('Perbaiki pengajuan'), findsOneWidget);
     });
   });
 }

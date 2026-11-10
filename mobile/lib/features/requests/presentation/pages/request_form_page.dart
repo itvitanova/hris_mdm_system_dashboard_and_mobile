@@ -398,16 +398,39 @@ class _RequestFormState extends State<RequestForm> {
     });
   }
 
+  int _resolveRevision() {
+    final direct = (widget.initialRequest?['revision'] as num?)?.toInt() ??
+        int.tryParse(widget.initialRequest?['revision']?.toString() ?? '');
+    if (direct != null && direct > 0) return direct;
+    final reqId = widget.initialRequest?['id']?.toString() ?? '';
+    if (reqId.isNotEmpty && widget.workspace != null) {
+      final matches =
+          widget.workspace!.rows('requests').where((r) => r['id'] == reqId);
+      if (matches.isNotEmpty) {
+        final wRev = (matches.first['revision'] as num?)?.toInt() ??
+            int.tryParse(matches.first['revision']?.toString() ?? '');
+        if (wRev != null && wRev > 0) return wRev;
+      }
+    }
+    return 0;
+  }
+
   Future<void> submit() async {
-    if (!form.currentState!.validate() || busy || uploading) return;
+    if (busy || uploading) return;
+    if (!form.currentState!.validate()) {
+      notify(context, 'Mohon lengkapi formulir sebelum mengirim.');
+      return;
+    }
     if (kind == 'Reimbursement' && expenses.any((e) => e.receiptId.isEmpty)) {
-      setState(() => error = 'Unggah bukti untuk setiap rincian pengeluaran.');
+      const msg = 'Unggah bukti untuk setiap rincian pengeluaran.';
+      setState(() => error = msg);
+      notify(context, 'Perhatian: $msg');
       return;
     }
     if (end.isBefore(start)) {
-      setState(
-        () => error = 'Tanggal selesai tidak boleh sebelum tanggal mulai.',
-      );
+      const msg = 'Tanggal selesai tidak boleh sebelum tanggal mulai.';
+      setState(() => error = msg);
+      notify(context, 'Perhatian: $msg');
       return;
     }
     setState(() {
@@ -440,6 +463,9 @@ class _RequestFormState extends State<RequestForm> {
         fullDescription = '$fullDescription\n\n[${metadataItems.join(' · ')}]';
       }
 
+      final isRevision = widget.initialRequest?['id'] != null &&
+          widget.initialRequest!['id'].toString().isNotEmpty;
+
       final payload = <String, dynamic>{
         'kind': kind,
         'title': title.text.trim(),
@@ -450,12 +476,9 @@ class _RequestFormState extends State<RequestForm> {
               ? start
               : end,
         ),
-        if (widget.initialRequest?['id'] != null &&
-            widget.initialRequest!['id'].toString().isNotEmpty) ...{
+        if (isRevision) ...{
           'id': widget.initialRequest!['id'].toString(),
-          'revision': (widget.initialRequest?['revision'] as num?)?.toInt() ??
-              int.tryParse(widget.initialRequest?['revision']?.toString() ?? '') ??
-              0,
+          'revision': _resolveRevision(),
         },
         if (kind == 'Reimbursement') ...{
           'items': expenses.map((e) => e.json()).toList(),
@@ -487,11 +510,20 @@ class _RequestFormState extends State<RequestForm> {
         sl<RequestBloc>().add(RequestLoadRequested(kind: kind));
       }
       if (mounted) {
+        notify(
+          context,
+          isRevision
+              ? 'Pengajuan yang direvisi telah berhasil dikirim.'
+              : 'Pengajuan berhasil dikirim.',
+        );
         Navigator.pop(context, true);
-        notify(context, 'Pengajuan berhasil dikirim.');
       }
     } catch (e) {
-      if (mounted) setState(() => error = e.toString());
+      if (mounted) {
+        final errText = e.toString().replaceFirst('Exception: ', '');
+        setState(() => error = errText);
+        notify(context, 'Gagal mengirim pengajuan: $errText');
+      }
     } finally {
       if (mounted) setState(() => busy = false);
     }

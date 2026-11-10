@@ -8,6 +8,7 @@ import '../../domain/entities/submission_kind.dart';
 import '../../domain/entities/submission_status.dart';
 import '../../domain/entities/request_notification_item.dart';
 import 'request_detail_page.dart';
+import 'request_form_page.dart';
 
 /// Halaman Notifikasi Pembaruan Pengajuan Mandiri
 /// Dilengkapi Header Dua Baris Seragam, Segmented Filter ('Semua' & 'Belum Dibaca'),
@@ -220,24 +221,94 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
     }
   }
 
+  Json _resolveRequestForItem(RequestNotificationItem item) {
+    if (item.rawRequest != null && item.rawRequest!.isNotEmpty) {
+      return Map<String, dynamic>.from(item.rawRequest!);
+    }
+    final matches =
+        data.rows('requests').where((r) => r['id'] == item.requestId);
+    if (matches.isNotEmpty) {
+      return Map<String, dynamic>.from(matches.first);
+    }
+    return {
+      'id': item.requestId,
+      'title': item.requestTitle,
+      'kind': item.kind.displayName,
+      'status': item.status.displayName,
+      'reviewedBy': item.reviewerName ?? 'Peninjau',
+      'reviewNote': item.reviewNote ?? '',
+      'startDate': DateTime.now().toIso8601String().substring(0, 10),
+      'endDate': DateTime.now().toIso8601String().substring(0, 10),
+      'revision': 0,
+    };
+  }
+
+  Future<void> _openRevisionForm(RequestNotificationItem item) async {
+    setState(() {
+      _readIds.add(item.id);
+    });
+
+    final targetRequest = _resolveRequestForItem(item);
+
+    final changed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => RequestForm(
+          api: widget.api,
+          workspace: data,
+          initialKind: item.kind.displayName,
+          initialRequest: targetRequest,
+          lockKindSelection: true,
+        ),
+      ),
+    );
+
+    if (changed == true) {
+      await refresh();
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(
+                  Icons.check_circle_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
+                SizedBox(width: 8.w),
+                const Expanded(
+                  child: Text(
+                    'Pengajuan yang direvisi telah berhasil dikirim.',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 12,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF0F766E),
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.r),
+            ),
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _openItem(RequestNotificationItem item) async {
     setState(() {
       _readIds.add(item.id);
     });
 
-    final targetRequest = item.rawRequest ??
-        {
-          'id': item.requestId,
-          'title': item.requestTitle,
-          'kind': item.kind.displayName,
-          'status': item.status.displayName,
-          'reviewedBy': item.reviewerName ?? 'Peninjau',
-          'reviewNote': item.reviewNote ?? '',
-          'startDate': DateTime.now().toIso8601String().substring(0, 10),
-          'endDate': DateTime.now().toIso8601String().substring(0, 10),
-        };
+    final targetRequest = _resolveRequestForItem(item);
 
-    await Navigator.push(
+    final changed = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (_) => RequestDetailScreen(
@@ -247,7 +318,41 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
         ),
       ),
     );
+
     await refresh();
+    if (changed == true && mounted) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(
+                Icons.check_circle_rounded,
+                color: Colors.white,
+                size: 18,
+              ),
+              SizedBox(width: 8.w),
+              const Expanded(
+                child: Text(
+                  'Pengajuan yang direvisi telah berhasil dikirim.',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 12,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFF0F766E),
+          duration: const Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10.r),
+          ),
+        ),
+      );
+    }
   }
 
   Widget _buildSegmentedFilterBar(int unreadCount) {
@@ -652,7 +757,8 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
                                 child: Material(
                                   color: Colors.transparent,
                                   child: InkWell(
-                                    onTap: () => _openItem(item),
+                                    key: ValueKey('notif_fix_now_${item.id}'),
+                                    onTap: () => _openRevisionForm(item),
                                     borderRadius: BorderRadius.circular(6.r),
                                     child: Container(
                                       padding: EdgeInsets.symmetric(
