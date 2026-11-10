@@ -1,11 +1,14 @@
 package domain
 
 type ExpenseItem struct {
-	Date        string `json:"date"`
-	Description string `json:"description"`
-	Category    string `json:"category"`
-	Amount      int64  `json:"amount"`
-	ReceiptID   string `json:"receiptId"`
+	Date          string `json:"date"`
+	Description   string `json:"description"`
+	Category      string `json:"category"`
+	Amount        int64  `json:"amount"`
+	ReceiptID     string `json:"receiptId"`
+	Qty           int    `json:"qty,omitempty"`
+	UnitPrice     int64  `json:"unitPrice,omitempty"`
+	Specification string `json:"specification,omitempty"`
 }
 type RequestSnapshot struct {
 	EmployeeID        string `json:"employeeId"`

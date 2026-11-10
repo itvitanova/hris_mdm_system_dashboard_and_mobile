@@ -372,7 +372,8 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
 
     final hasReviewNote =
         item.reviewNote != null && item.reviewNote!.trim().isNotEmpty;
-    final needsFixAction = isRevision || isRejected;
+    // Aksi revisi ("Perbaiki Sekarang") hanya untuk status 'Perlu Revisi', bukan untuk pengajuan yang ditolak
+    final needsFixAction = isRevision;
 
     return Container(
       margin: EdgeInsets.only(bottom: 10.h),

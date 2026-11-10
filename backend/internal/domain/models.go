@@ -83,8 +83,13 @@ type Request struct {
 	Days         int             `json:"days"`
 	Status       string          `json:"status"`
 	CreatedAt    string          `json:"createdAt"`
-	ReviewedBy   string          `json:"reviewedBy"`
-	ReviewNote   string          `json:"reviewNote"`
+	ReviewedBy     string          `json:"reviewedBy"`
+	ReviewNote     string          `json:"reviewNote"`
+	Category       string          `json:"category,omitempty"`
+	Priority       string          `json:"priority,omitempty"`
+	Location       string          `json:"location,omitempty"`
+	AttachmentName string          `json:"attachmentName,omitempty"`
+	PermissionType string          `json:"permissionType,omitempty"`
 }
 type Inventory struct {
 	ID       string `json:"id"`

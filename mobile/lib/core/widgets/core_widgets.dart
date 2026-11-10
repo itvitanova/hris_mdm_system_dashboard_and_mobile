@@ -9,9 +9,12 @@ const line = Color(0xFFE2E8F0);
 
 IconData requestIcon(String kind) => switch (kind) {
   'Cuti' => Icons.event_available_outlined,
+  'Izin' => Icons.assignment_late_outlined,
   'Reimbursement' => Icons.receipt_long_outlined,
+  'Medical Claim' => Icons.medical_services_outlined,
   'Petty Cash' => Icons.account_balance_wallet_outlined,
   'General Affair' => Icons.business_center_outlined,
+  'Lembur' => Icons.schedule_outlined,
   _ => Icons.more_time_outlined,
 };
 
@@ -64,9 +67,21 @@ class ErrorNotice extends StatelessWidget {
   );
 }
 
-void notify(BuildContext context, Object message) => ScaffoldMessenger.of(
-  context,
-).showSnackBar(SnackBar(content: Text(message.toString())));
+final rootScaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+
+void notify(BuildContext context, Object message) {
+  final messenger =
+      rootScaffoldMessengerKey.currentState ?? ScaffoldMessenger.maybeOf(context);
+  if (messenger != null) {
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(message.toString()),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+}
 
 class Panel extends StatelessWidget {
   const Panel({super.key, required this.child});

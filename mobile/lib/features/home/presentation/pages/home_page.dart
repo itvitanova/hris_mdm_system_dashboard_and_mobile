@@ -5,7 +5,6 @@ import '../../../../core/workspace.dart';
 import '../../../../core/widgets/core_widgets.dart';
 import '../../../attendance/presentation/pages/attendance_page.dart';
 import '../../../attendance/presentation/widgets/daily_attendance.dart';
-import '../../../auth/presentation/pages/change_password_page.dart';
 import '../../../requests/presentation/pages/request_form_page.dart';
 import '../../../requests/presentation/pages/request_detail_page.dart';
 import '../../../payroll/presentation/pages/payslip_page.dart';
@@ -109,10 +108,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       ),
       actions: [
         IconButton(
-          tooltip: 'Kalender cuti',
+          tooltip: 'Kalender ulang tahun',
           onPressed: () =>
               open(LeaveCalendarScreen(api: widget.api, workspace: w)),
-          icon: const Icon(Icons.calendar_month_outlined),
+          icon: const Icon(Icons.cake_outlined),
         ),
         IconButton(
           tooltip: 'Notifikasi pengajuan',
@@ -317,10 +316,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final stacked = MediaQuery.textScalerOf(context).scale(14) > 22;
+            final pendingLeaveDays = w
+                .mine('requests')
+                .where((r) =>
+                    (r['kind'] == 'Cuti' || r['type'] == 'Cuti') &&
+                    r['status'] == 'Menunggu')
+                .fold<int>(0, (sum, r) => sum + (number(r, 'days').toInt()));
+            final baseLeave = number(w.employee, 'leaveBalance').toInt();
+            final effectiveLeave = (baseLeave - pendingLeaveDays).clamp(0, 999);
             final children = [
               _Summary(
                 label: 'Sisa cuti',
-                value: '${number(w.employee, 'leaveBalance').toInt()} hari',
+                value: '$effectiveLeave hari',
                 icon: Icons.event_available_outlined,
               ),
               _Summary(
@@ -407,8 +414,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       OutlinedButton.icon(
         onPressed: () =>
             open(LeaveCalendarScreen(api: widget.api, workspace: w)),
-        icon: const Icon(Icons.calendar_month_outlined),
-        label: const Text('Kalender cuti rekan satu lokasi'),
+        icon: const Icon(Icons.cake_outlined),
+        label: const Text('Kalender ulang tahun rekan kerja'),
       ),
       const SizedBox(height: 12),
       if (attendance.isEmpty)
@@ -659,20 +666,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         style: TextStyle(color: Color(0xFF52637A)),
       ),
     ),
-    OutlinedButton.icon(
-      onPressed: () async {
-        final changed = await Navigator.push<bool>(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ChangePasswordScreen(api: widget.api),
-          ),
-        );
-        if (changed == true && mounted) widget.onLogout();
-      },
-      icon: const Icon(Icons.lock_outline),
-      label: const Text('Ganti password'),
-    ),
-    const SizedBox(height: 16),
     OutlinedButton.icon(
       onPressed: loggingOut ? null : logout,
       icon: const Icon(Icons.logout),

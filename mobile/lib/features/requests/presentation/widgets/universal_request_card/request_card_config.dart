@@ -81,6 +81,8 @@ class RequestCardHelper {
     switch (kind) {
       case SubmissionKind.cuti:
         return 'Persetujuan Cuti';
+      case SubmissionKind.izin:
+        return 'Persetujuan Izin';
       case SubmissionKind.pettyCash:
         return 'Persetujuan Kas Kecil';
       case SubmissionKind.generalAffair:
@@ -89,6 +91,8 @@ class RequestCardHelper {
         return 'Persetujuan Lembur';
       case SubmissionKind.reimbursement:
         return 'Persetujuan Atasan';
+      case SubmissionKind.medicalClaim:
+        return 'Persetujuan Medical Claim';
     }
   }
 
@@ -102,6 +106,13 @@ class RequestCardHelper {
           secondaryMeta: (m) =>
               m.leaveBalance != null ? '· Sisa ${m.leaveBalance} hari' : null,
         );
+      case SubmissionKind.izin:
+        return RequestKindConfig(
+          icon: Icons.assignment_late_outlined,
+          typeTitle: 'Pengajuan Izin',
+          metricTag: (m) => '${m.days ?? 1} HARI',
+          secondaryMeta: (_) => '· Izin Kerja',
+        );
       case SubmissionKind.reimbursement:
         return RequestKindConfig(
           icon: Icons.receipt_long_rounded,
@@ -110,6 +121,13 @@ class RequestCardHelper {
           secondaryMeta: (m) => m.transactionCount != null
               ? '· ${m.transactionCount} transaksi'
               : null,
+        );
+      case SubmissionKind.medicalClaim:
+        return RequestKindConfig(
+          icon: Icons.medical_services_outlined,
+          typeTitle: 'Medical Claim',
+          metricTag: (m) => formatIDR(m.amount ?? 0),
+          secondaryMeta: (_) => '· Klaim Medis',
         );
       case SubmissionKind.pettyCash:
         return RequestKindConfig(
@@ -122,8 +140,10 @@ class RequestCardHelper {
         return RequestKindConfig(
           icon: Icons.inventory_2_rounded,
           typeTitle: 'Pengajuan General Affair',
-          metricTag: (m) => formatIDR(m.amount ?? 0),
-          secondaryMeta: (_) => '· Fasilitas Kantor',
+          metricTag: (m) => m.amount != null && m.amount! > 0
+              ? formatIDR(m.amount!)
+              : 'Fasilitas GA',
+          secondaryMeta: (_) => '· Sarana Kantor',
         );
       case SubmissionKind.lembur:
         return RequestKindConfig(

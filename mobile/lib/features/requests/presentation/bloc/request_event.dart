@@ -7,6 +7,21 @@ sealed class RequestEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+class RequestLoadRequested extends RequestEvent {
+  final String? kind;
+  final String? status;
+  final String? review;
+
+  const RequestLoadRequested({
+    this.kind,
+    this.status,
+    this.review,
+  });
+
+  @override
+  List<Object?> get props => [kind, status, review];
+}
+
 class RequestSubmitRequested extends RequestEvent {
   final Map<String, dynamic> requestData;
 
@@ -31,4 +46,21 @@ class RequestDecideRequested extends RequestEvent {
 
   @override
   List<Object?> get props => [id, revision, decision, note];
+}
+
+class RequestMarkSeenRequested extends RequestEvent {
+  final String id;
+  final String token;
+
+  const RequestMarkSeenRequested({
+    required this.id,
+    required this.token,
+  });
+
+  @override
+  List<Object?> get props => [id, token];
+}
+
+class RequestResetStatus extends RequestEvent {
+  const RequestResetStatus();
 }

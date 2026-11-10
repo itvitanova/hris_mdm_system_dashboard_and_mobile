@@ -12,6 +12,8 @@ import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/bloc/auth_event.dart';
 import 'features/auth/presentation/bloc/auth_state.dart';
 import 'features/home/presentation/bloc/workspace_bloc.dart';
+import 'features/home/presentation/bloc/workspace_event.dart';
+import 'features/home/presentation/bloc/workspace_state.dart';
 import 'features/attendance/face_enrollment_screen.dart';
 import 'features/attendance/presentation/bloc/attendance_bloc.dart';
 import 'features/requests/presentation/bloc/request_bloc.dart';
@@ -82,6 +84,7 @@ class _HrisAppState extends State<HrisApp> {
       builder: (context, child) => MaterialApp(
       title: 'MDM HR',
       navigatorKey: navigator,
+      scaffoldMessengerKey: rootScaffoldMessengerKey,
       debugShowCheckedModeBanner: false,
       theme: hrisTheme(),
       home: BlocBuilder<AuthBloc, AuthState>(
@@ -145,68 +148,85 @@ class WorkspaceLoader extends StatefulWidget {
 }
 
 class _WorkspaceLoaderState extends State<WorkspaceLoader> {
-  Workspace? data;
-  String? error;
-
   @override
   void initState() {
     super.initState();
-    refresh();
+    context.read<WorkspaceBloc>().add(const WorkspaceFetchRequested());
   }
 
-  Future<void> refresh() async {
-    try {
-      final next = Workspace(await widget.api.workspace());
-      if (mounted) {
-        setState(() {
-          data = next;
-          error = null;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => error = e.toString());
-        if (data != null) notify(context, e);
-      }
+  void _refresh() {
+    if (mounted) {
+      try {
+        context.read<WorkspaceBloc>().add(const WorkspaceRefreshRequested());
+        return;
+      } catch (_) {}
+    }
+    if (sl.isRegistered<WorkspaceBloc>()) {
+      sl<WorkspaceBloc>().add(const WorkspaceRefreshRequested());
     }
   }
 
   @override
-  Widget build(BuildContext context) => data != null
-      ? data!.employee['faceEnrolled'] != true
-          ? FaceEnrollmentScreen(
-              api: widget.api,
-              workspace: data!,
-              onRefresh: refresh,
-              onLogout: widget.onLogout,
-            )
-          : RootPage(
-              api: widget.api,
-              workspace: data!,
-              onRefresh: refresh,
-              onLogout: widget.onLogout,
-            )
-      : error != null
-          ? Scaffold(
-              backgroundColor: AppColors.bg,
-              body: SafeArea(
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(error!, textAlign: TextAlign.center),
-                        const SizedBox(height: 16),
-                        FilledButton(
-                          onPressed: refresh,
-                          child: const Text('Coba lagi'),
-                        ),
-                      ],
-                    ),
+  Widget build(BuildContext context) {
+    return BlocConsumer<WorkspaceBloc, WorkspaceState>(
+      listener: (context, state) {
+        if (state is WorkspaceError && state.previousWorkspace != null) {
+          notify(context, state.message);
+        }
+      },
+      builder: (context, state) {
+        Workspace? data;
+        String? error;
+
+        if (state is WorkspaceLoaded) {
+          data = state.workspace;
+        } else if (state is WorkspaceError) {
+          data = state.previousWorkspace;
+          error = state.message;
+        }
+
+        if (data != null) {
+          return data.employee['faceEnrolled'] != true
+              ? FaceEnrollmentScreen(
+                  api: widget.api,
+                  workspace: data,
+                  onRefresh: () async => _refresh(),
+                  onLogout: widget.onLogout,
+                )
+              : RootPage(
+                  api: widget.api,
+                  workspace: data,
+                  onRefresh: () async => _refresh(),
+                  onLogout: widget.onLogout,
+                );
+        }
+
+        if (error != null) {
+          return Scaffold(
+            backgroundColor: AppColors.bg,
+            body: SafeArea(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(error, textAlign: TextAlign.center),
+                      const SizedBox(height: 16),
+                      FilledButton(
+                        onPressed: _refresh,
+                        child: const Text('Coba lagi'),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            )
-          : const DashboardSkeleton();
+            ),
+          );
+        }
+
+        return const DashboardSkeleton();
+      },
+    );
+  }
 }

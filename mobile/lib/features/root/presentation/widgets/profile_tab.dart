@@ -6,7 +6,6 @@ import '../../../../core/workspace.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../shared/widgets.dart';
-import '../../../auth/change_password_screen.dart';
 import '../../../requests/presentation/pages/request_notifications_page.dart';
 import 'logout_confirmation_bottom_sheet.dart';
 
@@ -605,25 +604,7 @@ class _ProfileTabState extends State<ProfileTab> {
 
                 SizedBox(height: 12.h),
 
-                // 2. Ganti Kata Sandi (Teal Gradient Button)
-                _SettingItem(
-                  icon: Icons.lock_outline_rounded,
-                  label: 'Ganti Kata Sandi',
-                  onTap: () async {
-                    final changed =
-                        await Navigator.of(context, rootNavigator: true)
-                            .push<bool>(
-                      MaterialPageRoute(
-                        builder: (_) => ChangePasswordScreen(api: widget.api),
-                      ),
-                    );
-                    if (changed == true && mounted) widget.onLogout();
-                  },
-                ),
-
-                SizedBox(height: 12.h),
-
-                // 3. Keluar Akun (Danger Red Card)
+                // 2. Keluar Akun (Danger Red Card)
                 _SettingItem(
                   icon: Icons.logout_rounded,
                   label: 'Keluar Akun',

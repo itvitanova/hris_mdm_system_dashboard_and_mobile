@@ -41,16 +41,37 @@ void main() {
           ),
         ),
       );
+      final titleFinder = (kind == 'Petty Cash' || kind == 'Medical Claim' || kind == 'Izin' || kind == 'Reimbursement' || kind == 'General Affair')
+          ? find.widgetWithText(TextFormField, 'Ringkasan keperluan Anda')
+          : find.widgetWithText(TextFormField, 'Judul');
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Judul'),
+        titleFinder,
         'Keperluan karyawan',
       );
+      final descFinder = (kind == 'Petty Cash' || kind == 'Medical Claim' || kind == 'Izin' || kind == 'Reimbursement' || kind == 'General Affair')
+          ? find.widgetWithText(
+              TextFormField,
+              'Jelaskan kebutuhan dan cantumkan referensi dokumen pendukung',
+            )
+          : find.widgetWithText(TextFormField, 'Keperluan / rincian');
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Keperluan / rincian'),
+        descFinder,
         'Rincian pengajuan',
       );
-      if (['Petty Cash', 'General Affair'].contains(kind)) {
-        final field = find.widgetWithText(TextFormField, 'Nominal (Rp)');
+      if (kind == 'Izin') {
+        final dropdown = find.byKey(const ValueKey('izin_type_dropdown'));
+        await tester.scrollUntilVisible(
+          dropdown,
+          200,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await tester.tap(dropdown);
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Sakit').last);
+        await tester.pumpAndSettle();
+      }
+      if (kind == 'Petty Cash' || kind == 'Medical Claim') {
+        final field = find.widgetWithText(TextFormField, '0');
         await tester.scrollUntilVisible(
           field,
           200,
@@ -81,7 +102,9 @@ void main() {
         expect(api.payload?['hours'], 2);
         expect(api.payload?['startDate'], api.payload?['endDate']);
       }
-      if (kind == 'Cuti') expect(api.payload?['amount'], 0);
+      if (kind == 'Cuti' || kind == 'General Affair') {
+        expect(api.payload?['amount'], 0);
+      }
       if (kind == 'Reimbursement') {
         expect(api.payload?['amount'], 150000);
         expect(
@@ -89,16 +112,25 @@ void main() {
           'receipt-fixture',
         );
       }
-      if (kind == 'Petty Cash') {
-        expect(api.payload?['category'], 'Operasional Kantor');
-        expect(api.payload?['startDate'], api.payload?['endDate']);
+      if (kind == 'Petty Cash' || kind == 'Medical Claim') {
+        expect(api.payload?['amount'], 150000);
+        expect(api.payload?['startDate'], isNotEmpty);
+        expect(api.payload?['endDate'], isNotEmpty);
       }
+      if (kind == 'Izin') {
+        expect(api.payload?['permissionType'], 'Sakit');
+        expect(api.payload?['description'], contains('[Jenis Izin: Sakit]'));
+      }
+      expect(api.payload?.containsKey('category'), isFalse);
+      expect(api.payload?.containsKey('priority'), isFalse);
+      expect(api.payload?.containsKey('location'), isFalse);
+      expect(api.payload?.containsKey('attachmentName'), isFalse);
       expect(tester.takeException(), isNull);
     });
   }
 
   testWidgets(
-    'Petty Cash form displays category selector, summary card, and attachment card',
+    'Petty Cash form displays web-aligned fields: kind, title, date range, amount, description, and policy note',
     (tester) async {
       final api = CaptureApi();
       await tester.pumpWidget(
@@ -111,33 +143,67 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Kategori Kas Kecil *'), findsOneWidget);
-      expect(find.text('Operasional Kantor'), findsWidgets);
-      expect(find.text('Konsumsi Rapat'), findsOneWidget);
-      expect(find.text('ATK Darurat'), findsOneWidget);
-      expect(find.text('Transportasi Lokal'), findsOneWidget);
-      expect(find.text('Tanggal Kebutuhan Kas Kecil *'), findsOneWidget);
-      expect(find.text('Pilih Berkas Lampiran'), findsOneWidget);
-      expect(find.text('Ringkasan Pengajuan Kas Kecil'), findsOneWidget);
+      // 1. Jenis pengajuan *
+      expect(find.text('Jenis pengajuan *'), findsOneWidget);
+      expect(find.text('Petty Cash'), findsWidgets);
 
-      await tester.scrollUntilVisible(
-        find.text('ATK Darurat'),
-        100,
-        scrollable: find.byType(Scrollable).first,
+      // 2. Judul pengajuan *
+      expect(find.text('Judul pengajuan *'), findsOneWidget);
+      expect(find.text('Ringkasan keperluan Anda'), findsOneWidget);
+
+      // 3. Tanggal mulai * & Tanggal selesai * (Rentang tanggal)
+      expect(find.text('Tanggal Mulai & Tanggal Selesai *'), findsOneWidget);
+      expect(find.text('Tanggal mulai *'), findsOneWidget);
+      expect(find.text('Tanggal selesai *'), findsOneWidget);
+
+      // 4. Nominal pengajuan (Rp) *
+      expect(find.text('Nominal pengajuan (Rp) *'), findsOneWidget);
+
+      // 5. Detail keperluan / referensi bukti *
+      expect(find.text('Detail keperluan / referensi bukti *'), findsOneWidget);
+      expect(
+        find.text('Jelaskan kebutuhan dan cantumkan referensi dokumen pendukung'),
+        findsOneWidget,
       );
-      await tester.tap(find.text('ATK Darurat'));
-      await tester.pumpAndSettle();
 
-      final field = find.widgetWithText(TextFormField, 'Nominal (Rp)');
+      // 6. Policy Note
+      expect(
+        find.text(
+          'Saldo petty cash HO/service point yang tercatat saat pengajuan dikurangi setelah persetujuan akhir. Pengajuan ditolak atau diminta revisi tidak mengurangi saldo.',
+        ),
+        findsOneWidget,
+      );
+
+      // Pastikan kategori chips lama, lampiran picker, dan summary box tidak tampil di Petty Cash
+      expect(find.text('Kategori Kas Kecil *'), findsNothing);
+      expect(find.text('Operasional Kantor'), findsNothing);
+      expect(find.text('Pilih Berkas Lampiran'), findsNothing);
+      expect(find.text('Ringkasan Pengajuan Kas Kecil'), findsNothing);
+
+      // Test input amount and quick presets
+      final field = find.widgetWithText(TextFormField, '0');
       await tester.enterText(field, '50000');
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('ATK Darurat'), findsWidgets);
+      // UI otomatis memformat angka dengan pemisah ribuan titik
+      expect(find.text('50.000'), findsOneWidget);
+      expect(find.textContaining('Terbilang'), findsNothing);
+
+      // Tapping preset chip memformat nominal dengan titik
+      final chip = find.text('Rp 100 rb');
+      await tester.scrollUntilVisible(
+        chip,
+        100,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(chip);
+      await tester.pumpAndSettle();
+      expect(find.text('100.000'), findsOneWidget);
     },
   );
 
   testWidgets(
-    'General Affair renders category selector, priority, date card, optional amount, attachment, and summary box',
+    'General Affair form displays web-aligned fields: title, date range, description, and policy note',
     (tester) async {
       final api = CaptureApi();
       await tester.pumpWidget(
@@ -150,30 +216,452 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // 1. Check Category selector
-      expect(find.text('Kategori Kebutuhan GA *'), findsOneWidget);
-      expect(find.text('Pengadaan Barang'), findsWidgets);
-      expect(find.text('Perbaikan & Servis'), findsOneWidget);
-      expect(find.text('Kebutuhan ATK'), findsOneWidget);
-      expect(find.text('Pemeliharaan Fasilitas'), findsOneWidget);
+      // 1. Judul pengajuan *
+      expect(find.text('Judul pengajuan *'), findsOneWidget);
+      expect(find.text('Ringkasan keperluan Anda'), findsOneWidget);
 
-      // 2. Check Priority selector
-      expect(find.text('Tingkat Prioritas *'), findsOneWidget);
-      expect(find.text('Normal'), findsWidgets);
-      expect(find.text('Mendesak'), findsOneWidget);
+      // 2. Periode Pengajuan (Tanggal Mulai & Selesai)
+      expect(find.text('Periode Pengajuan'), findsOneWidget);
+      expect(find.text('Tanggal Mulai'), findsOneWidget);
+      expect(find.text('Tanggal Selesai'), findsOneWidget);
 
-      // 3. Check Structured Date Picker
-      expect(find.text('Tanggal Kebutuhan Sarana *'), findsOneWidget);
-      expect(find.text('Tanggal Kebutuhan'), findsWidgets);
+      // 3. Detail keperluan / referensi bukti *
+      expect(find.text('Detail keperluan / referensi bukti *'), findsOneWidget);
+      expect(
+        find.text('Jelaskan kebutuhan dan cantumkan referensi dokumen pendukung'),
+        findsOneWidget,
+      );
 
-      // 4. Check Optional Amount
-      expect(find.text('Estimasi Biaya / Anggaran (Rp)'), findsOneWidget);
+      // 4. Policy note matching web
+      expect(
+        find.text(
+          'Pengajuan mengikuti alur persetujuan yang ditetapkan kantor. Persetujuan tidak otomatis melakukan pembayaran atau mengeluarkan stok.',
+        ),
+        findsOneWidget,
+      );
 
-      // 5. Check Attachment card
-      expect(find.text('Lampiran Dokumen / Foto Kondisi'), findsOneWidget);
+      // 5. Ensure hallucinated fields are gone
+      expect(find.text('Kategori Kebutuhan GA *'), findsNothing);
+      expect(find.text('Tingkat Prioritas *'), findsNothing);
+      expect(find.text('Tanggal Kebutuhan Sarana *'), findsNothing);
+      expect(find.text('Lokasi Penempatan / Ruangan'), findsNothing);
+      expect(find.text('Lampiran Dokumen / Foto Kondisi'), findsNothing);
+      expect(find.text('Ringkasan Kebutuhan GA'), findsNothing);
+    },
+  );
 
-      // 6. Check Summary box
-      expect(find.text('Ringkasan Kebutuhan GA'), findsOneWidget);
+  testWidgets(
+    'Reimbursement renders category dropdown matching web catalog',
+    (tester) async {
+      final api = CaptureApi();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: RequestForm(
+            api: api,
+            initialKind: 'Reimbursement',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Check dropdown exists
+      final dropdown = find.byType(DropdownButtonFormField<String>);
+      expect(dropdown, findsOneWidget);
+
+      await tester.scrollUntilVisible(
+        dropdown,
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text('Pilih kategori'), findsOneWidget);
+
+      // Open dropdown
+      await tester.tap(dropdown);
+      await tester.pumpAndSettle();
+
+      // Verify categories matching web app exist
+      expect(find.text('Transportasi').last, findsOneWidget);
+      expect(find.text('Keperluan Kantor (Habis Pakai)'), findsOneWidget);
+      expect(find.text('Alat Tulis Kantor'), findsOneWidget);
+      expect(find.text('Peralatan Kantor (Aset)'), findsOneWidget);
+      expect(find.text('Biaya Sewa'), findsOneWidget);
+      expect(find.text('Entertain'), findsOneWidget);
+      expect(find.text('Subscription'), findsOneWidget);
+      expect(find.text('Lainnya'), findsOneWidget);
+
+      // Select an item
+      await tester.tap(find.text('Keperluan Kantor (Habis Pakai)'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Keperluan Kantor (Habis Pakai)'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'Reimbursement renders single delete button for uploaded receipt and clears it',
+    (tester) async {
+      final api = CaptureApi();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: RequestForm(
+            api: api,
+            initialKind: 'Reimbursement',
+            initialRequest: {
+              'kind': 'Reimbursement',
+              'items': [
+                {
+                  'date': '2026-01-02',
+                  'description': 'Biaya Parkir Klien',
+                  'category': 'Transportasi',
+                  'amount': 50000,
+                  'receiptId': 'receipt-123',
+                },
+              ],
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Exactly 1 delete receipt button
+      final deleteBtn = find.byKey(const Key('delete_receipt_0'));
+      expect(deleteBtn, findsOneWidget);
+      expect(find.text('Lihat bukti yang diunggah'), findsOneWidget);
+
+      await tester.scrollUntilVisible(
+        deleteBtn,
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(deleteBtn);
+      await tester.pumpAndSettle();
+
+      // After delete, the receipt is removed and form asks to upload again
+      expect(find.byKey(const Key('delete_receipt_0')), findsNothing);
+      expect(find.text('Unggah bukti transaksi'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'Izin / General form displays single delete button for attachment and clears it',
+    (tester) async {
+      final api = CaptureApi();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: RequestForm(
+            api: api,
+            initialKind: 'Izin',
+            initialRequest: {
+              'kind': 'Izin',
+              'title': 'Izin Sakit',
+              'description': 'Demam tinggi\n\n[Lampiran: surat_dokter.pdf]',
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Exactly 1 delete button in attachment card
+      final deleteAttachmentBtn =
+          find.byKey(const Key('delete_attachment_button'));
+      expect(deleteAttachmentBtn, findsOneWidget);
+      expect(find.text('surat_dokter.pdf'), findsOneWidget);
+
+      await tester.scrollUntilVisible(
+        deleteAttachmentBtn,
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(deleteAttachmentBtn);
+      await tester.pumpAndSettle();
+
+      // After delete, attachment name is gone and default picker placeholder is shown
+      expect(
+        find.byKey(const Key('delete_attachment_button')),
+        findsNothing,
+      );
+      expect(find.text('Pilih Berkas Lampiran'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'Medical Claim form displays web-aligned fields: kind, title, date range, plafon info box, amount, attachment, description, and policy note',
+    (tester) async {
+      final api = CaptureApi();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: RequestForm(
+            api: api,
+            initialKind: 'Medical Claim',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // 1. Jenis pengajuan * (Dihilangkan pada Medical Claim karena sudah otomatis terpilih diawal)
+      expect(find.text('Jenis pengajuan *'), findsNothing);
+      expect(find.textContaining('Medical Claim'), findsWidgets);
+
+      // 2. Judul pengajuan *
+      expect(find.text('Judul pengajuan *'), findsOneWidget);
+      expect(find.text('Ringkasan keperluan Anda'), findsOneWidget);
+
+      // 3. Tanggal mulai perawatan * & Tanggal selesai perawatan *
+      expect(find.text('Periode Perawatan Medis *'), findsOneWidget);
+      expect(find.text('Tanggal mulai perawatan *'), findsOneWidget);
+      expect(find.text('Tanggal selesai perawatan *'), findsOneWidget);
+
+      // 4. Info Box Plafon Medical Claim
+      expect(find.textContaining('Medical Claim'), findsWidgets);
+      expect(
+        find.text(
+          'Tahun kalender Januari–Desember; sisa saldo tidak dibawa ke tahun berikutnya. Lampiran gambar/PDF opsional.',
+        ),
+        findsOneWidget,
+      );
+
+      // 5. Biaya perawatan (Rp) *
+      expect(find.text('Biaya perawatan (Rp) *'), findsOneWidget);
+
+      // 5. Lampiran pendukung (opsional)
+      expect(find.text('Lampiran pendukung (opsional)'), findsOneWidget);
+      expect(find.text('JPEG, PNG, PDF; maksimal 2 MB.'), findsOneWidget);
+
+      // 6. Detail keperluan / referensi bukti *
+      expect(find.text('Detail keperluan / referensi bukti *'), findsOneWidget);
+      expect(
+        find.text('Jelaskan kebutuhan dan cantumkan referensi dokumen pendukung'),
+        findsOneWidget,
+      );
+
+      // 7. Policy Note
+      expect(
+        find.text(
+          'Pengajuan mengikuti alur persetujuan yang ditetapkan kantor. Persetujuan tidak otomatis melakukan pembayaran atau mengeluarkan stok.',
+        ),
+        findsOneWidget,
+      );
+
+      // Test amount formatting
+      final amountField = find.widgetWithText(TextFormField, '0');
+      await tester.scrollUntilVisible(
+        amountField,
+        150,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.enterText(amountField, '750000');
+      await tester.pumpAndSettle();
+      expect(find.text('750.000'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'Medical Claim validates and sends the existing API contract',
+    (tester) async {
+      final api = CaptureApi();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: RequestForm(
+            api: api,
+            initialKind: 'Medical Claim',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final titleField = find.widgetWithText(
+        TextFormField,
+        'Ringkasan keperluan Anda',
+      );
+      await tester.enterText(titleField, 'Klaim Rawat Jalan');
+
+      final amountField = find.widgetWithText(TextFormField, '0');
+      await tester.scrollUntilVisible(
+        amountField,
+        100,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.enterText(amountField, '350000');
+
+      final descField = find.widgetWithText(
+        TextFormField,
+        'Jelaskan kebutuhan dan cantumkan referensi dokumen pendukung',
+      );
+      await tester.scrollUntilVisible(
+        descField,
+        150,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.enterText(descField, 'Biaya konsultasi dokter dan obat flu');
+
+      final sendButton = find.text('Kirim pengajuan');
+      await tester.scrollUntilVisible(
+        sendButton,
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(sendButton);
+      await tester.pumpAndSettle();
+
+      expect(api.payload?['kind'], 'Medical Claim');
+      expect(api.payload?['title'], 'Klaim Rawat Jalan');
+      expect(api.payload?['amount'], 350000);
+      expect(
+        api.payload?['description'],
+        contains('Biaya konsultasi dokter dan obat flu'),
+      );
+    },
+  );
+
+  testWidgets(
+    'Izin form displays web-aligned fields: kind, jenis izin dropdown, title, date range, attachment, description, and policy note',
+    (tester) async {
+      final api = CaptureApi();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: RequestForm(
+            api: api,
+            initialKind: 'Izin',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Check title and labels
+      expect(find.text('Formulir Pengajuan Izin'), findsOneWidget);
+      expect(find.text('Jenis izin *'), findsOneWidget);
+      expect(find.text('Judul pengajuan *'), findsOneWidget);
+      expect(find.text('Periode Pengajuan'), findsOneWidget);
+      expect(find.text('Lampiran pendukung (opsional)'), findsOneWidget);
+      expect(find.text('Detail keperluan / referensi bukti *'), findsOneWidget);
+      expect(
+        find.text(
+          '• Izin tidak memotong saldo cuti.\n• Lampiran pendukung bersifat opsional.',
+        ),
+        findsOneWidget,
+      );
+
+      // Verify dropdown options matching web catalog
+      final dropdown = find.byKey(const ValueKey('izin_type_dropdown'));
+      expect(dropdown, findsOneWidget);
+      expect(find.text('Pilih jenis izin'), findsOneWidget);
+
+      await tester.tap(dropdown);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Sakit').last, findsOneWidget);
+      expect(find.text('Ibadah'), findsOneWidget);
+      expect(find.text('Melahirkan'), findsOneWidget);
+      expect(find.text('Keguguran'), findsOneWidget);
+      expect(find.text('Menikah'), findsOneWidget);
+      expect(find.text('Keluarga meninggal'), findsOneWidget);
+      expect(find.text('Lainnya'), findsOneWidget);
+
+      // Select Sakit
+      await tester.tap(find.text('Sakit').last);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Sakit'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'Reimbursement renders web-aligned expense item fields: qty, unit price, specification, and auto-calculates amount',
+    (tester) async {
+      final api = CaptureApi();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: RequestForm(
+            api: api,
+            initialKind: 'Reimbursement',
+            initialRequest: {
+              'kind': 'Reimbursement',
+              'items': [
+                {
+                  'date': '2026-11-10',
+                  'description': 'Kebutuhan ATK Kantor',
+                  'category': 'Alat Tulis Kantor',
+                  'amount': 0,
+                  'receiptId': 'receipt-fixture-123',
+                },
+              ],
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Verify presence of web-aligned labels
+      expect(find.text('Rincian Pengeluaran *'), findsOneWidget);
+      expect(find.text('Tanggal transaksi *'), findsOneWidget);
+      expect(find.text('Kategori *'), findsOneWidget);
+      expect(find.text('Deskripsi *'), findsOneWidget);
+      expect(find.text('Qty'), findsOneWidget);
+      expect(find.text('Harga satuan (Rp)'), findsOneWidget);
+      expect(find.text('Brand / Type & Spesifikasi'), findsOneWidget);
+      expect(find.text('Jumlah (Rp) *'), findsOneWidget);
+      expect(find.text('Bukti transaksi *'), findsOneWidget);
+
+      // Verify title & description inputs
+      final titleFinder = find.widgetWithText(
+        TextFormField,
+        'Ringkasan keperluan Anda',
+      );
+      expect(titleFinder, findsOneWidget);
+      await tester.enterText(titleFinder, 'Pengadaan ATK');
+
+      final descFinder = find.widgetWithText(
+        TextFormField,
+        'Jelaskan kebutuhan dan cantumkan referensi dokumen pendukung',
+      );
+      expect(descFinder, findsOneWidget);
+      await tester.enterText(descFinder, 'Pembelian kertas HVS untuk divisi');
+
+      // Test Qty and Harga Satuan auto-calculation into Jumlah
+      final qtyFinder = find.byKey(const Key('reimbursement_qty_field'));
+      expect(qtyFinder, findsOneWidget);
+      await tester.enterText(qtyFinder, '3');
+      await tester.pumpAndSettle();
+
+      final unitPriceFinder =
+          find.byKey(const Key('reimbursement_unit_price_field'));
+      expect(unitPriceFinder, findsOneWidget);
+      await tester.enterText(unitPriceFinder, '25000');
+      await tester.pumpAndSettle();
+
+      // Amount should auto-calculate: 3 * 25000 = 75000
+      final amountFinder = find.byKey(const Key('reimbursement_amount_field'));
+      expect(amountFinder, findsOneWidget);
+      expect(find.widgetWithText(TextFormField, '75000'), findsOneWidget);
+
+      // Enter Brand / Type & Spesifikasi
+      final specFinder =
+          find.byKey(const Key('reimbursement_specification_field'));
+      expect(specFinder, findsOneWidget);
+      await tester.enterText(specFinder, 'PaperOne A4 80gsm');
+      await tester.pumpAndSettle();
+
+      // Submit form
+      final send = find.text('Kirim pengajuan');
+      await tester.scrollUntilVisible(
+        send,
+        250,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(send);
+      await tester.pumpAndSettle();
+
+      expect(api.payload?['kind'], 'Reimbursement');
+      expect(api.payload?['title'], 'Pengadaan ATK');
+      expect(api.payload?['amount'], 75000);
+      final items = api.payload?['items'] as List<dynamic>;
+      expect(items.length, 1);
+      final item = items[0] as Map<String, dynamic>;
+      expect(item['qty'], 3);
+      expect(item['unitPrice'], 25000);
+      expect(item['specification'], 'PaperOne A4 80gsm');
+      expect(item['amount'], 75000);
+      expect(item['receiptId'], 'receipt-fixture-123');
     },
   );
 }

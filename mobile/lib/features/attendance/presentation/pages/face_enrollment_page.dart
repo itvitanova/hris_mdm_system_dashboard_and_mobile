@@ -4,7 +4,6 @@ import '../../../../core/workspace.dart';
 import '../../../../core/widgets/core_widgets.dart';
 import '../../attendance_service.dart';
 import 'auto_face_page.dart';
-import '../../../auth/presentation/pages/change_password_page.dart';
 
 class FaceEnrollmentScreen extends StatefulWidget {
   const FaceEnrollmentScreen({
@@ -80,20 +79,6 @@ class _FaceEnrollmentScreenState extends State<FaceEnrollmentScreen> {
           onPressed: busy || !widget.workspace.faceAvailable ? null : register,
           icon: const Icon(Icons.camera_alt_outlined),
           label: const Text('Daftarkan wajah'),
-        ),
-        TextButton(
-          onPressed: busy
-              ? null
-              : () async {
-                  final changed = await Navigator.push<bool>(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ChangePasswordScreen(api: widget.api),
-                    ),
-                  );
-                  if (changed == true && mounted) widget.onLogout();
-                },
-          child: const Text('Ganti password'),
         ),
         TextButton(
           onPressed: busy
