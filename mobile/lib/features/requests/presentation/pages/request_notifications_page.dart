@@ -82,6 +82,43 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
               ? 'Pembaruan peninjauan dari $reviewer'
               : 'Buka untuk melihat perkembangan keputusan.');
 
+      final dateStr = text(r, 'updatedAt', text(r, 'createdAt', ''));
+      final rawDt = dateStr.isNotEmpty ? DateTime.tryParse(dateStr) : null;
+      final dt = rawDt?.toLocal();
+      final now = DateTime.now();
+
+      String timeAgoText = 'Baru saja';
+      if (dt != null) {
+        final startOfToday = DateTime(now.year, now.month, now.day);
+        final startOfYesterday = DateTime(now.year, now.month, now.day - 1);
+        final itemDate = DateTime(dt.year, dt.month, dt.day);
+
+        if (!dt.isBefore(startOfToday)) {
+          // Hari Ini: terjadi pada jam 00:00:00 atau setelahnya pada hari ini
+          final diff = now.difference(dt);
+          if (diff.inHours > 0) {
+            timeAgoText = '${diff.inHours} jam lalu';
+          } else if (diff.inMinutes > 0) {
+            timeAgoText = '${diff.inMinutes} mnt lalu';
+          } else {
+            timeAgoText = 'Baru saja';
+          }
+        } else if (!dt.isBefore(startOfYesterday)) {
+          // Kemarin: terjadi pada jam 00:00:00 s.d. 23:59:59 kemarin
+          timeAgoText = 'Kemarin';
+        } else {
+          // Terdahulu: terjadi sebelum jam 00:00:00 kemarin
+          final daysDiff = startOfToday.difference(itemDate).inDays;
+          if (daysDiff <= 30) {
+            timeAgoText = '$daysDiff hari lalu';
+          } else {
+            final day = dt.day.toString().padLeft(2, '0');
+            final month = dt.month.toString().padLeft(2, '0');
+            timeAgoText = '$day/$month/${dt.year}';
+          }
+        }
+      }
+
       return RequestNotificationItem(
         id: 'real-$reqId',
         requestId: reqId,
@@ -90,27 +127,12 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
         status: status,
         headline: headline,
         message: message,
-        timeAgo: () {
-          final dateStr = text(r, 'updatedAt', text(r, 'createdAt', ''));
-          if (dateStr.isNotEmpty) {
-            final dt = DateTime.tryParse(dateStr);
-            if (dt != null) {
-              final diff = DateTime.now().difference(dt);
-              if (diff.inDays <= 0) {
-                return diff.inHours > 0 ? '${diff.inHours} jam lalu' : 'Baru saja';
-              } else if (diff.inDays == 1) {
-                return 'Kemarin';
-              } else {
-                return '${diff.inDays} hari lalu';
-              }
-            }
-          }
-          return 'Baru saja';
-        }(),
+        timeAgo: timeAgoText,
         isUnread: isUnread,
         reviewerName: reviewer.isNotEmpty ? reviewer : null,
         reviewNote: note.isNotEmpty ? note : null,
         rawRequest: r,
+        createdAt: dt,
       );
     }).toList();
 
@@ -734,23 +756,40 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
         : allItems;
 
     // Pengelompokan Notifikasi: Hari Ini, Kemarin, Terdahulu
+    // Mengikuti batas pergantian hari kalender (jam 00:00), bukan rolling 24 jam
+    final now = DateTime.now();
+    final startOfToday = DateTime(now.year, now.month, now.day);
+    final startOfYesterday = DateTime(now.year, now.month, now.day - 1);
+
     final todayItems = <RequestNotificationItem>[];
     final yesterdayItems = <RequestNotificationItem>[];
     final earlierItems = <RequestNotificationItem>[];
 
     for (final item in filteredItems) {
-      final time = item.timeAgo.toLowerCase();
-      if (time.contains('kemarin')) {
-        yesterdayItems.add(item);
-      } else if (time.contains('hari lalu') ||
-          time.contains('minggu') ||
-          time.contains('bulan') ||
-          time.contains('2026') ||
-          time.contains('okt') ||
-          time.contains('sep')) {
-        earlierItems.add(item);
+      if (item.createdAt != null) {
+        final dt = item.createdAt!.toLocal();
+        if (!dt.isBefore(startOfToday)) {
+          todayItems.add(item);
+        } else if (!dt.isBefore(startOfYesterday)) {
+          yesterdayItems.add(item);
+        } else {
+          earlierItems.add(item);
+        }
       } else {
-        todayItems.add(item);
+        final time = item.timeAgo.toLowerCase();
+        if (time.contains('kemarin')) {
+          yesterdayItems.add(item);
+        } else if (time.contains('hari lalu') ||
+            time.contains('minggu') ||
+            time.contains('bulan') ||
+            time.contains('/') ||
+            time.contains('202') ||
+            time.contains('okt') ||
+            time.contains('sep')) {
+          earlierItems.add(item);
+        } else {
+          todayItems.add(item);
+        }
       }
     }
 

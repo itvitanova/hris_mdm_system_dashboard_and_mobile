@@ -15,6 +15,7 @@ class RequestNotificationItem {
   final String? reviewerName;
   final String? reviewNote;
   final Map<String, dynamic>? rawRequest;
+  final DateTime? createdAt;
 
   const RequestNotificationItem({
     required this.id,
@@ -29,10 +30,12 @@ class RequestNotificationItem {
     this.reviewerName,
     this.reviewNote,
     this.rawRequest,
+    this.createdAt,
   });
 
   RequestNotificationItem copyWith({
     bool? isUnread,
+    DateTime? createdAt,
   }) {
     return RequestNotificationItem(
       id: id,
@@ -47,6 +50,7 @@ class RequestNotificationItem {
       reviewerName: reviewerName,
       reviewNote: reviewNote,
       rawRequest: rawRequest,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 }

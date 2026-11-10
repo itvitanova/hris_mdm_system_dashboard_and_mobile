@@ -196,5 +196,54 @@ void main() {
       // Pastikan tombol revisi "Perbaiki Sekarang" TIDAK muncul jika ditolak
       expect(find.text('Perbaiki Sekarang'), findsNothing);
     });
+
+    testWidgets('notifications across 00:00 midnight boundary are categorized as Kemarin, not Hari Ini', (
+      tester,
+    ) async {
+      final now = DateTime.now();
+      final startOfToday = DateTime(now.year, now.month, now.day);
+      // Notification 1: 5 minutes after midnight today
+      final todayNotifTime = startOfToday.add(const Duration(minutes: 5));
+      // Notification 2: 10 minutes before midnight (yesterday night)
+      final yesterdayNotifTime = startOfToday.subtract(const Duration(minutes: 10));
+
+      final workspace = Workspace({
+        'requests': [
+          {
+            'id': 'REQ-TODAY',
+            'kind': 'Cuti',
+            'title': 'Cuti Pagi',
+            'status': 'Disetujui',
+            'unread': true,
+            'updatedAt': todayNotifTime.toIso8601String(),
+          },
+          {
+            'id': 'REQ-YESTERDAY',
+            'kind': 'Izin',
+            'title': 'Izin Malam',
+            'status': 'Disetujui',
+            'unread': true,
+            'updatedAt': yesterdayNotifTime.toIso8601String(),
+          },
+        ],
+        'employees': [],
+      });
+
+      await tester.pumpWidget(
+        wrapWithScreenUtil(
+          RequestNotificationsScreen(
+            api: ApiClient(),
+            workspace: workspace,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Hari Ini should have 1 item (REQ-TODAY)
+      expect(find.text('HARI INI'), findsOneWidget);
+      // Kemarin should have 1 item (REQ-YESTERDAY, even if less than 24h ago)
+      expect(find.text('KEMARIN'), findsOneWidget);
+      expect(find.text('Kemarin'), findsOneWidget);
+    });
   });
 }
