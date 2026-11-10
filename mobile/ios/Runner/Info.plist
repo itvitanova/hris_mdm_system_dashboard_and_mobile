@@ -18,14 +18,22 @@
 	<string>Lokasi digunakan saat absensi untuk memeriksa radius 100 meter dari kantor.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Aplikasi memerlukan izin galeri foto untuk memilih file lampiran, bukti transaksi/kwitansi, atau foto absensi.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Aplikasi memerlukan izin untuk menyimpan file lampiran, bukti transaksi, atau slip gaji ke galeri foto.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Lokasi digunakan saat absensi untuk memeriksa radius 100 meter dari kantor.</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>https</string>
 		<string>http</string>
+		<string>tel</string>
+		<string>mailto</string>
 	</array>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>
+		<true/>
+		<key>NSAllowsArbitraryLoadsInWebContent</key>
 		<true/>
 	</dict>
 	<key>ITSAppUsesNonExemptEncryption</key>
