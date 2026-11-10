@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -16,11 +17,13 @@ class LoginScreen extends StatefulWidget {
     this.api,
     this.onLogin,
     this.authBloc,
+    this.storage,
   });
 
   final ApiClient? api;
   final VoidCallback? onLogin;
   final AuthBloc? authBloc;
+  final FlutterSecureStorage? storage;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -33,6 +36,69 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isChecked = false;
   bool busy = false;
   String? error;
+
+  FlutterSecureStorage get _storage =>
+      widget.storage ??
+      (sl.isRegistered<FlutterSecureStorage>()
+          ? sl<FlutterSecureStorage>()
+          : const FlutterSecureStorage());
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRememberedCredentials();
+  }
+
+  Future<void> _loadRememberedCredentials() async {
+    try {
+      final enabled = await _storage.read(key: 'remember_me_enabled');
+      if (enabled == 'true') {
+        final email = await _storage.read(key: 'remember_me_email');
+        final password = await _storage.read(key: 'remember_me_password');
+        if (mounted) {
+          setState(() {
+            isChecked = true;
+            if (email != null && email.isNotEmpty) {
+              emailTextC.text = email;
+            }
+            if (password != null && password.isNotEmpty) {
+              passwordTextC.text = password;
+            }
+          });
+        }
+      }
+    } catch (_) {
+      // Storage unavailable or platform channel error in tests handled gracefully
+    }
+  }
+
+  Future<void> _handleRememberMe([String? email, String? password]) async {
+    final emailVal =
+        (email != null && email.isNotEmpty) ? email : emailTextC.text.trim();
+    final passVal =
+        (password != null && password.isNotEmpty) ? password : passwordTextC.text;
+    try {
+      if (isChecked) {
+        await _storage.write(key: 'remember_me_enabled', value: 'true');
+        await _storage.write(key: 'remember_me_email', value: emailVal);
+        await _storage.write(key: 'remember_me_password', value: passVal);
+      } else {
+        await _clearRememberedCredentials();
+      }
+    } catch (_) {
+      // Storage unavailable or platform channel error in tests handled gracefully
+    }
+  }
+
+  Future<void> _clearRememberedCredentials() async {
+    try {
+      await _storage.delete(key: 'remember_me_enabled');
+      await _storage.delete(key: 'remember_me_email');
+      await _storage.delete(key: 'remember_me_password');
+    } catch (_) {
+      // Storage unavailable or platform channel error in tests handled gracefully
+    }
+  }
 
   @override
   void dispose() {
@@ -113,7 +179,10 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await api.login(emailTextC.text.trim(), passwordTextC.text);
       if (mounted) {
-        passwordTextC.clear();
+        await _handleRememberMe();
+        if (!isChecked) {
+          passwordTextC.clear();
+        }
         widget.onLogin?.call();
       }
     } catch (e) {
@@ -333,10 +402,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                             onChanged: isLoading
                                                 ? null
                                                 : (bool? value) {
+                                                    final next = value ?? false;
                                                     setState(() {
-                                                      isChecked =
-                                                          value ?? false;
+                                                      isChecked = next;
                                                     });
+                                                    if (!next) {
+                                                      _clearRememberedCredentials();
+                                                    }
                                                   },
                                             activeColor:
                                                 AppColors.filterTealAccent,
@@ -350,26 +422,23 @@ class _LoginScreenState extends State<LoginScreen> {
                                             ),
                                           ),
                                           SizedBox(width: 6.w),
-                                          Expanded(
+                                          GestureDetector(
+                                            behavior: HitTestBehavior.opaque,
+                                            onTap: isLoading
+                                                ? null
+                                                : () {
+                                                    final next = !isChecked;
+                                                    setState(() {
+                                                      isChecked = next;
+                                                    });
+                                                    if (!next) {
+                                                      _clearRememberedCredentials();
+                                                    }
+                                                  },
                                             child: Text(
                                               "Remember me",
                                               style: AppTextStyles
                                                   .inter128RegularPrimary,
-                                            ),
-                                          ),
-                                          GestureDetector(
-                                            onTap: () {},
-                                            child: Text(
-                                              "Forgot Password",
-                                              style: TextStyle(
-                                                fontFamily: 'Inter',
-                                                fontSize: 12.sp,
-                                                color: isLoading
-                                                    ? AppColors.textTertiary
-                                                    : AppColors
-                                                        .filterTealAccent,
-                                                fontWeight: FontWeight.w600,
-                                              ),
                                             ),
                                           ),
                                         ],
@@ -489,7 +558,12 @@ class _LoginScreenState extends State<LoginScreen> {
           bloc: bloc,
           listener: (context, state) {
             if (state is Authenticated) {
-              passwordTextC.clear();
+              final pass = passwordTextC.text;
+              final email = emailTextC.text.trim();
+              _handleRememberMe(email, pass);
+              if (!isChecked) {
+                passwordTextC.clear();
+              }
               if (busy || error != null) {
                 setState(() {
                   busy = false;
@@ -497,7 +571,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 });
               }
             } else if (state is Unauthenticated) {
-              passwordTextC.clear();
+              if (isChecked) {
+                _loadRememberedCredentials();
+              } else {
+                passwordTextC.clear();
+              }
               if (busy || error != null) {
                 setState(() {
                   busy = false;

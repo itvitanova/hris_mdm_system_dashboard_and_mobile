@@ -10,6 +10,26 @@ class RequestRepositoryImpl implements RequestRepository {
   RequestRepositoryImpl({required this.remoteDataSource});
 
   @override
+  Future<Result<List<Map<String, dynamic>>>> getRequests({
+    String? kind,
+    String? status,
+    String? review,
+  }) async {
+    try {
+      final list = await remoteDataSource.getRequests(
+        kind: kind,
+        status: status,
+        review: review,
+      );
+      return Success(list);
+    } on ApiException catch (e) {
+      return FailureResult(ServerFailure(e.message, e.status));
+    } catch (e) {
+      return FailureResult(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Result<void>> submitRequest(Map<String, dynamic> requestData) async {
     try {
       await remoteDataSource.submit(requestData);
@@ -35,6 +55,21 @@ class RequestRepositoryImpl implements RequestRepository {
         decision: decision,
         note: note,
       );
+      return const Success(null);
+    } on ApiException catch (e) {
+      return FailureResult(ServerFailure(e.message, e.status));
+    } catch (e) {
+      return FailureResult(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<void>> markSeenRequest({
+    required String id,
+    required String token,
+  }) async {
+    try {
+      await remoteDataSource.markSeen(id: id, token: token);
       return const Success(null);
     } on ApiException catch (e) {
       return FailureResult(ServerFailure(e.message, e.status));

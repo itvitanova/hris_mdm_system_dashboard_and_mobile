@@ -57,6 +57,7 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
   late DateTime selected;
   late DateTime month;
   List<Json> entries = [];
+  List<Json> birthdays = [];
   bool loading = true;
   String? error;
   int epoch = 0;
@@ -78,11 +79,20 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
       error = null;
     });
     try {
-      final result = await widget.api.getList(
-        '/leave-calendar?month=${dateOnly(month).substring(0, 7)}',
-      );
+      final monthStr = dateOnly(month).substring(0, 7);
+      final results = await Future.wait([
+        widget.api
+            .getList('/leave-calendar?month=$monthStr')
+            .catchError((_) => <Map<String, dynamic>>[]),
+        widget.api
+            .getList('/birthday-calendar?month=$monthStr')
+            .catchError((_) => <Map<String, dynamic>>[]),
+      ]);
       if (mounted && requestEpoch == epoch) {
-        setState(() => entries = result);
+        setState(() {
+          entries = results[0];
+          birthdays = results[1];
+        });
       }
     } catch (e) {
       if (mounted && requestEpoch == epoch) {
@@ -102,6 +112,85 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
             text(e, 'endDate').compareTo(dateOnly(day)) >= 0,
       )
       .toList();
+
+  List<Json> birthdaysOnDate(DateTime day) {
+    final d = dateOnly(day);
+    final fromApi = birthdays.where((b) => text(b, 'date') == d).toList();
+    final results = <Json>[...fromApi];
+
+    final emps = widget.workspace.rows('employees');
+    for (final emp in emps) {
+      final bDate = text(emp, 'birthDate', '');
+      if (bDate.length >= 10) {
+        final m = int.tryParse(bDate.substring(5, 7));
+        final dy = int.tryParse(bDate.substring(8, 10));
+        if (m == day.month && dy == day.day) {
+          results.add({
+            'name': text(emp, 'name', 'Rekan Kerja'),
+            'department': text(emp, 'department', ''),
+            'position': text(emp, 'position', ''),
+            'birthDate': bDate,
+            'date': d,
+          });
+        }
+      }
+    }
+
+    final leaveEntries = onDate(day);
+    for (final le in leaveEntries) {
+      final name = text(le, 'name', 'Rekan Kerja');
+      if (!results.any((r) => text(r, 'name') == name)) {
+        results.add({
+          'name': name,
+          'department': text(le, 'department', ''),
+          'position': text(le, 'position', ''),
+          'date': d,
+        });
+      }
+    }
+    return results;
+  }
+
+  List<Json> birthdaysInMonth(DateTime targetMonth) {
+    final emps = widget.workspace.rows('employees');
+    final results = <Json>[];
+    for (final emp in emps) {
+      final bDate = text(emp, 'birthDate', '');
+      if (bDate.length >= 10) {
+        final m = int.tryParse(bDate.substring(5, 7));
+        if (m == targetMonth.month) {
+          final dy = int.tryParse(bDate.substring(8, 10)) ?? 1;
+          results.add({
+            'name': text(emp, 'name', 'Rekan Kerja'),
+            'department': text(emp, 'department', ''),
+            'position': text(emp, 'position', ''),
+            'birthDate': bDate,
+            'day': dy,
+          });
+        }
+      }
+    }
+    for (final le in entries) {
+      final sDate = text(le, 'startDate', '');
+      if (sDate.length >= 10) {
+        final m = int.tryParse(sDate.substring(5, 7));
+        if (m == targetMonth.month) {
+          final dy = int.tryParse(sDate.substring(8, 10)) ?? 1;
+          final name = text(le, 'name', 'Rekan Kerja');
+          if (!results.any((r) => text(r, 'name') == name)) {
+            results.add({
+              'name': name,
+              'department': text(le, 'department', ''),
+              'position': text(le, 'position', ''),
+              'day': dy,
+            });
+          }
+        }
+      }
+    }
+    results.sort((a, b) => (a['day'] as int).compareTo(b['day'] as int));
+    return results;
+  }
 
   void move(int offset) {
     setState(() {
@@ -135,67 +224,18 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
   }
 
   String _formatDisplayDate(DateTime date) {
-    final weekdayStr = _dayNamesLong[date.weekday];
-    final monthStr = _monthNames[date.month - 1];
-    return '$weekdayStr, ${date.day} $monthStr ${date.year}';
-  }
-
-  String _getInitials(String name) {
-    final trimmed = name.trim();
-    if (trimmed.isEmpty) return '??';
-    final parts = trimmed.split(' ').where((p) => p.isNotEmpty).toList();
-    if (parts.length == 1) {
-      return parts[0].substring(0, parts[0].length >= 2 ? 2 : 1).toUpperCase();
-    }
-    return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-  }
-
-  int _calculateDurationDays(String startStr, String endStr) {
-    final start = DateTime.tryParse(startStr);
-    final end = DateTime.tryParse(endStr);
-    if (start == null || end == null) return 1;
-    final diff = end.difference(start).inDays + 1;
-    return diff > 0 ? diff : 1;
-  }
-
-  String _formatFriendlyDateRange(String startStr, String endStr) {
-    final start = DateTime.tryParse(startStr);
-    final end = DateTime.tryParse(endStr);
-    if (start == null) return '$startStr – $endStr';
-
-    const shortMonths = [
-      '',
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'Mei',
-      'Jun',
-      'Jul',
-      'Agt',
-      'Sep',
-      'Okt',
-      'Nov',
-      'Des',
-    ];
-
-    if (end == null || startStr == endStr) {
-      return '${start.day} ${shortMonths[start.month]} ${start.year}';
-    }
-
-    if (start.year == end.year) {
-      if (start.month == end.month) {
-        return '${start.day} – ${end.day} ${shortMonths[start.month]} ${start.year}';
-      }
-      return '${start.day} ${shortMonths[start.month]} – ${end.day} ${shortMonths[end.month]} ${start.year}';
-    }
-    return '${start.day} ${shortMonths[start.month]} ${start.year} – ${end.day} ${shortMonths[end.month]} ${end.year}';
+    final dayName = _dayNamesLong[date.weekday];
+    final dayNum = date.day;
+    final monthName = _monthNames[date.month - 1];
+    final year = date.year;
+    return '$dayName, $dayNum $monthName $year';
   }
 
   @override
   Widget build(BuildContext context) {
     final today = DateTime.now();
-    final todayRows = onDate(selected);
+    final todayBirthdays = birthdaysOnDate(selected);
+    final monthlyBirthdays = birthdaysInMonth(month);
     final locationName = text(
       widget.workspace.attendancePolicy,
       'name',
@@ -223,7 +263,7 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
           mainAxisSize: MainAxisSize.min,
           children: const [
             Text(
-              'Kalender Cuti',
+              'Kalender Ulang Tahun',
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 17,
@@ -234,7 +274,7 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
             ),
             SizedBox(height: 1.5),
             Text(
-              'Jadwal & Rekan Cuti Kantor',
+              'Jadwal Ulang Tahun Rekan Kerja',
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 11,
@@ -303,17 +343,17 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
                 child: Row(
                   children: [
                     Container(
-                      width: 32,
-                      height: 32,
+                      width: 34,
+                      height: 34,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF0FDFA),
+                        color: const Color(0xFFFEF3C7),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFFCCFBF1)),
+                        border: Border.all(color: const Color(0xFFFDE68A)),
                       ),
                       child: const Icon(
-                        Icons.business_rounded,
-                        size: 16,
-                        color: Color(0xFF0F766E),
+                        Icons.cake_rounded,
+                        size: 18,
+                        color: Color(0xFFD97706),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -339,8 +379,33 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
                               color: Color(0xFF0F172A),
                               letterSpacing: -0.1,
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFFBEB),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: const Color(0xFFFDE68A), width: 0.8),
+                          ),
+                          child: Text(
+                            '${monthlyBirthdays.length} Bulan Ini',
+                            style: const TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFFB45309),
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -383,7 +448,7 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
                           children: [
                             const Expanded(
                               child: Text(
-                                'PILIH TANGGAL REVIU',
+                                'PILIH TANGGAL',
                                 style: TextStyle(
                                   fontFamily: 'Inter',
                                   fontSize: 10.5,
@@ -444,94 +509,75 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
                                   DateTime(month.year, month.month, 1),
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              _buildPresetChip(
-                                label: 'Akhir Bulan',
-                                isSelected: _isSameDay(
-                                  selected,
-                                  DateTime(
-                                    month.year,
-                                    month.month,
-                                    DateUtils.getDaysInMonth(
-                                      month.year,
-                                      month.month,
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // 1.3 Baris Navigasi Bulan & Tahun
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: const Color(0xFFF1F5F9),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              _buildMonthNavButton(
+                                icon: Icons.chevron_left_rounded,
+                                onTap: () => move(-1),
+                              ),
+                              Expanded(
+                                child: Center(
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      '${_monthNames[month.month - 1]} ${month.year}',
+                                      style: const TextStyle(
+                                        fontFamily: 'Inter',
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w700,
+                                        color: Color(0xFF0F172A),
+                                        letterSpacing: -0.2,
+                                      ),
                                     ),
                                   ),
                                 ),
-                                onTap: () => _selectPreset(
-                                  DateTime(
-                                    month.year,
-                                    month.month,
-                                    DateUtils.getDaysInMonth(
-                                      month.year,
-                                      month.month,
-                                    ),
-                                  ),
-                                ),
+                              ),
+                              _buildMonthNavButton(
+                                icon: Icons.chevron_right_rounded,
+                                onTap: () => move(1),
                               ),
                             ],
                           ),
                         ),
-
-                        const SizedBox(height: 14),
-                        const Divider(color: Color(0xFFF1F5F9), height: 1),
                         const SizedBox(height: 14),
 
-                        // 1.3 Month Navigator Row
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  '${_monthNames[month.month - 1]} ${month.year}',
-                                  style: const TextStyle(
-                                    fontFamily: 'Inter',
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFF0F172A),
-                                    letterSpacing: -0.2,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                _buildCircleNavButton(
-                                  icon: Icons.chevron_left_rounded,
-                                  tooltip: 'Bulan sebelumnya',
-                                  onTap: () => move(-1),
-                                ),
-                                const SizedBox(width: 8),
-                                _buildCircleNavButton(
-                                  icon: Icons.chevron_right_rounded,
-                                  tooltip: 'Bulan berikutnya',
-                                  onTap: () => move(1),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 14),
-
-                        // 1.4 Days of Week Header
+                        // 1.4 Baris Header Nama Hari
                         Row(
                           children: _dayNames.map((d) {
+                            final isWeekend = d == 'Sab' || d == 'Min';
                             return Expanded(
                               child: Center(
                                 child: FittedBox(
                                   fit: BoxFit.scaleDown,
                                   child: Text(
                                     d,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontFamily: 'Inter',
-                                      fontSize: 11,
+                                      fontSize: 11.5,
                                       fontWeight: FontWeight.w600,
-                                      color: Color(0xFF64748B),
+                                      color: isWeekend
+                                          ? const Color(0xFF94A3B8)
+                                          : const Color(0xFF475569),
                                     ),
                                   ),
                                 ),
@@ -549,25 +595,59 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
                         const SizedBox(height: 10),
 
                         // 1.6 Legend Indicator Row
-                        Row(
+                        Wrap(
+                          spacing: 14,
+                          runSpacing: 6,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
-                            Container(
-                              width: 7,
-                              height: 7,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFF10B981),
-                                shape: BoxShape.circle,
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 7,
+                                    height: 7,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFFF59E0B),
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  const Text(
+                                    'Ulang tahun rekan 🎂',
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 11,
+                                      color: Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            const SizedBox(width: 7),
-                            const Expanded(
-                              child: Text(
-                                'Ada rekan kerja yang cuti',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 11,
-                                  color: Color(0xFF64748B),
-                                ),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 7,
+                                    height: 7,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFF0D9488),
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  const Text(
+                                    'Hari ini',
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 11,
+                                      color: Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -586,14 +666,14 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
                   child: TextButton.icon(
                     onPressed: load,
                     icon: const Icon(Icons.refresh_rounded, size: 16),
-                    label: const Text('Coba lagi muat data cuti'),
+                    label: const Text('Coba lagi muat data'),
                   ),
                 ),
               ],
 
               const SizedBox(height: 22),
 
-              // ==================== 2. SEKSI DAFTAR REKAN CUTI ====================
+              // ==================== 2. SEKSI DAFTAR REKAN ULANG TAHUN ====================
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -601,23 +681,23 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
                     width: 28,
                     height: 28,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF0FDFA),
+                      color: const Color(0xFFFEF3C7),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: const Color(0xFFCCFBF1),
+                        color: const Color(0xFFFDE68A),
                         width: 0.8,
                       ),
                     ),
                     child: const Icon(
-                      Icons.groups_rounded,
+                      Icons.cake_rounded,
                       size: 15,
-                      color: Color(0xFF0F766E),
+                      color: Color(0xFFD97706),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Cuti pada ${selected.day} ${_monthNames[selected.month - 1]}',
+                      'Ulang Tahun pada ${selected.day} ${_monthNames[selected.month - 1]}',
                       style: const TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 14.5,
@@ -625,6 +705,7 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
                         color: Color(0xFF0F172A),
                         letterSpacing: -0.2,
                       ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -636,25 +717,25 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: todayRows.isNotEmpty
-                            ? const Color(0xFFDCFCE7)
+                        color: todayBirthdays.isNotEmpty
+                            ? const Color(0xFFFEF3C7)
                             : const Color(0xFFF1F5F9),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: todayRows.isNotEmpty
-                              ? const Color(0xFFBBF7D0)
+                          color: todayBirthdays.isNotEmpty
+                              ? const Color(0xFFFDE68A)
                               : const Color(0xFFE2E8F0),
                           width: 0.8,
                         ),
                       ),
                       child: Text(
-                        '${todayRows.length} Cuti',
+                        '${todayBirthdays.length} Rekan',
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: todayRows.isNotEmpty
-                              ? const Color(0xFF15803D)
+                          color: todayBirthdays.isNotEmpty
+                              ? const Color(0xFFB45309)
                               : const Color(0xFF64748B),
                         ),
                       ),
@@ -664,7 +745,7 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
               ),
               const SizedBox(height: 6),
               const Text(
-                'Hanya menampilkan cuti yang telah disetujui. Alasan dan dokumen pribadi dirahasiakan.',
+                'Rekan kerja yang merayakan hari ulang tahun.',
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 11,
@@ -674,8 +755,90 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
               ),
               const SizedBox(height: 12),
 
-              // ==================== 3. KARTU DETAIL REKAN CUTI ====================
-              if (!loading && error == null && todayRows.isEmpty)
+              // Kartu Detail Ulang Tahun Tanggal Terpilih
+              if (!loading && error == null && todayBirthdays.isNotEmpty) ...[
+                for (final b in todayBirthdays)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFFFBEB), Color(0xFFFEF3C7)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: const Color(0xFFFDE68A),
+                        width: 1,
+                      ),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x060F172A),
+                          blurRadius: 8,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF59E0B),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.cake_rounded,
+                              size: 22,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Selamat Ulang Tahun! 🎂',
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFFB45309),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                text(b, 'name', 'Rekan Kerja'),
+                                style: const TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF78350F),
+                                ),
+                              ),
+                              if (text(b, 'department', '').isNotEmpty)
+                                Text(
+                                  text(b, 'department', ''),
+                                  style: const TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 11,
+                                    color: Color(0xFF92400E),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+
+              if (!loading && error == null && todayBirthdays.isEmpty)
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
@@ -687,16 +850,16 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
                       width: 1,
                     ),
                   ),
-                  child: const Column(
+                  child: Column(
                     children: [
-                      Icon(
-                        Icons.event_available_rounded,
+                      const Icon(
+                        Icons.cake_outlined,
                         size: 36,
-                        color: Color(0xFF10B981),
+                        color: Color(0xFFF59E0B),
                       ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Semua Rekan Kantor Hadir',
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Tidak Ada Ulang Tahun',
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 13.5,
@@ -704,11 +867,11 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
                           color: Color(0xFF0F172A),
                         ),
                       ),
-                      SizedBox(height: 3),
+                      const SizedBox(height: 3),
                       Text(
-                        'Tidak ada rekan satu lokasi yang cuti pada tanggal ini.',
+                        'Tidak ada rekan yang berulang tahun pada tanggal ${selected.day} ${_monthNames[selected.month - 1]}.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 11.5,
                           fontWeight: FontWeight.w400,
@@ -719,223 +882,135 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
                   ),
                 ),
 
-              for (final entry in todayRows) ...[
-                Builder(
-                  builder: (context) {
-                    final startDateStr = text(entry, 'startDate');
-                    final endDateStr = text(entry, 'endDate');
-                    final durationDays = _calculateDurationDays(startDateStr, endDateStr);
-                    final formattedDateRange = _formatFriendlyDateRange(startDateStr, endDateStr);
-                    final department = text(entry, 'department', 'Divisi');
-
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: const Color(0xFFE2E8F0),
-                          width: 1,
-                        ),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x060F172A),
-                            blurRadius: 8,
-                            offset: Offset(0, 2),
+              // ==================== 3. SEMUA ULANG TAHUN BULAN INI ====================
+              Builder(
+                builder: (context) {
+                  final otherMonthlyBirthdays = monthlyBirthdays
+                      .where((b) => (b['day'] as int? ?? 0) != selected.day)
+                      .toList();
+                  if (loading || error != null || otherMonthlyBirthdays.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 22),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.celebration_rounded,
+                            size: 16,
+                            color: Color(0xFFD97706),
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              'Ulang Tahun Lainnya (${_monthNames[month.month - 1]})',
+                              style: const TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF0F172A),
+                                letterSpacing: -0.2,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${otherMonthlyBirthdays.length} Rekan',
+                            style: const TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFFD97706),
+                            ),
                           ),
                         ],
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // 1. Profil Karyawan & Durasi (Simetris Sejajar Tengah)
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              // Squircle Avatar 42x42 dengan Status Dot
-                              Stack(
-                                clipBehavior: Clip.none,
-                                children: [
-                                  Container(
-                                    width: 42,
-                                    height: 42,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFF0FDFA),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: const Color(0xFFCCFBF1),
-                                        width: 1.2,
-                                      ),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        _getInitials(text(entry, 'name')),
-                                        style: const TextStyle(
-                                          fontFamily: 'Inter',
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w700,
-                                          color: Color(0xFF0F766E),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    right: -2,
-                                    bottom: -2,
-                                    child: Container(
-                                      width: 11,
-                                      height: 11,
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF10B981),
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: Colors.white,
-                                          width: 2,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(width: 12),
-
-                              // Nama, Durasi Cuti, & Departemen
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    // Baris Nama + Durasi Cuti (Berdampingan rapi tanpa space berlebih)
-                                    Wrap(
-                                      crossAxisAlignment:
-                                          WrapCrossAlignment.center,
-                                      spacing: 8,
-                                      runSpacing: 4,
-                                      children: [
-                                        Text(
-                                          text(entry, 'name'),
-                                          style: const TextStyle(
-                                            fontFamily: 'Inter',
-                                            fontSize: 14.5,
-                                            fontWeight: FontWeight.w700,
-                                            color: Color(0xFF0F172A),
-                                            letterSpacing: -0.2,
-                                          ),
-                                        ),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 2.5,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFFDCFCE7),
-                                            borderRadius:
-                                                BorderRadius.circular(6),
-                                            border: Border.all(
-                                              color: const Color(0xFFBBF7D0),
-                                              width: 0.8,
-                                            ),
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
-                                            children: [
-                                              Container(
-                                                width: 5,
-                                                height: 5,
-                                                decoration: const BoxDecoration(
-                                                  color: Color(0xFF15803D),
-                                                  shape: BoxShape.circle,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 4.5),
-                                              Text(
-                                                '$durationDays Hari',
-                                                style: const TextStyle(
-                                                  fontFamily: 'Inter',
-                                                  fontSize: 10.5,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: Color(0xFF15803D),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 7,
-                                        vertical: 2,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFF1F5F9),
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Text(
-                                        department,
-                                        style: const TextStyle(
-                                          fontFamily: 'Inter',
-                                          fontSize: 10.5,
-                                          fontWeight: FontWeight.w600,
-                                          color: Color(0xFF475569),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: 11),
-
-                          // 2. Rentang Tanggal (Soft Slate Container)
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 7.5,
-                            ),
+                      const SizedBox(height: 10),
+                      for (final b in otherMonthlyBirthdays)
+                        InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () {
+                            final dayNum = b['day'] as int? ?? 1;
+                            setState(() {
+                              selected = DateTime(month.year, month.month, dayNum);
+                            });
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF8FAFC),
-                              borderRadius: BorderRadius.circular(10),
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: const Color(0xFFE2E8F0),
+                                color: _isSameDay(
+                                  selected,
+                                  DateTime(month.year, month.month, b['day'] as int? ?? 1),
+                                )
+                                    ? const Color(0xFFF59E0B)
+                                    : const Color(0xFFE2E8F0),
                                 width: 0.8,
                               ),
                             ),
                             child: Row(
                               children: [
-                                const Icon(
-                                  Icons.calendar_month_rounded,
-                                  size: 14,
-                                  color: Color(0xFF0D9488),
-                                ),
-                                const SizedBox(width: 7),
-                                Expanded(
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFEF3C7),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
                                   child: Text(
-                                    formattedDateRange,
+                                    '${b['day']} ${_monthNames[month.month - 1].substring(0, 3)}',
                                     style: const TextStyle(
                                       fontFamily: 'Inter',
-                                      fontSize: 11.5,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF334155),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFFB45309),
                                     ),
                                   ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        text(b, 'name', 'Rekan Kerja'),
+                                        style: const TextStyle(
+                                          fontFamily: 'Inter',
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF0F172A),
+                                        ),
+                                      ),
+                                      if (text(b, 'department', '').isNotEmpty)
+                                        Text(
+                                          text(b, 'department', ''),
+                                          style: const TextStyle(
+                                            fontFamily: 'Inter',
+                                            fontSize: 10.5,
+                                            color: Color(0xFF64748B),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                const Icon(
+                                  Icons.cake_outlined,
+                                  size: 16,
+                                  color: Color(0xFFF59E0B),
                                 ),
                               ],
                             ),
                           ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ],
+                        ),
+                    ],
+                  );
+                },
+              ),
             ],
           ),
         ),
@@ -948,42 +1023,45 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
     required bool isSelected,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0D9488) : const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected
-                ? const Color(0xFF0F766E)
-                : const Color(0xFFE2E8F0),
-            width: 1.1,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+          decoration: BoxDecoration(
+            color: isSelected ? const Color(0xFF0D9488) : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isSelected
+                  ? const Color(0xFF0D9488)
+                  : const Color(0xFFE2E8F0),
+              width: 1,
+            ),
           ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 11,
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected ? Colors.white : const Color(0xFF64748B),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 11.5,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              color: isSelected ? Colors.white : const Color(0xFF475569),
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildCircleNavButton({
+  Widget _buildMonthNavButton({
     required IconData icon,
-    required String tooltip,
     required VoidCallback onTap,
   }) {
-    return Tooltip(
-      message: tooltip,
-      child: GestureDetector(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
         onTap: onTap,
         child: Container(
           width: 32,
@@ -1017,7 +1095,6 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
 
     for (int i = 0; i < totalCells; i++) {
       if (i < startingWeekday) {
-        // Tanggal bulan sebelumnya (Muted Zinc)
         final dayNum = daysInPrevMonth - (startingWeekday - 1) + i;
         dayWidgets.add(
           _buildDayCell(
@@ -1030,12 +1107,13 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
           ),
         );
       } else if (i < startingWeekday + daysInMonth) {
-        // Tanggal bulan aktif
         final dayNum = i - startingWeekday + 1;
         final cellDate = DateTime(month.year, month.month, dayNum);
         final isSelected = _isSameDay(cellDate, selected);
         final isToday = _isSameDay(cellDate, today);
-        final count = onDate(cellDate).length;
+        final bDays = birthdaysOnDate(cellDate);
+        final count = bDays.length;
+        final hasBirthday = count > 0;
 
         dayWidgets.add(
           _buildDayCell(
@@ -1045,6 +1123,7 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
             isSelected: isSelected,
             isToday: isToday,
             count: count,
+            hasBirthday: hasBirthday,
             onTap: () {
               setState(() {
                 selected = cellDate;
@@ -1053,7 +1132,6 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
           ),
         );
       } else {
-        // Tanggal bulan berikutnya (Muted Zinc)
         final dayNum = i - (startingWeekday + daysInMonth) + 1;
         dayWidgets.add(
           _buildDayCell(
@@ -1086,6 +1164,7 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
     required bool isSelected,
     required bool isToday,
     required int count,
+    bool hasBirthday = false,
     required VoidCallback? onTap,
   }) {
     if (!isCurrentMonth) {
@@ -1107,7 +1186,7 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
 
     final cellWidget = Semantics(
       label: date != null
-          ? '${date.day} ${_monthNames[month.month - 1]} ${month.year}, $count rekan cuti'
+          ? '${date.day} ${_monthNames[month.month - 1]} ${month.year}${hasBirthday ? ", $count rekan ulang tahun" : ""}'
           : text,
       selected: isSelected,
       button: true,
@@ -1129,17 +1208,17 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
                 ? null
                 : isToday
                     ? const Color(0xFFF0FDFA)
-                    : (count > 0
-                        ? const Color(0xFFF0FDF4)
+                    : (hasBirthday
+                        ? const Color(0xFFFFFBEB)
                         : Colors.transparent),
             borderRadius: BorderRadius.circular(10),
             border: isSelected
                 ? null
                 : isToday
                     ? Border.all(color: const Color(0xFF0D9488), width: 1.2)
-                    : (count > 0
+                    : (hasBirthday
                         ? Border.all(
-                            color: const Color(0xFFBBF7D0),
+                            color: const Color(0xFFFDE68A),
                             width: 0.8,
                           )
                         : null),
@@ -1166,13 +1245,13 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
                       fontSize: 13,
                       fontWeight: isSelected || isToday
                           ? FontWeight.w700
-                          : (count > 0 ? FontWeight.w600 : FontWeight.w500),
+                          : (hasBirthday ? FontWeight.w700 : FontWeight.w500),
                       color: isSelected
                           ? Colors.white
                           : isToday
                               ? const Color(0xFF0D9488)
-                              : (count > 0
-                                  ? const Color(0xFF15803D)
+                              : (hasBirthday
+                                  ? const Color(0xFFB45309)
                                   : const Color(0xFF1E293B)),
                     ),
                   ),
@@ -1181,27 +1260,32 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
               const SizedBox(height: 2),
               SizedBox(
                 height: 4,
-                child: count > 0
-                    ? Container(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (hasBirthday)
+                      Container(
                         width: 4,
                         height: 4,
                         decoration: BoxDecoration(
                           color: isSelected
                               ? Colors.white
-                              : const Color(0xFF10B981),
+                              : const Color(0xFFF59E0B),
                           shape: BoxShape.circle,
                         ),
-                      )
-                    : (isToday && !isSelected
-                        ? Container(
-                            width: 3.5,
-                            height: 3.5,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF0D9488),
-                              shape: BoxShape.circle,
-                            ),
-                          )
-                        : null),
+                      ),
+                    if (!hasBirthday && isToday && !isSelected)
+                      Container(
+                        width: 3.5,
+                        height: 3.5,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF0D9488),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -1213,4 +1297,5 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
   }
 }
 
+typedef BirthdayCalendarScreen = LeaveCalendarScreen;
 typedef LeaveCalendarPage = LeaveCalendarScreen;

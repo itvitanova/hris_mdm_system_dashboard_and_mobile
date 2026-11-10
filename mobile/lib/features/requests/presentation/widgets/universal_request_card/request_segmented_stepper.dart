@@ -24,6 +24,31 @@ class RequestSegmentedStepper extends StatelessWidget {
   /// 1. REIMBURSEMENT: 2 Tahap (Atasan ➔ Finance)
   Widget _buildTwoStageStepper() {
     final isDone = data.status == SubmissionStatus.disetujui;
+    final isRejected = data.status == SubmissionStatus.ditolak;
+    final isRevision = data.status == SubmissionStatus.perluRevisi;
+
+    final Color secondStepColor;
+    final String statusText;
+    final Color statusTextColor;
+
+    if (isDone) {
+      secondStepColor = const Color(0xFF059669);
+      statusText = 'Disetujui';
+      statusTextColor = const Color(0xFF059669);
+    } else if (isRejected) {
+      secondStepColor = const Color(0xFFE11D48);
+      statusText = 'Ditolak';
+      statusTextColor = const Color(0xFFE11D48);
+    } else if (isRevision) {
+      secondStepColor = const Color(0xFFD97706);
+      statusText = 'Perlu revisi';
+      statusTextColor = const Color(0xFFD97706);
+    } else {
+      secondStepColor = const Color(0xFFF59E0B);
+      statusText = 'Menunggu verifikasi finance';
+      statusTextColor = const Color(0xFF475569);
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -77,9 +102,7 @@ class RequestSegmentedStepper extends StatelessWidget {
               child: Container(
                 height: 5,
                 decoration: BoxDecoration(
-                  color: isDone
-                      ? const Color(0xFF059669)
-                      : const Color(0xFFF59E0B),
+                  color: secondStepColor,
                   borderRadius: BorderRadius.circular(2.5),
                 ),
               ),
@@ -101,15 +124,14 @@ class RequestSegmentedStepper extends StatelessWidget {
             const SizedBox(width: 8),
             Flexible(
               child: Text(
-                isDone ? 'Disetujui' : 'Menunggu verifikasi finance',
+                statusText,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.end,
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
-                  color:
-                      isDone ? const Color(0xFF059669) : const Color(0xFF475569),
+                  color: statusTextColor,
                 ),
               ),
             ),
@@ -122,6 +144,31 @@ class RequestSegmentedStepper extends StatelessWidget {
   /// 2. CUTI, PETTY CASH, GA, LEMBUR: 1 Tahap (Atasan)
   Widget _buildSingleStageStepper() {
     final isDone = data.status == SubmissionStatus.disetujui;
+    final isRejected = data.status == SubmissionStatus.ditolak;
+    final isRevision = data.status == SubmissionStatus.perluRevisi;
+
+    final Color trackColor;
+    final String statusText;
+    final Color statusTextColor;
+
+    if (isDone) {
+      trackColor = const Color(0xFF059669);
+      statusText = 'Disetujui';
+      statusTextColor = const Color(0xFF059669);
+    } else if (isRejected) {
+      trackColor = const Color(0xFFE11D48);
+      statusText = 'Ditolak';
+      statusTextColor = const Color(0xFFE11D48);
+    } else if (isRevision) {
+      trackColor = const Color(0xFFD97706);
+      statusText = 'Perlu revisi';
+      statusTextColor = const Color(0xFFD97706);
+    } else {
+      trackColor = const Color(0xFFF59E0B);
+      statusText = 'Menunggu persetujuan';
+      statusTextColor = const Color(0xFF475569);
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -158,7 +205,7 @@ class RequestSegmentedStepper extends StatelessWidget {
           width: double.infinity,
           height: 5,
           decoration: BoxDecoration(
-            color: isDone ? const Color(0xFF059669) : const Color(0xFFF59E0B),
+            color: trackColor,
             borderRadius: BorderRadius.circular(2.5),
           ),
         ),
@@ -177,15 +224,14 @@ class RequestSegmentedStepper extends StatelessWidget {
             const SizedBox(width: 8),
             Flexible(
               child: Text(
-                isDone ? 'Disetujui' : 'Menunggu persetujuan',
+                statusText,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.end,
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
-                  color:
-                      isDone ? const Color(0xFF059669) : const Color(0xFF475569),
+                  color: statusTextColor,
                 ),
               ),
             ),

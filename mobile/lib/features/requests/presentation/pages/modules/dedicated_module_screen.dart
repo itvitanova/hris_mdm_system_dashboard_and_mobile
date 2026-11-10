@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mdm_hris/core/api_client.dart';
 import 'package:mdm_hris/core/workspace.dart';
@@ -7,9 +8,14 @@ import 'package:mdm_hris/features/home/leave_calendar_screen.dart';
 import 'package:mdm_hris/features/requests/request_detail.dart';
 import 'package:mdm_hris/features/requests/request_form.dart';
 import 'package:mdm_hris/features/requests/request_notifications.dart';
+import 'package:mdm_hris/features/requests/presentation/bloc/request_bloc.dart';
+import 'package:mdm_hris/features/requests/presentation/bloc/request_event.dart';
+import 'package:mdm_hris/features/requests/presentation/bloc/request_state.dart';
 import 'package:mdm_hris/features/requests/presentation/widgets/universal_request_card/universal_request_card.dart';
 import 'package:mdm_hris/features/requests/presentation/widgets/services_hub/module_stat_card.dart';
 import 'package:mdm_hris/features/requests/presentation/widgets/services_hub/submission_status_filter_dropdown.dart';
+import 'package:mdm_hris/features/home/presentation/bloc/workspace_bloc.dart';
+import 'package:mdm_hris/features/home/presentation/bloc/workspace_state.dart';
 
 /// Halaman Khusus (Dedicated Screen) untuk Setiap Modul Pengajuan Mandiri
 /// Dilengkapi rekap statistik 2x2 korporat, filter status dropdown, dan header riwayat dengan tombol (+) tanpa FAB dan tanpa banner.
@@ -44,15 +50,64 @@ class DedicatedModuleScreen extends StatefulWidget {
 }
 
 class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
+  static const int _itemsPerPage = 5;
   SubmissionStatus? _selectedStatusFilter;
+  int _currentPage = 1;
 
-  Workspace get w => widget.workspace;
+  Workspace get w {
+    try {
+      final state = BlocProvider.of<WorkspaceBloc>(context).state;
+      if (state is WorkspaceLoaded) {
+        return state.workspace;
+      }
+    } catch (_) {}
+    return widget.workspace;
+  }
 
-  List<UniversalRequestModel> _getAllKindRequests() {
-    final rows = w.mine('requests');
+  RequestBloc? _tryGetRequestBloc(BuildContext context) {
+    try {
+      return BlocProvider.of<RequestBloc>(context, listen: false);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _tryGetRequestBloc(context)?.add(
+          RequestLoadRequested(kind: widget.kind.displayName),
+        );
+      }
+    });
+  }
+
+  Future<void> _handleRefresh() async {
+    await widget.onRefresh();
+    if (mounted) {
+      _tryGetRequestBloc(context)?.add(
+        RequestLoadRequested(kind: widget.kind.displayName),
+      );
+      setState(() => _currentPage = 1);
+    }
+  }
+
+  Future<void> _navigateAndRefresh(Widget target) async {
+    await widget.open(target);
+    if (mounted) {
+      await _handleRefresh();
+    }
+  }
+
+  List<UniversalRequestModel> _getAllKindRequests([
+    List<Map<String, dynamic>>? customRows,
+  ]) {
+    final rows = customRows ?? w.mine('requests');
     final List<UniversalRequestModel> items = [];
 
-    // Data riil dari workspace
+    // Data riil dari workspace atau BLoC
     for (final r in rows) {
       final normalized = Map<String, dynamic>.from(r);
       if (normalized['kind'] == null && normalized['type'] != null) {
@@ -64,6 +119,11 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
         final parsed = int.tryParse(rawAmount);
         if (parsed != null) normalized['amount'] = parsed;
       }
+      final rawHours = normalized['hours'] ?? normalized['durasi'];
+      if (rawHours is String) {
+        final parsed = int.tryParse(rawHours);
+        if (parsed != null) normalized['hours'] = parsed;
+      }
       final model = UniversalRequestModel.fromMap(normalized);
       if (model.kind == widget.kind) {
         items.add(model);
@@ -73,16 +133,8 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
     return items;
   }
 
-  String _toTitleCase(String text) {
-    if (text.isEmpty) return text;
-    final words = text.toLowerCase().split(' ');
-    return words
-        .map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '')
-        .join(' ');
-  }
-
   void _openCreateForm() {
-    widget.open(
+    _navigateAndRefresh(
       RequestForm(
         api: widget.api,
         workspace: widget.workspace,
@@ -95,11 +147,15 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
   String _getModuleSubtitle(SubmissionKind kind) {
     switch (kind) {
       case SubmissionKind.cuti:
-        return 'Kelola kuota, permohonan & kalender cuti';
+        return 'Kelola kuota & permohonan cuti';
+      case SubmissionKind.izin:
+        return 'Pencatatan izin sakit & dispensasi kerja';
       case SubmissionKind.lembur:
         return 'Pencatatan tugas & kompensasi lembur';
       case SubmissionKind.reimbursement:
         return 'Klaim biaya operasional & reimburse';
+      case SubmissionKind.medicalClaim:
+        return 'Penggantian biaya kesehatan & rawat jalan';
       case SubmissionKind.pettyCash:
         return 'Pengajuan & kas kecil operasional';
       case SubmissionKind.generalAffair:
@@ -110,10 +166,16 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
   Widget _buildModuleHeroActionBanner() {
     final (badgeText, headline, subtitle, buttonText) = switch (widget.kind) {
       SubmissionKind.cuti => (
-          'Layanan Cuti & Izin',
-          'Perlu Cuti atau Izin Kerja?',
-          'Ajukan cuti tahunan, sakit, atau izin kerja dengan cepat.',
+          'Layanan Cuti Tahunan',
+          'Perlu Cuti Kerja?',
+          'Ajukan permohonan cuti tahunan atau urusan penting.',
           'Buat Pengajuan Cuti',
+        ),
+      SubmissionKind.izin => (
+          'Layanan Izin & Sakit',
+          'Perlu Izin Tidak Masuk?',
+          'Ajukan izin sakit atau dispensasi kerja dengan lampiran dokumen.',
+          'Buat Pengajuan Izin',
         ),
       SubmissionKind.lembur => (
           'Layanan Lembur',
@@ -126,6 +188,12 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
           'Klaim Biaya Pengeluaran?',
           'Ajukan penggantian dana transportasi, makan, dan dinas.',
           'Ajukan Reimbursement',
+        ),
+      SubmissionKind.medicalClaim => (
+          'Klaim Biaya Medis',
+          'Klaim Rawat Jalan / Inap?',
+          'Penggantian biaya kesehatan dan rawat jalan karyawan.',
+          'Ajukan Medical Claim',
         ),
       SubmissionKind.pettyCash => (
           'Permohonan Kas Kecil',
@@ -309,28 +377,40 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final allRequests = _getAllKindRequests();
+    final bloc = _tryGetRequestBloc(context);
+    if (bloc != null) {
+      return BlocBuilder<RequestBloc, RequestState>(
+        bloc: bloc,
+        builder: (context, state) {
+          final rows = (state is RequestsLoaded &&
+                  (state.activeKind == null ||
+                      state.activeKind == widget.kind.displayName))
+              ? state.requests
+              : w.mine('requests');
+          return _buildScaffold(context, rows);
+        },
+      );
+    }
+    return _buildScaffold(context, w.mine('requests'));
+  }
+
+  Widget _buildScaffold(BuildContext context, List<Map<String, dynamic>> rows) {
+    final allRequests = _getAllKindRequests(rows);
     final approvedCount = allRequests
         .where((r) => r.status == SubmissionStatus.disetujui)
         .length;
     final pendingCount = allRequests
         .where((r) => r.status == SubmissionStatus.menunggu)
         .length;
-    final rejectedCount = allRequests
-        .where((r) =>
-            r.status == SubmissionStatus.ditolak ||
-            r.status == SubmissionStatus.perluRevisi)
+    final onlyRejectedCount = allRequests
+        .where((r) => r.status == SubmissionStatus.ditolak)
+        .length;
+    final revisionCount = allRequests
+        .where((r) => r.status == SubmissionStatus.perluRevisi)
         .length;
 
-    final pettyCashTotal = widget.kind == SubmissionKind.pettyCash
-        ? allRequests.fold<int>(
-            0,
-            (sum, r) => sum + (r.amount ?? 0),
-          )
-        : 0;
-
     final unreadCount =
-        w.mine('requests').where((r) => r['unread'] == true).length;
+        rows.where((r) => r['unread'] == true).length;
 
     // Filter daftar sesuai status terpilih
     final filteredRequests = _selectedStatusFilter != null
@@ -338,6 +418,15 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
             .where((it) => it.status == _selectedStatusFilter)
             .toList()
         : allRequests;
+
+    final totalItems = filteredRequests.length;
+    final totalPages = (totalItems / _itemsPerPage).ceil().clamp(1, 99999);
+    final currentPage = _currentPage.clamp(1, totalPages);
+    final startIndex = (currentPage - 1) * _itemsPerPage;
+    final endIndex = (startIndex + _itemsPerPage).clamp(0, totalItems);
+    final paginatedRequests = filteredRequests.isEmpty
+        ? <UniversalRequestModel>[]
+        : filteredRequests.sublist(startIndex, endIndex);
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -408,7 +497,7 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                 child: InkWell(
                   key: const Key('dedicated_calendar_button'),
                   borderRadius: BorderRadius.circular(11),
-                  onTap: () => widget.open(
+                  onTap: () => _navigateAndRefresh(
                     LeaveCalendarScreen(
                       api: widget.api,
                       workspace: widget.workspace,
@@ -448,7 +537,7 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
               child: InkWell(
                 key: const Key('dedicated_notification_button'),
                 borderRadius: BorderRadius.circular(11),
-                onTap: () => widget.open(
+                onTap: () => _navigateAndRefresh(
                   RequestNotificationsScreen(
                     api: widget.api,
                     workspace: widget.workspace,
@@ -491,7 +580,7 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
       body: SafeArea(
         top: false,
         child: RefreshIndicator(
-          onRefresh: widget.onRefresh,
+          onRefresh: _handleRefresh,
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
@@ -515,6 +604,7 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                                 SubmissionStatus.disetujui
                             ? null
                             : SubmissionStatus.disetujui;
+                        _currentPage = 1;
                       }),
                     ),
                   ),
@@ -532,6 +622,7 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                             _selectedStatusFilter == SubmissionStatus.menunggu
                                 ? null
                                 : SubmissionStatus.menunggu;
+                        _currentPage = 1;
                       }),
                     ),
                   ),
@@ -542,10 +633,10 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                 children: [
                   Expanded(
                     child: ModuleStatCard(
-                      title: 'Ditolak / Revisi',
-                      subTitle: 'perlu tindak',
-                      label: 'DITOLAK / REVISI',
-                      value: '$rejectedCount',
+                      title: 'Ditolak',
+                      subTitle: 'tidak disetujui',
+                      label: 'DITOLAK',
+                      value: '$onlyRejectedCount',
                       icon: Icons.highlight_off_rounded,
                       isSelected: _selectedStatusFilter == SubmissionStatus.ditolak,
                       onTap: () => setState(() {
@@ -553,29 +644,27 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                             _selectedStatusFilter == SubmissionStatus.ditolak
                                 ? null
                                 : SubmissionStatus.ditolak;
+                        _currentPage = 1;
                       }),
                     ),
                   ),
                   SizedBox(width: 10.w),
                   Expanded(
                     child: ModuleStatCard(
-                      title: widget.kind == SubmissionKind.generalAffair
-                          ? 'Total Permohonan'
-                          : _toTitleCase(widget.keyMetricLabel),
-                      subTitle: widget.kind == SubmissionKind.lembur
-                          ? 'jam disetujui'
-                          : widget.kind == SubmissionKind.pettyCash
-                              ? 'total nominal'
-                              : widget.kind == SubmissionKind.generalAffair
-                                  ? 'total diajukan'
-                                  : 'saldo aktif',
-                      label: widget.keyMetricLabel,
-                      value: widget.kind == SubmissionKind.pettyCash
-                          ? rupiah(pettyCashTotal)
-                          : widget.kind == SubmissionKind.generalAffair
-                              ? '${allRequests.length} Permohonan'
-                          : widget.keyMetricValue,
-                      icon: widget.keyMetricIcon,
+                      title: 'Perlu Revisi',
+                      subTitle: 'perlu tindak',
+                      label: 'PERLU REVISI',
+                      value: '$revisionCount',
+                      icon: Icons.edit_note_rounded,
+                      isSelected: _selectedStatusFilter ==
+                          SubmissionStatus.perluRevisi,
+                      onTap: () => setState(() {
+                        _selectedStatusFilter = _selectedStatusFilter ==
+                                SubmissionStatus.perluRevisi
+                            ? null
+                            : SubmissionStatus.perluRevisi;
+                        _currentPage = 1;
+                      }),
                     ),
                   ),
                 ],
@@ -590,14 +679,17 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                     child: SubmissionStatusFilterDropdown(
                       selected: _selectedStatusFilter,
                       onChanged: (status) {
-                        setState(() => _selectedStatusFilter = status);
+                        setState(() {
+                          _selectedStatusFilter = status;
+                          _currentPage = 1;
+                        });
                       },
                     ),
                   ),
                   SizedBox(width: 10.w),
                   _FilterIconButton(
                     icon: Icons.refresh_rounded,
-                    onTap: widget.onRefresh,
+                    onTap: _handleRefresh,
                   ),
                 ],
               ),
@@ -625,8 +717,9 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                         SizedBox(width: 8.w),
                         Flexible(
                           child: Text(
-                            'Riwayat Pengajuan ${widget.kind.displayName}',
-                            overflow: TextOverflow.ellipsis,
+                            widget.kind == SubmissionKind.medicalClaim
+                                ? 'Riwayat Pengajuan'
+                                : 'Riwayat Pengajuan ${widget.kind.displayName}',
                             style: TextStyle(
                               fontFamily: 'Inter',
                               fontSize: 15.sp,
@@ -725,34 +818,230 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                     ],
                   ),
                 )
-              else
-                ...filteredRequests.map(
+              else ...[
+                ...paginatedRequests.map(
                   (model) => Padding(
                     padding: EdgeInsets.only(bottom: 10.h),
                     child: UniversalRequestCard(
                       data: model,
-                      onDetailPressed: () => widget.open(
+                      onDetailPressed: () => _navigateAndRefresh(
                         RequestDetailScreen(
                           api: widget.api,
-                          request: model.toMap(),
+                          request: model.rawMap ?? model.toMap(),
                           own: true,
                         ),
                       ),
-                      onRevisePressed: () => widget.open(
+                      onRevisePressed: () => _navigateAndRefresh(
                         RequestForm(
                           api: widget.api,
-                          workspace: widget.workspace,
+                          workspace: w,
                           initialKind: model.kind.displayName,
-                          initialRequest: model.toMap(),
+                          initialRequest: model.rawMap ?? model.toMap(),
                           lockKindSelection: true,
                         ),
                       ),
                     ),
                   ),
                 ),
+                _buildPaginationBar(
+                  currentPage,
+                  totalPages,
+                  startIndex,
+                  endIndex,
+                  totalItems,
+                ),
+              ],
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildPaginationBar(
+    int currentPage,
+    int totalPages,
+    int startIndex,
+    int endIndex,
+    int totalItems,
+  ) {
+    if (totalItems <= _itemsPerPage) {
+      return const SizedBox.shrink();
+    }
+
+    final hasPrev = currentPage > 1;
+    final hasNext = currentPage < totalPages;
+
+    return Container(
+      key: const ValueKey('pagination_bar'),
+      margin: EdgeInsets.only(top: 4.h, bottom: 8.h),
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 0.8),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x060F172A),
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Tombol Sebelumnya
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              key: const ValueKey('pagination_prev_btn'),
+              onTap: hasPrev
+                  ? () => setState(() => _currentPage = currentPage - 1)
+                  : null,
+              borderRadius: BorderRadius.circular(8.r),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
+                decoration: BoxDecoration(
+                  color: hasPrev
+                      ? const Color(0xFFF8FAFC)
+                      : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(
+                    color: hasPrev
+                        ? const Color(0xFFCBD5E1)
+                        : const Color(0xFFE2E8F0),
+                    width: 0.8,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.chevron_left_rounded,
+                      size: 16.sp,
+                      color: hasPrev
+                          ? const Color(0xFF0F172A)
+                          : const Color(0xFF94A3B8),
+                    ),
+                    SizedBox(width: 2.w),
+                    Text(
+                      'Sebelumnya',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w600,
+                        color: hasPrev
+                            ? const Color(0xFF0F172A)
+                            : const Color(0xFF94A3B8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Info Halaman
+          Flexible(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 4.w),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF0FDFA),
+                      borderRadius: BorderRadius.circular(6.r),
+                      border: Border.all(
+                        color: const Color(0xFFCCFBF1),
+                        width: 0.8,
+                      ),
+                    ),
+                    child: Text(
+                      'Halaman $currentPage dari $totalPages',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF0F766E),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 2.h),
+                  Text(
+                    '${startIndex + 1}–$endIndex dari $totalItems',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 10.sp,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFF64748B),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Tombol Selanjutnya
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              key: const ValueKey('pagination_next_btn'),
+              onTap: hasNext
+                  ? () => setState(() => _currentPage = currentPage + 1)
+                  : null,
+              borderRadius: BorderRadius.circular(8.r),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
+                decoration: BoxDecoration(
+                  color: hasNext
+                      ? const Color(0xFFF8FAFC)
+                      : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(
+                    color: hasNext
+                        ? const Color(0xFFCBD5E1)
+                        : const Color(0xFFE2E8F0),
+                    width: 0.8,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Selanjutnya',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w600,
+                        color: hasNext
+                            ? const Color(0xFF0F172A)
+                            : const Color(0xFF94A3B8),
+                      ),
+                    ),
+                    SizedBox(width: 2.w),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 16.sp,
+                      color: hasNext
+                          ? const Color(0xFF0F172A)
+                          : const Color(0xFF94A3B8),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

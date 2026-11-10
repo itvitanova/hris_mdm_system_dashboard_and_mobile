@@ -76,124 +76,128 @@ class UniversalRequestCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // BARIS 1: Icon Squircle + Judul & Subtitle + Status Pill di Pojok Kanan Atas
+                    // BARIS 1: Header Rata Kanan-Kiri (Blok Identitas di Kiri, Badge Status Menempel di Kanan)
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Mint Icon Box 38x38
-                        Container(
-                          width: 38.w,
-                          height: 38.w,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF0FDFA),
-                            borderRadius: BorderRadius.circular(10.r),
-                            border: Border.all(
-                              color: const Color(0xFFCCFBF1),
-                              width: 0.8,
-                            ),
-                          ),
-                          alignment: Alignment.center,
-                          child: Icon(
-                            kindConfig.icon,
-                            size: 18.w,
-                            color: const Color(0xFF0F766E),
-                          ),
-                        ),
-                        SizedBox(width: 12.w),
-
-                        // Title & Metadata
+                        // Blok Kiri: Icon Squircle 38x38 + Judul, Subtitle & Nama Pemohon
                         Expanded(
-                          child: Column(
+                          child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                data.title,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 14.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF0F172A),
-                                  height: 1.3,
-                                  letterSpacing: -0.2,
+                              Container(
+                                width: 38.w,
+                                height: 38.w,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF0FDFA),
+                                  borderRadius: BorderRadius.circular(10.r),
+                                  border: Border.all(
+                                    color: const Color(0xFFCCFBF1),
+                                    width: 0.8,
+                                  ),
+                                ),
+                                alignment: Alignment.center,
+                                child: Icon(
+                                  kindConfig.icon,
+                                  size: 18.w,
+                                  color: const Color(0xFF0F766E),
                                 ),
                               ),
-                              SizedBox(height: 3.h),
-                              // Baris Metadata Ringkas & Tenang
-                              Text(
-                                [
-                                  '${kindConfig.typeTitle} · ${kindConfig.metricTag(data)}',
-                                  if (kindConfig.secondaryMeta(data) != null)
-                                    kindConfig.secondaryMeta(data)!,
-                                ].join(' '),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color(0xFF64748B),
-                                  letterSpacing: 0.1,
-                                ),
-                              ),
-                              if (showApplicant && data.employeeName.isNotEmpty) ...[
-                                SizedBox(height: 5.h),
-                                Row(
+                              SizedBox(width: 12.w),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Icon(
-                                      Icons.person_outline_rounded,
-                                      size: 13.w,
-                                      color: const Color(0xFF0F766E),
-                                    ),
-                                    SizedBox(width: 4.w),
-                                    Expanded(
-                                      child: Text(
-                                        data.employeeName,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          fontFamily: 'Inter',
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w600,
-                                          color: Color(0xFF0F766E),
-                                        ),
+                                    Text(
+                                      data.title,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontFamily: 'Inter',
+                                        fontSize: 14.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: Color(0xFF0F172A),
+                                        height: 1.3,
+                                        letterSpacing: -0.2,
                                       ),
                                     ),
+                                    SizedBox(height: 3.h),
+                                    // Baris Metadata Ringkas & Tenang
+                                    Text(
+                                      [
+                                        '${kindConfig.typeTitle} · ${kindConfig.metricTag(data)}',
+                                        if (kindConfig.secondaryMeta(data) != null)
+                                          kindConfig.secondaryMeta(data)!,
+                                      ].join(' '),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontFamily: 'Inter',
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
+                                        color: Color(0xFF64748B),
+                                        letterSpacing: 0.1,
+                                      ),
+                                    ),
+                                    if (showApplicant && data.employeeName.isNotEmpty) ...[
+                                      SizedBox(height: 5.h),
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.person_outline_rounded,
+                                            size: 13.w,
+                                            color: const Color(0xFF0F766E),
+                                          ),
+                                          SizedBox(width: 4.w),
+                                          Expanded(
+                                            child: Text(
+                                              data.employeeName,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                fontFamily: 'Inter',
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w600,
+                                                color: Color(0xFF0F766E),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ],
                                 ),
-                              ],
+                              ),
                             ],
                           ),
                         ),
-                        SizedBox(width: 8.w),
+                        SizedBox(width: 10.w),
 
-                        // Status Pill di Pojok Kanan Atas
-                        Flexible(
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 8.w,
-                              vertical: 3.5.h,
+                        // Blok Kanan: Status Pill Rata di Pojok Kanan Atas Kartu
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8.w,
+                            vertical: 3.5.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: statusConfig.badgeBg,
+                            borderRadius: BorderRadius.circular(6.r),
+                            border: Border.all(
+                              color: statusConfig.badgeBorder,
+                              width: 0.8,
                             ),
-                            decoration: BoxDecoration(
-                              color: statusConfig.badgeBg,
-                              borderRadius: BorderRadius.circular(6.r),
-                              border: Border.all(
-                                color: statusConfig.badgeBorder,
-                                width: 0.8,
-                              ),
-                            ),
-                            child: Text(
-                              statusConfig.label,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: statusConfig.textColor,
-                                letterSpacing: 0.2,
-                              ),
+                          ),
+                          child: Text(
+                            statusConfig.label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: statusConfig.textColor,
+                              letterSpacing: 0.2,
                             ),
                           ),
                         ),

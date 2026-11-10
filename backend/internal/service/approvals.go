@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-var requestKinds = map[string]bool{"Cuti": true, "Reimbursement": true, "Petty Cash": true, "General Affair": true, "Lembur": true}
+var requestKinds = map[string]bool{"Cuti": true, "Izin": true, "Reimbursement": true, "Petty Cash": true, "General Affair": true, "Lembur": true}
 
 func defaultPolicy(kind string) domain.ApprovalPolicy {
 	p := domain.ApprovalPolicy{ID: kind, Stages: []domain.ApprovalStage{{Name: "Persetujuan atasan", Source: "manager", Level: 1, Mode: "all"}}}
@@ -26,7 +26,7 @@ func (a *App) ApprovalPolicies(ctx context.Context, actor domain.Actor) ([]domai
 	if err := a.Store.List(ctx, "approval_policies", &saved); err != nil {
 		return nil, err
 	}
-	for _, kind := range []string{"Cuti", "Reimbursement", "Petty Cash", "General Affair", "Lembur"} {
+	for _, kind := range []string{"Cuti", "Izin", "Reimbursement", "Petty Cash", "General Affair", "Lembur"} {
 		p := defaultPolicy(kind)
 		for _, v := range saved {
 			if v.ID == kind {

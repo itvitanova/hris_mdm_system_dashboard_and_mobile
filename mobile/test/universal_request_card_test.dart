@@ -145,7 +145,7 @@ void main() {
       tester,
     ) async {
       final workspace = Workspace({
-        'requests': [],
+        'requests': mockUniversalRequests.map((m) => m.toMap()).toList(),
         'employees': [],
         'attendancePolicy': {},
       });
@@ -166,9 +166,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // 5 Service Cards
+      // 6 Service Cards
       expect(find.text('Katalog Pengajuan'), findsOneWidget);
-      expect(find.text('Cuti & Izin'), findsOneWidget);
+      expect(find.text('Cuti'), findsWidgets);
+      expect(find.text('Izin'), findsWidgets);
       expect(find.text('Lembur'), findsOneWidget);
       expect(find.text('Reimbursement'), findsOneWidget);
       expect(find.text('Petty Cash'), findsOneWidget);

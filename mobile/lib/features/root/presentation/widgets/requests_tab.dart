@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/workspace.dart';
@@ -7,9 +8,14 @@ import '../../../home/leave_calendar_screen.dart';
 import '../../../requests/request_form.dart';
 import '../../../requests/request_detail.dart';
 import '../../../requests/request_notifications.dart';
+import '../../../requests/presentation/bloc/request_bloc.dart';
+import '../../../requests/presentation/bloc/request_event.dart';
+import '../../../requests/presentation/bloc/request_state.dart';
 import '../../../requests/presentation/widgets/universal_request_card/universal_request_card.dart';
 import '../../../requests/presentation/widgets/services_hub/service_module_card.dart';
 import '../../../requests/presentation/pages/modules/dedicated_module_screen.dart';
+import '../../../home/presentation/bloc/workspace_bloc.dart';
+import '../../../home/presentation/bloc/workspace_state.dart';
 
 /// Halaman Hub Pengajuan Utama (Tab 'Pengajuan' di Bottom Navbar)
 /// Berisi Hero Action Banner, Bento Layout Simetris 5 Modul Layanan Mandiri,
@@ -36,9 +42,49 @@ class _RequestsTabState extends State<RequestsTab> {
   String _selectedFilter = 'Semua';
 
   ApiClient get api => widget.api;
-  Workspace get w => widget.workspace;
+  Workspace get w {
+    try {
+      final state = BlocProvider.of<WorkspaceBloc>(context).state;
+      if (state is WorkspaceLoaded) {
+        return state.workspace;
+      }
+    } catch (_) {}
+    return widget.workspace;
+  }
   Future<void> Function() get onRefresh => widget.onRefresh;
   Future<void> Function(Widget) get open => widget.open;
+
+  RequestBloc? _tryGetRequestBloc(BuildContext context) {
+    try {
+      return BlocProvider.of<RequestBloc>(context, listen: false);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _tryGetRequestBloc(context)?.add(const RequestLoadRequested());
+      }
+    });
+  }
+
+  Future<void> _handleRefresh() async {
+    await widget.onRefresh();
+    if (mounted) {
+      _tryGetRequestBloc(context)?.add(const RequestLoadRequested());
+    }
+  }
+
+  Future<void> _navigateAndRefresh(Widget target) async {
+    await open(target);
+    if (mounted) {
+      await _handleRefresh();
+    }
+  }
 
   Widget _buildHeroActionBanner() {
     return Container(
@@ -157,7 +203,7 @@ class _RequestsTabState extends State<RequestsTab> {
             Material(
               color: Colors.transparent,
               child: InkWell(
-                onTap: () => open(ApprovalsScreen(api: api)),
+                onTap: () => _navigateAndRefresh(ApprovalsScreen(api: api)),
                 borderRadius: BorderRadius.circular(5.r),
                 child: Container(
                   padding: EdgeInsets.symmetric(
@@ -277,7 +323,22 @@ class _RequestsTabState extends State<RequestsTab> {
 
   @override
   Widget build(BuildContext context) {
-    final rows = w.mine('requests');
+    final bloc = _tryGetRequestBloc(context);
+    if (bloc != null) {
+      return BlocBuilder<RequestBloc, RequestState>(
+        bloc: bloc,
+        builder: (context, state) {
+          final rows = (state is RequestsLoaded && state.activeKind == null)
+              ? state.requests
+              : w.mine('requests');
+          return _buildScaffold(context, rows);
+        },
+      );
+    }
+    return _buildScaffold(context, w.mine('requests'));
+  }
+
+  Widget _buildScaffold(BuildContext context, List<Map<String, dynamic>> rows) {
     final unreadCount = rows.where((r) => r['unread'] == true).length;
 
     // Data request riil karyawan dari workspace
@@ -285,6 +346,64 @@ class _RequestsTabState extends State<RequestsTab> {
 
     // Konversi ke model universal
     final allModels = allRawItems.map((r) => UniversalRequestModel.fromMap(r)).toList();
+
+    // Kalkulasi metriks dinamis per modul
+    final cutiRequests = allModels
+        .where((m) => m.kind == SubmissionKind.cuti)
+        .toList();
+    final izinRequests = allModels
+        .where((m) => m.kind == SubmissionKind.izin)
+        .toList();
+    final lemburRequests = allModels
+        .where((m) => m.kind == SubmissionKind.lembur)
+        .toList();
+    final reimburseRequests = allModels
+        .where((m) => m.kind == SubmissionKind.reimbursement)
+        .toList();
+    final medicalRequests = allModels
+        .where((m) => m.kind == SubmissionKind.medicalClaim)
+        .toList();
+    final pettyCashRequests = allModels
+        .where((m) => m.kind == SubmissionKind.pettyCash)
+        .toList();
+    final gaRequests = allModels
+        .where((m) => m.kind == SubmissionKind.generalAffair)
+        .toList();
+
+    // 1. Cuti: Sisa kuota aktif (Base saldo kuota dikurangi pengajuan cuti berstatus Menunggu)
+    final baseLeaveBalance = (w.employee['leaveBalance'] as num?)?.toInt() ?? 12;
+    final pendingLeaveDays = cutiRequests
+        .where((r) => r.status == SubmissionStatus.menunggu)
+        .fold<int>(0, (sum, r) => sum + (r.days ?? 0));
+    final currentLeaveBalance = (baseLeaveBalance - pendingLeaveDays).clamp(0, 999);
+    final cutiMetricStr = '$currentLeaveBalance Hari';
+
+    // 2. Lembur: Total durasi jam lembur yang disetujui
+    final totalLemburHours = lemburRequests
+        .where((r) => r.status == SubmissionStatus.disetujui)
+        .fold<int>(0, (sum, r) => sum + (r.hours ?? 0));
+    final lemburMetricStr = '$totalLemburHours Jam';
+
+    // 3. Reimbursement: Total nominal klaim yang disetujui
+    final totalReimburseAmount = reimburseRequests
+        .where((r) => r.status == SubmissionStatus.disetujui)
+        .fold<int>(0, (sum, r) => sum + (r.amount ?? 0));
+    final reimburseMetricStr = rupiah(totalReimburseAmount);
+
+    // 4. Medical Claim: Total nominal klaim yang disetujui
+    final totalMedicalAmount = medicalRequests
+        .where((r) => r.status == SubmissionStatus.disetujui)
+        .fold<int>(0, (sum, r) => sum + (r.amount ?? 0));
+    final medicalMetricStr = rupiah(totalMedicalAmount);
+
+    // 5. Petty Cash: Jumlah permohonan kas kecil yang diajukan
+    final pettyCashMetricStr = '${pettyCashRequests.length} Pengajuan';
+
+    // 6. GA: Jumlah permohonan sarana GA aktif / terkini
+    final activeGaCount = gaRequests
+        .where((r) => r.status == SubmissionStatus.menunggu || r.status == SubmissionStatus.perluRevisi)
+        .length;
+    final gaMetricStr = activeGaCount > 0 ? '$activeGaCount Aktif' : '${gaRequests.length} Pengajuan';
 
     // Terapkan filter status
     final filteredIndices = <int>[];
@@ -321,14 +440,14 @@ class _RequestsTabState extends State<RequestsTab> {
         ),
         child: UniversalRequestCard(
           data: model,
-          onDetailPressed: () => open(
+          onDetailPressed: () => _navigateAndRefresh(
             RequestDetailScreen(
               api: api,
               request: raw,
               own: true,
             ),
           ),
-          onRevisePressed: () => open(
+          onRevisePressed: () => _navigateAndRefresh(
             RequestForm(
               api: api,
               workspace: w,
@@ -377,7 +496,7 @@ class _RequestsTabState extends State<RequestsTab> {
           ],
         ),
         actions: [
-          // 1. Kalender Cuti (Smooth Soft-Slate Button)
+          // 1. Kalender Ulang Tahun (Smooth Soft-Slate Button)
           Container(
             width: 38.w,
             height: 38.w,
@@ -401,9 +520,9 @@ class _RequestsTabState extends State<RequestsTab> {
               child: InkWell(
                 key: const Key('requests_calendar_button'),
                 borderRadius: BorderRadius.circular(11.r),
-                onTap: () => open(LeaveCalendarScreen(api: api, workspace: w)),
+                onTap: () => _navigateAndRefresh(LeaveCalendarScreen(api: api, workspace: w)),
                 child: Icon(
-                  Icons.calendar_month_outlined,
+                  Icons.cake_outlined,
                   size: 19.w,
                   color: const Color(0xFF334155),
                 ),
@@ -436,7 +555,7 @@ class _RequestsTabState extends State<RequestsTab> {
                 key: const Key('requests_notification_button'),
                 borderRadius: BorderRadius.circular(11.r),
                 onTap: () =>
-                    open(RequestNotificationsScreen(api: api, workspace: w)),
+                    _navigateAndRefresh(RequestNotificationsScreen(api: api, workspace: w)),
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
@@ -474,7 +593,7 @@ class _RequestsTabState extends State<RequestsTab> {
         top: false,
         bottom: false,
         child: RefreshIndicator(
-          onRefresh: onRefresh,
+          onRefresh: _handleRefresh,
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 0),
@@ -507,30 +626,7 @@ class _RequestsTabState extends State<RequestsTab> {
               ),
               SizedBox(height: 12.h),
 
-              // 1. Featured Card: Cuti & Izin (Full Width Horizontal)
-              ServiceModuleCard(
-                isFeatured: true,
-                title: 'Cuti & Izin',
-                metricTag: 'Layanan Utama',
-                description: 'Tahunan, cuti khusus, sakit & izin kerja',
-                icon: Icons.event_available_outlined,
-                onTap: () => open(
-                  DedicatedModuleScreen(
-                    kind: SubmissionKind.cuti,
-                    moduleTitle: 'Pengajuan Cuti & Izin',
-                    keyMetricLabel: 'SISA KUOTA',
-                    keyMetricValue: '10 Hari',
-                    keyMetricIcon: Icons.event_available_outlined,
-                    api: api,
-                    workspace: w,
-                    open: open,
-                    onRefresh: onRefresh,
-                  ),
-                ),
-              ),
-              SizedBox(height: 12.h),
-
-              // 2. 2x2 Grid Seimbang: Lembur, Reimbursement, Petty Cash, General Affair
+              // 6 Modul Layanan Mandiri (Grid Seimbang 2 Kolom)
               LayoutBuilder(
                 builder: (context, constraints) {
                   final spacing = 12.w;
@@ -540,7 +636,55 @@ class _RequestsTabState extends State<RequestsTab> {
                     spacing: spacing,
                     runSpacing: spacing,
                     children: [
-                      // 2. Lembur
+                      // 1. Cuti
+                      SizedBox(
+                        width: itemWidth,
+                        height: itemHeight,
+                        child: ServiceModuleCard(
+                          title: 'Cuti',
+                          metricTag: 'Cuti Tahunan',
+                          description: 'Cuti tahunan & urusan penting',
+                          icon: Icons.event_available_outlined,
+                          onTap: () => _navigateAndRefresh(
+                            DedicatedModuleScreen(
+                              kind: SubmissionKind.cuti,
+                              moduleTitle: 'Pengajuan Cuti',
+                              keyMetricLabel: 'SISA KUOTA',
+                              keyMetricValue: cutiMetricStr,
+                              keyMetricIcon: Icons.event_available_outlined,
+                              api: api,
+                              workspace: w,
+                              open: open,
+                              onRefresh: _handleRefresh,
+                            ),
+                          ),
+                        ),
+                      ),
+                      // 2. Izin
+                      SizedBox(
+                        width: itemWidth,
+                        height: itemHeight,
+                        child: ServiceModuleCard(
+                          title: 'Izin',
+                          metricTag: 'Surat Izin',
+                          description: 'Sakit & dispensasi kerja',
+                          icon: Icons.medical_services_outlined,
+                          onTap: () => _navigateAndRefresh(
+                            DedicatedModuleScreen(
+                              kind: SubmissionKind.izin,
+                              moduleTitle: 'Pengajuan Izin',
+                              keyMetricLabel: 'TOTAL IZIN',
+                              keyMetricValue: '${izinRequests.length} Pengajuan',
+                              keyMetricIcon: Icons.medical_services_outlined,
+                              api: api,
+                              workspace: w,
+                              open: open,
+                              onRefresh: _handleRefresh,
+                            ),
+                          ),
+                        ),
+                      ),
+                      // 3. Lembur
                       SizedBox(
                         width: itemWidth,
                         height: itemHeight,
@@ -549,22 +693,22 @@ class _RequestsTabState extends State<RequestsTab> {
                           metricTag: 'Kompensasi',
                           description: 'Tugas lembur & kompensasi',
                           icon: Icons.access_time_rounded,
-                          onTap: () => open(
+                          onTap: () => _navigateAndRefresh(
                             DedicatedModuleScreen(
                               kind: SubmissionKind.lembur,
                               moduleTitle: 'Pengajuan Lembur',
                               keyMetricLabel: 'TOTAL LEMBUR',
-                              keyMetricValue: '4 Jam',
+                              keyMetricValue: lemburMetricStr,
                               keyMetricIcon: Icons.access_time_rounded,
                               api: api,
                               workspace: w,
                               open: open,
-                              onRefresh: onRefresh,
+                              onRefresh: _handleRefresh,
                             ),
                           ),
                         ),
                       ),
-                      // 3. Reimbursement
+                      // 4. Reimbursement
                       SizedBox(
                         width: itemWidth,
                         height: itemHeight,
@@ -573,22 +717,46 @@ class _RequestsTabState extends State<RequestsTab> {
                           metricTag: 'Klaim Biaya',
                           description: 'Transport, makan & klien',
                           icon: Icons.receipt_long_rounded,
-                          onTap: () => open(
+                          onTap: () => _navigateAndRefresh(
                             DedicatedModuleScreen(
                               kind: SubmissionKind.reimbursement,
                               moduleTitle: 'Klaim Reimbursement',
                               keyMetricLabel: 'TOTAL KLAIM',
-                              keyMetricValue: 'Rp 850K',
+                              keyMetricValue: reimburseMetricStr,
                               keyMetricIcon: Icons.receipt_long_rounded,
                               api: api,
                               workspace: w,
                               open: open,
-                              onRefresh: onRefresh,
+                              onRefresh: _handleRefresh,
                             ),
                           ),
                         ),
                       ),
-                      // 4. Petty Cash
+                      // 5. Medical Claim
+                      SizedBox(
+                        width: itemWidth,
+                        height: itemHeight,
+                        child: ServiceModuleCard(
+                          title: 'Medical Claim',
+                          metricTag: 'Plafon Medis',
+                          description: 'Rawat jalan & pengobatan',
+                          icon: Icons.health_and_safety_outlined,
+                          onTap: () => _navigateAndRefresh(
+                            DedicatedModuleScreen(
+                              kind: SubmissionKind.medicalClaim,
+                              moduleTitle: 'Medical Claim',
+                              keyMetricLabel: 'TOTAL KLAIM',
+                              keyMetricValue: medicalMetricStr,
+                              keyMetricIcon: Icons.health_and_safety_outlined,
+                              api: api,
+                              workspace: w,
+                              open: open,
+                              onRefresh: _handleRefresh,
+                            ),
+                          ),
+                        ),
+                      ),
+                      // 6. Petty Cash
                       SizedBox(
                         width: itemWidth,
                         height: itemHeight,
@@ -597,41 +765,41 @@ class _RequestsTabState extends State<RequestsTab> {
                           metricTag: 'Kas Kecil',
                           description: 'Permohonan dana operasional',
                           icon: Icons.payments_outlined,
-                          onTap: () => open(
+                          onTap: () => _navigateAndRefresh(
                             DedicatedModuleScreen(
                               kind: SubmissionKind.pettyCash,
                               moduleTitle: 'Pengajuan Petty Cash',
-                              keyMetricLabel: 'KAS KECIL',
-                              keyMetricValue: 'Rp 375K',
+                              keyMetricLabel: 'TOTAL PENGAJUAN',
+                              keyMetricValue: pettyCashMetricStr,
                               keyMetricIcon: Icons.payments_outlined,
                               api: api,
                               workspace: w,
                               open: open,
-                              onRefresh: onRefresh,
+                              onRefresh: _handleRefresh,
                             ),
                           ),
                         ),
                       ),
-                      // 5. General Affair
+                      // 7. General Affair (Featured Full-Width Card)
                       SizedBox(
-                        width: itemWidth,
-                        height: itemHeight,
+                        width: constraints.maxWidth,
                         child: ServiceModuleCard(
                           title: 'General Affair',
                           metricTag: 'Fasilitas & GA',
-                          description: 'Pengadaan barang & sarana',
+                          description: 'Pengadaan barang, logistik & sarana kantor',
                           icon: Icons.inventory_2_outlined,
-                          onTap: () => open(
+                          isFeatured: true,
+                          onTap: () => _navigateAndRefresh(
                             DedicatedModuleScreen(
                               kind: SubmissionKind.generalAffair,
                               moduleTitle: 'General Affair',
                               keyMetricLabel: 'PERMOHONAN GA',
-                              keyMetricValue: '1 Aktif',
+                              keyMetricValue: gaMetricStr,
                               keyMetricIcon: Icons.inventory_2_outlined,
                               api: api,
                               workspace: w,
                               open: open,
-                              onRefresh: onRefresh,
+                              onRefresh: _handleRefresh,
                             ),
                           ),
                         ),
@@ -645,29 +813,14 @@ class _RequestsTabState extends State<RequestsTab> {
               SizedBox(height: 18.h),
 
               // ==================== 2. PENGAJUAN TERKINI ====================
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Pengajuan Terkini',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF0F172A),
-                        letterSpacing: -0.2,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    '${filteredIndices.length} Pengajuan',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF64748B),
-                    ),
-                  ),
-                ],
+              const Text(
+                'Pengajuan Terkini',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF0F172A),
+                  letterSpacing: -0.2,
+                ),
               ),
               SizedBox(height: 4.h),
               const Text(

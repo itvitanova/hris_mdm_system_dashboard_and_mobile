@@ -67,16 +67,16 @@ func (a *App) SubmitRequest(ctx context.Context, actor domain.Actor, input domai
 		if emp.Status == "Nonaktif" {
 			return ErrForbidden
 		}
-		r := domain.Request{ID: ID(), Version: 2, Revision: 1, EmployeeID: emp.ID, EmployeeName: emp.Name, Kind: input.Kind, Title: strings.TrimSpace(input.Title), Description: strings.TrimSpace(input.Description), StartDate: input.StartDate, EndDate: input.EndDate, Amount: input.Amount, Hours: input.Hours, CreatedAt: now(), Status: "Menunggu", History: []domain.ApprovalEvent{}}
+		r := domain.Request{ID: ID(), Version: 2, Revision: 1, EmployeeID: emp.ID, EmployeeName: emp.Name, Kind: input.Kind, Title: strings.TrimSpace(input.Title), Description: strings.TrimSpace(input.Description), StartDate: input.StartDate, EndDate: input.EndDate, Amount: input.Amount, Hours: input.Hours, CreatedAt: now(), Status: "Menunggu", History: []domain.ApprovalEvent{}, Category: input.Category, Priority: input.Priority, Location: input.Location, AttachmentName: input.AttachmentName, PermissionType: input.PermissionType}
 		if input.ID != "" {
 			var old domain.Request
 			if s.Get(ctx, "requests", input.ID, &old) != nil || old.EmployeeID != actor.EmployeeID {
 				return ErrForbidden
 			}
-			if old.Status != "Perlu revisi" || old.Version != 2 {
+			if strings.ToLower(old.Status) != "perlu revisi" {
 				return errors.New("hanya pengajuan yang diminta revisi dapat dikirim ulang")
 			}
-			if input.Revision != old.Revision {
+			if input.Revision != 0 && input.Revision != old.Revision {
 				return errors.New("pengajuan berubah; segarkan data sebelum mengirim ulang")
 			}
 			r.ID = old.ID
@@ -140,6 +140,11 @@ func (a *App) SubmitRequest(ctx context.Context, actor domain.Actor, input domai
 			if r.Days > emp.LeaveBalance {
 				return errors.New("saldo cuti tidak cukup")
 			}
+		}
+		if r.Kind == "Izin" {
+			r.Amount = 0
+			r.Hours = 0
+			r.Days = int(end.Sub(start).Hours()/24) + 1
 		}
 		steps, err := resolveSteps(ctx, s, emp, r.Kind)
 		if err != nil {

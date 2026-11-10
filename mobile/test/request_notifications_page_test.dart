@@ -161,5 +161,40 @@ void main() {
       // Verified opened RequestDetailScreen
       expect(find.byType(RequestDetailScreen), findsOneWidget);
     });
+
+    testWidgets('rejected notifications do not display revision action ("Perbaiki Sekarang")', (
+      tester,
+    ) async {
+      final workspace = Workspace({
+        'requests': [
+          {
+            'id': 'REQ-REJECTED',
+            'kind': 'Petty Cash',
+            'title': 'Beli Kebutuhan Kantor',
+            'status': 'Ditolak',
+            'unread': true,
+            'reviewNote': 'Kebutuhan tidak sesuai anggaran bulan ini',
+            'reviewedBy': 'Manager Ops',
+            'updatedAt': DateTime.now().toIso8601String(),
+          },
+        ],
+        'employees': [],
+      });
+
+      await tester.pumpWidget(
+        wrapWithScreenUtil(
+          RequestNotificationsScreen(
+            api: ApiClient(),
+            workspace: workspace,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Pengajuan Petty Cash Ditolak'), findsOneWidget);
+      expect(find.textContaining('Catatan Peninjau'), findsOneWidget);
+      // Pastikan tombol revisi "Perbaiki Sekarang" TIDAK muncul jika ditolak
+      expect(find.text('Perbaiki Sekarang'), findsNothing);
+    });
   });
 }

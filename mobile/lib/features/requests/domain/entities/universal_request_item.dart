@@ -26,6 +26,8 @@ class UniversalRequestModel {
   final int? transactionCount;
   final String? bankAccount;
   final int? leaveBalance;
+  final int? revision;
+  final Map<String, dynamic>? rawMap;
 
   const UniversalRequestModel({
     required this.id,
@@ -45,6 +47,8 @@ class UniversalRequestModel {
     this.transactionCount,
     this.bankAccount,
     this.leaveBalance,
+    this.revision,
+    this.rawMap,
   });
 
   factory UniversalRequestModel.fromMap(Map<String, dynamic> map) {
@@ -67,6 +71,25 @@ class UniversalRequestModel {
     final kindStr = (map['kind'] ?? map['type'])?.toString() ?? 'Cuti';
     final statusStr = map['status']?.toString() ?? 'Menunggu';
 
+    int? resolvedAmount() {
+      final direct = (map['amount'] as num?)?.toInt() ??
+          int.tryParse(map['amount']?.toString() ?? '');
+      if (direct != null && direct > 0) return direct;
+      if (map['items'] is List) {
+        final sum = (map['items'] as List).fold<int>(0, (acc, item) {
+          if (item is Map) {
+            final a = (item['amount'] as num?)?.toInt() ??
+                int.tryParse(item['amount']?.toString() ?? '') ??
+                0;
+            return acc + a;
+          }
+          return acc;
+        });
+        if (sum > 0) return sum;
+      }
+      return direct;
+    }
+
     return UniversalRequestModel(
       id: map['id']?.toString() ?? 'REQ-${DateTime.now().millisecondsSinceEpoch}',
       kind: SubmissionKind.fromString(kindStr),
@@ -75,9 +98,12 @@ class UniversalRequestModel {
       status: SubmissionStatus.fromString(statusStr),
       startDate: parseDate(map['startDate']),
       endDate: parseNullableDate(map['endDate']),
-      days: (map['days'] as num?)?.toInt(),
-      hours: (map['hours'] as num?)?.toInt(),
-      amount: (map['amount'] as num?)?.toInt(),
+      days: (map['days'] as num?)?.toInt() ??
+          int.tryParse(map['days']?.toString() ?? ''),
+      hours: (map['hours'] as num?)?.toInt() ??
+          int.tryParse(map['hours']?.toString() ?? '') ??
+          (double.tryParse(map['hours']?.toString() ?? '')?.toInt()),
+      amount: resolvedAmount(),
       employeeName: map['employeeName']?.toString() ?? 'Karyawan',
       pendingWith: map['pendingWith']?.toString(),
       reviewedBy: map['reviewedBy']?.toString(),
@@ -86,11 +112,15 @@ class UniversalRequestModel {
           (map['items'] is List ? (map['items'] as List).length : null),
       bankAccount: map['bankAccount']?.toString(),
       leaveBalance: (map['leaveBalance'] as num?)?.toInt(),
+      revision: (map['revision'] as num?)?.toInt() ?? int.tryParse(map['revision']?.toString() ?? ''),
+      rawMap: map,
     );
   }
 
   Map<String, dynamic> toMap() {
+    final base = rawMap != null ? Map<String, dynamic>.from(rawMap!) : <String, dynamic>{};
     return {
+      ...base,
       'id': id,
       'kind': kind.displayName,
       'title': title,
@@ -108,6 +138,7 @@ class UniversalRequestModel {
       if (reviewNote != null) 'reviewNote': reviewNote,
       if (leaveBalance != null) 'leaveBalance': leaveBalance,
       if (transactionCount != null) 'transactionCount': transactionCount,
+      if (revision != null) 'revision': revision,
       'unread': false,
     };
   }

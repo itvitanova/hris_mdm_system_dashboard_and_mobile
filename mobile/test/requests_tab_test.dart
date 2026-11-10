@@ -46,22 +46,24 @@ void main() {
         expect(find.text('Pusat Layanan Mandiri'), findsOneWidget);
         expect(find.text('Pusat Persetujuan'), findsOneWidget);
 
-        // 2. Verify 5 Service Cards in catalog (1 featured + 4 grid)
+        // 2. Verify Service Cards in catalog (1 featured + 6 grid)
         expect(find.text('Katalog Pengajuan'), findsOneWidget);
-        expect(find.byType(ServiceModuleCard), findsNWidgets(5));
-        expect(find.text('Cuti & Izin'), findsOneWidget);
+        expect(find.byType(ServiceModuleCard), findsNWidgets(7));
+        expect(find.text('Cuti'), findsOneWidget);
+        expect(find.text('Izin'), findsOneWidget);
         expect(find.text('Lembur'), findsOneWidget);
         expect(find.text('Reimbursement'), findsOneWidget);
+        expect(find.text('Medical Claim'), findsOneWidget);
         expect(find.text('Petty Cash'), findsOneWidget);
         expect(find.text('General Affair'), findsOneWidget);
 
-        // 3. Tap Cuti & Izin card -> routes to DedicatedModuleScreen
-        await tester.tap(find.text('Cuti & Izin'));
+        // 3. Tap Cuti card -> routes to DedicatedModuleScreen
+        await tester.tap(find.text('Cuti'));
         await tester.pumpAndSettle();
 
         expect(openedWidget, isA<DedicatedModuleScreen>());
         final screen = openedWidget as DedicatedModuleScreen;
-        expect(screen.moduleTitle, 'Pengajuan Cuti & Izin');
+        expect(screen.moduleTitle, 'Pengajuan Cuti');
         expect(screen.keyMetricLabel, 'SISA KUOTA');
 
         // 4. Verify Pengajuan Terkini section & Segmented Filter Bar
