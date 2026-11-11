@@ -270,7 +270,13 @@ class CompactAttendanceCard extends StatelessWidget {
               label: FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Text(
-                  daily.label,
+                  isEn
+                      ? (daily.completed
+                          ? 'Attendance Completed'
+                          : daily.checkedIn
+                              ? 'Check Out'
+                              : 'Check In')
+                      : daily.label,
                   maxLines: 1,
                   style: TextStyle(
                     fontFamily: 'Inter',

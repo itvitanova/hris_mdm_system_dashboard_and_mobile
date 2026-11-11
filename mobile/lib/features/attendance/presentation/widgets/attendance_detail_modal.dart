@@ -3,40 +3,69 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/workspace.dart';
+import '../../../root/presentation/widgets/language_swap_button.dart';
 
 /// Membuka Modal Detail Kehadiran lengkap dengan informasi verifikasi MDM,
 /// peta koordinat, kebijakan lokasi penugasan, dan status kepulangan.
 void showAttendanceDetailModal(
   BuildContext context,
-  Map<String, dynamic> raw,
-) {
+  Map<String, dynamic> raw, {
+  AppLanguage? language,
+}) {
+  final activeLanguage = language ?? AppLanguageController.currentLanguage;
+  final isEn = activeLanguage == AppLanguage.en;
   final dateStr = text(raw, 'date');
   DateTime? dt = DateTime.tryParse(dateStr);
   String formattedDate = dateStr;
   if (dt != null) {
-    const days = [
-      'Senin',
-      'Selasa',
-      'Rabu',
-      'Kamis',
-      'Jumat',
-      'Sabtu',
-      'Minggu',
-    ];
-    const months = [
-      'Januari',
-      'Februari',
-      'Maret',
-      'April',
-      'Mei',
-      'Juni',
-      'Juli',
-      'Agustus',
-      'September',
-      'Oktober',
-      'November',
-      'Desember',
-    ];
+    final days = isEn
+        ? const [
+            'Monday',
+            'Tuesday',
+            'Wednesday',
+            'Thursday',
+            'Friday',
+            'Saturday',
+            'Sunday',
+          ]
+        : const [
+            'Senin',
+            'Selasa',
+            'Rabu',
+            'Kamis',
+            'Jumat',
+            'Sabtu',
+            'Minggu',
+          ];
+    final months = isEn
+        ? const [
+            'January',
+            'February',
+            'March',
+            'April',
+            'May',
+            'June',
+            'July',
+            'August',
+            'September',
+            'October',
+            'November',
+            'December',
+          ]
+        : const [
+            'Januari',
+            'Februari',
+            'Maret',
+            'April',
+            'Mei',
+            'Juni',
+            'Juli',
+            'Agustus',
+            'September',
+            'Oktober',
+            'November',
+            'Desember',
+          ];
     final dayName = days[(dt.weekday - 1).clamp(0, 6)];
     final monthName = months[(dt.month - 1).clamp(0, 11)];
     formattedDate =
@@ -118,7 +147,7 @@ void showAttendanceDetailModal(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Detail Kehadiran',
+                      isEn ? 'Attendance Details' : 'Detail Kehadiran',
                       style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 16.sp,
@@ -154,7 +183,13 @@ void showAttendanceDetailModal(
                   ),
                 ),
                 child: Text(
-                  lateMinutes > 0 ? 'Terlambat $lateMinutes m' : status,
+                  lateMinutes > 0
+                      ? (isEn ? 'Late ${lateMinutes}m' : 'Terlambat $lateMinutes m')
+                      : (status.toLowerCase() == 'hadir'
+                          ? (isEn ? 'Present' : 'Hadir')
+                          : (status.toLowerCase() == 'terlambat'
+                              ? (isEn ? 'Late' : 'Terlambat')
+                              : status)),
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 11.sp,
@@ -184,7 +219,7 @@ void showAttendanceDetailModal(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'JAM MASUK',
+                        isEn ? 'CHECK-IN TIME' : 'JAM MASUK',
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 9.5.sp,
@@ -217,7 +252,7 @@ void showAttendanceDetailModal(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'JAM PULANG',
+                        isEn ? 'CHECK-OUT TIME' : 'JAM PULANG',
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 9.5.sp,
@@ -263,7 +298,9 @@ void showAttendanceDetailModal(
                   SizedBox(width: 8.w),
                   Expanded(
                     child: Text(
-                      'Pulang $earlyMinutes menit lebih awal${earlyReason.isNotEmpty ? ': "$earlyReason"' : ''}',
+                      isEn
+                          ? 'Left $earlyMinutes minutes early${earlyReason.isNotEmpty ? ': "$earlyReason"' : ''}'
+                          : 'Pulang $earlyMinutes menit lebih awal${earlyReason.isNotEmpty ? ': "$earlyReason"' : ''}',
                       style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 11.5.sp,
@@ -325,8 +362,12 @@ void showAttendanceDetailModal(
                     Expanded(
                       child: Text(
                         faceVerified
-                            ? 'Wajah Terverifikasi · ${distance.round()} m dari titik lokasi'
-                            : 'Data Presensi Mandiri',
+                            ? (isEn
+                                ? 'Face Verified · ${distance.round()} m from location point'
+                                : 'Wajah Terverifikasi · ${distance.round()} m dari titik lokasi')
+                            : (isEn
+                                ? 'Self Presence Data'
+                                : 'Data Presensi Mandiri'),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -362,7 +403,7 @@ void showAttendanceDetailModal(
                     onPressed: () => openMaps(inLat, inLng),
                     icon: Icon(Icons.map_outlined, size: 14.sp),
                     label: Text(
-                      'Peta Masuk',
+                      isEn ? 'Check-in Map' : 'Peta Masuk',
                       style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 11.5.sp,
@@ -385,7 +426,7 @@ void showAttendanceDetailModal(
                       onPressed: () => openMaps(outLat, outLng),
                       icon: Icon(Icons.map_outlined, size: 14.sp),
                       label: Text(
-                        'Peta Keluar',
+                        isEn ? 'Check-out Map' : 'Peta Keluar',
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 11.5.sp,
@@ -425,7 +466,7 @@ void showAttendanceDetailModal(
                 ),
                 onPressed: () => Navigator.of(ctx).pop(),
                 child: Text(
-                  'Tutup',
+                  isEn ? 'Close' : 'Tutup',
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 13.5.sp,

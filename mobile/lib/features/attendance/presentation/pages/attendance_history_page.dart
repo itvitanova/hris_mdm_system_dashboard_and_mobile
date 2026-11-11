@@ -6,7 +6,8 @@ import '../../../../core/api_client.dart';
 import '../../../../core/workspace.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
-import '../../../root/presentation/widgets/dashboard_attendance_card.dart';
+import '../../../root/presentation/widgets/language_swap_button.dart';
+import '../widgets/attendance_daily_card.dart';
 import '../widgets/attendance_stat_card.dart';
 import '../widgets/filter_dropdowns.dart';
 
@@ -20,10 +21,12 @@ class AttendanceHistoryPage extends StatefulWidget {
     super.key,
     required this.api,
     required this.workspace,
+    this.initialLanguage = AppLanguage.id,
   });
 
   final ApiClient api;
   final Workspace workspace;
+  final AppLanguage initialLanguage;
 
   @override
   State<AttendanceHistoryPage> createState() => _AttendanceHistoryPageState();
@@ -31,7 +34,14 @@ class AttendanceHistoryPage extends StatefulWidget {
 
 class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
   late Workspace _workspace = widget.workspace;
+  late AppLanguage _currentLanguage = widget.initialLanguage != AppLanguage.id
+      ? widget.initialLanguage
+      : AppLanguageController.currentLanguage;
   bool _isRefreshing = false;
+
+  // Pagination state
+  static const int _itemsPerPage = 5;
+  int _currentPage = 1;
 
   // Filter state persis desain referensi
   MonthEnum? _monthSelected;
@@ -42,8 +52,26 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
   @override
   void initState() {
     super.initState();
+    _currentLanguage = widget.initialLanguage != AppLanguage.id
+        ? widget.initialLanguage
+        : AppLanguageController.currentLanguage;
+    AppLanguageController.instance.addListener(_onGlobalLanguageChanged);
     _yearsSelected = DateTime.now().year;
     _listYears = List.generate(4, (index) => DateTime.now().year - index);
+  }
+
+  void _onGlobalLanguageChanged() {
+    if (mounted && _currentLanguage != AppLanguageController.currentLanguage) {
+      setState(() {
+        _currentLanguage = AppLanguageController.currentLanguage;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    AppLanguageController.instance.removeListener(_onGlobalLanguageChanged);
+    super.dispose();
   }
 
   Future<void> _refresh() async {
@@ -54,6 +82,7 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
       if (mounted) {
         setState(() {
           _workspace = updated;
+          _currentPage = 1;
         });
       }
     } catch (_) {
@@ -72,7 +101,244 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
   /// Modal detail kehadiran lengkap dengan informasi verifikasi MDM
   void _openAttendanceDetailModal(
       BuildContext context, Map<String, dynamic> raw) {
-    showAttendanceDetailModal(context, raw);
+    showAttendanceDetailModal(context, raw, language: _currentLanguage);
+  }
+
+  /// Ekstraksi string tanggal presensi dari berbagai kemungkinan key API/lokal
+  String _extractRawDate(Map<String, dynamic> r) {
+    for (final key in ['date', 'attendanceDate', 'checkIn', 'createdAt']) {
+      final val = text(r, key, '').trim();
+      if (val.isNotEmpty && val != '—' && val != '-') {
+        return val;
+      }
+    }
+    return '';
+  }
+
+  /// Cek kecocokan tahun dan bulan pada tanggal presensi
+  bool _matchesPeriod(String rawDate, int year, MonthEnum? month) {
+    if (rawDate.isEmpty) return false;
+    final parsed = DateTime.tryParse(rawDate);
+    if (parsed != null) {
+      if (parsed.year != year) return false;
+      if (month != null && parsed.month != (month.index + 1)) return false;
+      return true;
+    }
+    if (!rawDate.startsWith('$year')) return false;
+    if (month != null) {
+      final prefix = '$year-${(month.index + 1).toString().padLeft(2, '0')}';
+      if (!rawDate.startsWith(prefix)) return false;
+    }
+    return true;
+  }
+
+  List<int> _calculateVisiblePages(int current, int total) {
+    if (total <= 5) {
+      return List.generate(total, (i) => i + 1);
+    }
+    int start = current - 2;
+    int end = current + 2;
+    if (start < 1) {
+      start = 1;
+      end = 5;
+    } else if (end > total) {
+      end = total;
+      start = total - 4;
+    }
+    return List.generate(end - start + 1, (i) => start + i);
+  }
+
+  Widget _buildPaginationBar(
+    int currentPage,
+    int totalPages,
+    int startIndex,
+    int endIndex,
+    int totalItems,
+  ) {
+    final hasPrev = currentPage > 1;
+    final hasNext = currentPage < totalPages;
+    final visiblePages = _calculateVisiblePages(currentPage, totalPages);
+    final isEn = _currentLanguage == AppLanguage.en;
+
+    return Container(
+      key: const ValueKey('pagination_bar'),
+      margin: EdgeInsets.only(top: 8.h, bottom: 12.h),
+      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14.r),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x080F172A),
+            blurRadius: 10,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // 1. Teks Info di Atas (Halaman X dari Y & Menampilkan A-B dari N)
+          Text(
+            isEn
+                ? 'Page $currentPage of $totalPages'
+                : 'Halaman $currentPage dari $totalPages',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF1E293B),
+            ),
+          ),
+          SizedBox(height: 2.h),
+          Text(
+            totalItems == 0
+                ? (isEn
+                    ? 'No attendance records'
+                    : 'Tidak ada catatan kehadiran')
+                : (isEn
+                    ? 'Showing ${startIndex + 1}\u2013$endIndex of $totalItems attendance records'
+                    : 'Menampilkan ${startIndex + 1}\u2013$endIndex dari $totalItems catatan kehadiran'),
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 11.sp,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF64748B),
+            ),
+          ),
+          SizedBox(height: 10.h),
+
+          // 2. Row Pagination Tombol Angka: [<] [1] [2] [3] [>]
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Tombol Panah Kiri (<)
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  key: const ValueKey('pagination_prev_btn'),
+                  onTap: hasPrev
+                      ? () => setState(() => _currentPage = currentPage - 1)
+                      : null,
+                  borderRadius: BorderRadius.circular(8.r),
+                  child: Container(
+                    width: 34.w,
+                    height: 34.w,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: hasPrev
+                          ? const Color(0xFFF8FAFC)
+                          : const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(8.r),
+                      border: Border.all(
+                        color: hasPrev
+                            ? const Color(0xFFCBD5E1)
+                            : const Color(0xFFE2E8F0),
+                        width: 0.8,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.chevron_left_rounded,
+                      size: 20.sp,
+                      color: hasPrev
+                          ? const Color(0xFF0F172A)
+                          : const Color(0xFF94A3B8),
+                    ),
+                  ),
+                ),
+              ),
+
+              SizedBox(width: 6.w),
+
+              // Kotak-Kotak Angka Halaman
+              ...visiblePages.map((page) {
+                final isActive = page == currentPage;
+                return Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 3.w),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: isActive
+                          ? null
+                          : () => setState(() => _currentPage = page),
+                      borderRadius: BorderRadius.circular(8.r),
+                      child: Container(
+                        width: 34.w,
+                        height: 34.w,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: isActive
+                              ? const Color(0xFF0D9488)
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(8.r),
+                          border: Border.all(
+                            color: isActive
+                                ? const Color(0xFF0D9488)
+                                : const Color(0xFFCBD5E1),
+                            width: 0.8,
+                          ),
+                        ),
+                        child: Text(
+                          '$page',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 12.5.sp,
+                            fontWeight: isActive
+                                ? FontWeight.w700
+                                : FontWeight.w600,
+                            color: isActive
+                                ? Colors.white
+                                : const Color(0xFF1E293B),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }),
+
+              SizedBox(width: 6.w),
+
+              // Tombol Panah Kanan (>)
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  key: const ValueKey('pagination_next_btn'),
+                  onTap: hasNext
+                      ? () => setState(() => _currentPage = currentPage + 1)
+                      : null,
+                  borderRadius: BorderRadius.circular(8.r),
+                  child: Container(
+                    width: 34.w,
+                    height: 34.w,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: hasNext
+                          ? const Color(0xFFF8FAFC)
+                          : const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(8.r),
+                      border: Border.all(
+                        color: hasNext
+                            ? const Color(0xFFCBD5E1)
+                            : const Color(0xFFE2E8F0),
+                        width: 0.8,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.chevron_right_rounded,
+                      size: 20.sp,
+                      color: hasNext
+                          ? const Color(0xFF0F172A)
+                          : const Color(0xFF94A3B8),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -80,10 +346,10 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
     final allRawAttendance = _getAttendanceRawList();
 
     // 1. Hitung ringkasan statistik (Sudah Absen, Tepat Waktu, Terlambat, Belum Absen)
-    // Dihitung berdasarkan tahun yang dipilih
-    final yearFiltered = allRawAttendance.where((r) {
-      final d = text(r, 'date');
-      return d.startsWith('$_yearsSelected');
+    // Dihitung berdasarkan tahun dan bulan yang dipilih
+    final periodFiltered = allRawAttendance.where((r) {
+      final d = _extractRawDate(r);
+      return _matchesPeriod(d, _yearsSelected, _monthSelected);
     }).toList();
 
     int countSudahAbsen = 0;
@@ -91,16 +357,35 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
     int countTerlambat = 0;
     int countBelumAbsen = 0;
 
-    for (final r in yearFiltered) {
+    for (final r in periodFiltered) {
       final s = text(r, 'status').toLowerCase();
       final lateMin = (r['lateMinutes'] as num?)?.toInt() ?? 0;
+      final isLate = (r['isLate'] == true) ||
+          lateMin > 0 ||
+          s == 'terlambat' ||
+          s == 'telat' ||
+          s == 'late' ||
+          s.contains('terlambat') ||
+          s.contains('telat');
       final checkIn = text(r, 'checkIn', '').trim();
+      final checkOut = text(r, 'checkOut', '').trim();
       final hasCheckIn =
           checkIn.isNotEmpty && checkIn != '—' && checkIn != '-';
+      final hasCheckOut =
+          checkOut.isNotEmpty && checkOut != '—' && checkOut != '-';
 
-      if (hasCheckIn || s == 'hadir' || s == 'terlambat') {
+      final isAttended = hasCheckIn ||
+          hasCheckOut ||
+          isLate ||
+          s == 'hadir' ||
+          s == 'terlambat' ||
+          s == 'telat' ||
+          s == 'late' ||
+          s.contains('hadir');
+
+      if (isAttended) {
         countSudahAbsen++;
-        if (lateMin > 0 || s == 'terlambat') {
+        if (isLate) {
           countTerlambat++;
         } else {
           countTepatWaktu++;
@@ -110,52 +395,62 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
       }
     }
 
-    // 2. Filter item untuk tampilan list
-    final filteredRaw = allRawAttendance.where((r) {
-      final d = text(r, 'date');
-      if (!d.startsWith('$_yearsSelected')) return false;
+    // 2. Terapkan filter status pada daftar catatan harian
+    List<Map<String, dynamic>> displayedDailyRecords = List.from(periodFiltered);
 
-      if (_monthSelected != null) {
-        final monthPrefix =
-            '$_yearsSelected-${(_monthSelected!.index + 1).toString().padLeft(2, '0')}';
-        if (!d.startsWith(monthPrefix)) return false;
-      }
-
-      if (_attendanceSelected != null) {
+    if (_attendanceSelected != null) {
+      displayedDailyRecords = displayedDailyRecords.where((r) {
         final s = text(r, 'status').toLowerCase();
         final lateMin = (r['lateMinutes'] as num?)?.toInt() ?? 0;
+        final isLate = (r['isLate'] == true) ||
+            lateMin > 0 ||
+            s == 'terlambat' ||
+            s == 'telat' ||
+            s == 'late' ||
+            s.contains('terlambat') ||
+            s.contains('telat');
         final checkIn = text(r, 'checkIn', '').trim();
+        final checkOut = text(r, 'checkOut', '').trim();
         final hasCheckIn =
             checkIn.isNotEmpty && checkIn != '—' && checkIn != '-';
+        final hasCheckOut =
+            checkOut.isNotEmpty && checkOut != '—' && checkOut != '-';
+
+        final isAttended = hasCheckIn ||
+            hasCheckOut ||
+            isLate ||
+            s == 'hadir' ||
+            s == 'terlambat' ||
+            s == 'telat' ||
+            s == 'late' ||
+            s.contains('hadir');
+
         switch (_attendanceSelected!) {
           case AttendanceStatType.sudahAbsen:
-            return hasCheckIn || s == 'hadir' || s == 'terlambat';
+            return isAttended;
           case AttendanceStatType.tepatWaktu:
-            return (hasCheckIn || s == 'hadir') &&
-                lateMin == 0 &&
-                s != 'terlambat';
+            return isAttended && !isLate;
           case AttendanceStatType.terlambat:
-            return lateMin > 0 || s == 'terlambat';
+            return isAttended && isLate;
           case AttendanceStatType.belumAbsen:
-            return !hasCheckIn &&
-                (s == 'alpha' ||
-                    s == 'tidak hadir' ||
-                    s.contains('absen') ||
-                    s.isEmpty);
+            return !isAttended;
         }
-      }
+      }).toList();
+    }
 
-      return true;
-    }).toList();
-
-    final attendanceItems = DashboardAttendanceItem.fromAttendanceList(
-      filteredRaw,
-      treatLatestAsToday: _monthSelected == null && _attendanceSelected == null,
-    );
+    final totalItems = displayedDailyRecords.length;
+    final totalPages = (totalItems / _itemsPerPage).ceil().clamp(1, 99999);
+    final currentPage = _currentPage.clamp(1, totalPages);
+    final startIndex = (currentPage - 1) * _itemsPerPage;
+    final endIndex = (startIndex + _itemsPerPage).clamp(0, totalItems);
+    final paginatedItems = displayedDailyRecords.isEmpty
+        ? <Map<String, dynamic>>[]
+        : displayedDailyRecords.sublist(startIndex, endIndex);
 
     final policy = _workspace.attendancePolicy;
     final policyName = text(policy, 'name', 'Kantor Pusat MDM');
     final isDemo = _workspace.data['demo'] == true;
+    final isEn = _currentLanguage == AppLanguage.en;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -176,7 +471,7 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Riwayat Kehadiran',
+              isEn ? 'Attendance History' : 'Riwayat Kehadiran',
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 16.5.sp,
@@ -185,7 +480,9 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
               ),
             ),
             Text(
-              'Presensi & Verifikasi Lokasi',
+              isEn
+                  ? 'Presence & Location Verification'
+                  : 'Presensi & Verifikasi Lokasi',
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 11.sp,
@@ -268,7 +565,9 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                                     ),
                                     SizedBox(width: 3.w),
                                     Text(
-                                      'Lokasi & Wajah',
+                                      isEn
+                                          ? 'Location & Face'
+                                          : 'Lokasi & Wajah',
                                       style: TextStyle(
                                         fontFamily: 'Inter',
                                         fontSize: 9.sp,
@@ -283,7 +582,9 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                           ),
                           SizedBox(height: 3.h),
                           Text(
-                            'Radius dan zona waktu mengikuti penugasan. Koordinat tersimpan otomatis.',
+                            isEn
+                                ? 'Radius and time zone follow assignment. Coordinates saved automatically.'
+                                : 'Radius dan zona waktu mengikuti penugasan. Koordinat tersimpan otomatis.',
                             style: TextStyle(
                               fontFamily: 'Inter',
                               fontSize: 10.5.sp,
@@ -320,7 +621,9 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                       SizedBox(width: 6.w),
                       Expanded(
                         child: Text(
-                          'Riwayat awal adalah data contoh. Label "Contoh" tidak menunjukkan verifikasi nyata.',
+                          isEn
+                              ? 'Initial history is sample data. "Sample" label does not indicate real verification.'
+                              : 'Riwayat awal adalah data contoh. Label "Contoh" tidak menunjukkan verifikasi nyata.',
                           style: TextStyle(
                             fontFamily: 'Inter',
                             fontSize: 10.sp,
@@ -342,6 +645,7 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                     child: AttendanceStatCard(
                       type: AttendanceStatType.sudahAbsen,
                       count: countSudahAbsen,
+                      language: _currentLanguage,
                       isSelected:
                           _attendanceSelected == AttendanceStatType.sudahAbsen,
                       onTap: () {
@@ -350,6 +654,7 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                               _attendanceSelected == AttendanceStatType.sudahAbsen
                                   ? null
                                   : AttendanceStatType.sudahAbsen;
+                          _currentPage = 1;
                         });
                       },
                     ),
@@ -359,6 +664,7 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                     child: AttendanceStatCard(
                       type: AttendanceStatType.tepatWaktu,
                       count: countTepatWaktu,
+                      language: _currentLanguage,
                       isSelected:
                           _attendanceSelected == AttendanceStatType.tepatWaktu,
                       onTap: () {
@@ -367,6 +673,7 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                               _attendanceSelected == AttendanceStatType.tepatWaktu
                                   ? null
                                   : AttendanceStatType.tepatWaktu;
+                          _currentPage = 1;
                         });
                       },
                     ),
@@ -380,6 +687,7 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                     child: AttendanceStatCard(
                       type: AttendanceStatType.terlambat,
                       count: countTerlambat,
+                      language: _currentLanguage,
                       isSelected:
                           _attendanceSelected == AttendanceStatType.terlambat,
                       onTap: () {
@@ -388,6 +696,7 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                               _attendanceSelected == AttendanceStatType.terlambat
                                   ? null
                                   : AttendanceStatType.terlambat;
+                          _currentPage = 1;
                         });
                       },
                     ),
@@ -397,6 +706,7 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                     child: AttendanceStatCard(
                       type: AttendanceStatType.belumAbsen,
                       count: countBelumAbsen,
+                      language: _currentLanguage,
                       isSelected:
                           _attendanceSelected == AttendanceStatType.belumAbsen,
                       onTap: () {
@@ -405,6 +715,7 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                               _attendanceSelected == AttendanceStatType.belumAbsen
                                   ? null
                                   : AttendanceStatType.belumAbsen;
+                          _currentPage = 1;
                         });
                       },
                     ),
@@ -436,7 +747,7 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                     SizedBox(width: 8.w),
                     Expanded(
                       child: Text(
-                        'Riwayat Absensi${_attendanceSelected != null ? " - ${_attendanceSelected!.label}" : ""}${_monthSelected != null ? " - ${_monthSelected!.name}" : ""} $_yearsSelected',
+                        '${isEn ? "Attendance History" : "Riwayat Absensi"}${_attendanceSelected != null ? " - ${_attendanceSelected!.getLabel(_currentLanguage)}" : ""}${_monthSelected != null ? " - ${_monthSelected!.getName(_currentLanguage)}" : ""} $_yearsSelected',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -472,8 +783,12 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                           flex: 2,
                           child: MonthFilterDropdown(
                             selected: _monthSelected,
+                            language: _currentLanguage,
                             onChanged: (val) {
-                              setState(() => _monthSelected = val);
+                              setState(() {
+                                _monthSelected = val;
+                                _currentPage = 1;
+                              });
                             },
                           ),
                         ),
@@ -484,8 +799,10 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                             selected: _yearsSelected,
                             years: _listYears,
                             onChanged: (val) {
-                              setState(() =>
-                                  _yearsSelected = val ?? DateTime.now().year);
+                              setState(() {
+                                _yearsSelected = val ?? DateTime.now().year;
+                                _currentPage = 1;
+                              });
                             },
                           ),
                         ),
@@ -500,8 +817,12 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                           flex: 2,
                           child: StatusFilterDropdown(
                             selected: _attendanceSelected,
+                            language: _currentLanguage,
                             onChanged: (val) {
-                              setState(() => _attendanceSelected = val);
+                              setState(() {
+                                _attendanceSelected = val;
+                                _currentPage = 1;
+                              });
                             },
                           ),
                         ),
@@ -535,6 +856,7 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                                   _monthSelected = null;
                                   _attendanceSelected = null;
                                   _yearsSelected = DateTime.now().year;
+                                  _currentPage = 1;
                                 });
                               },
                               child: Row(
@@ -570,7 +892,7 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
               SizedBox(height: 14.h),
 
               // 5. Daftar Kartu Absensi atau Empty State
-              if (attendanceItems.isEmpty)
+              if (displayedDailyRecords.isEmpty)
                 Container(
                   padding: EdgeInsets.symmetric(
                     vertical: 40.h,
@@ -600,7 +922,9 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                       ),
                       SizedBox(height: 12.h),
                       Text(
-                        'Belum Ada Catatan Kehadiran',
+                        isEn
+                            ? 'No Attendance Records Yet'
+                            : 'Belum Ada Catatan Kehadiran',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontFamily: 'Inter',
@@ -611,7 +935,9 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                       ),
                       SizedBox(height: 4.h),
                       Text(
-                        'Catatan kehadiran akan otomatis tercatat setelah melakukan absensi masuk atau pulang.',
+                        isEn
+                            ? 'Attendance records will be automatically logged after checking in or out.'
+                            : 'Catatan kehadiran akan otomatis tercatat setelah melakukan absensi masuk atau pulang.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontFamily: 'Inter',
@@ -622,25 +948,38 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                     ],
                   ),
                 )
-              else
-                ...attendanceItems.map((item) {
+              else ...[
+                ...paginatedItems.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final rawRecord = entry.value;
+                  final isHighlighted = index == 0 &&
+                      currentPage == 1 &&
+                      _monthSelected == null &&
+                      _attendanceSelected == null;
+
                   return Padding(
                     padding: EdgeInsets.only(bottom: 10.h),
-                    child: DashboardAttendanceCard(
+                    child: AttendanceDailyCard(
                       key: ValueKey(
-                          'att_history_${item.title}_${item.dateText}'),
-                      item: item,
+                        'att_daily_${rawRecord['id'] ?? index}_${_extractRawDate(rawRecord)}',
+                      ),
+                      raw: rawRecord,
+                      isHighlighted: isHighlighted,
+                      language: _currentLanguage,
                       onTap: () {
-                        if (item.rawData is Map) {
-                          _openAttendanceDetailModal(
-                            context,
-                            Map<String, dynamic>.from(item.rawData as Map),
-                          );
-                        }
+                        _openAttendanceDetailModal(context, rawRecord);
                       },
                     ),
                   );
                 }),
+                _buildPaginationBar(
+                  currentPage,
+                  totalPages,
+                  startIndex,
+                  endIndex,
+                  totalItems,
+                ),
+              ],
             ],
           ),
         ),

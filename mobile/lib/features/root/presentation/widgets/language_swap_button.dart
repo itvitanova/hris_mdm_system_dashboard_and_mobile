@@ -20,6 +20,25 @@ enum AppLanguage {
   );
 }
 
+/// Controller terpusat untuk sinkronisasi bahasa aplikasi secara global.
+/// Ketika bahasa diubah di Dashboard, seluruh modul/tab akan otomatis memperbarui tampilan.
+class AppLanguageController extends ValueNotifier<AppLanguage> {
+  static final AppLanguageController instance = AppLanguageController._();
+  AppLanguageController._() : super(AppLanguage.id);
+
+  static AppLanguage get currentLanguage => instance.value;
+
+  static void setLanguage(AppLanguage language) {
+    if (instance.value != language) {
+      instance.value = language;
+    }
+  }
+
+  static void reset() {
+    instance.value = AppLanguage.id;
+  }
+}
+
 class LanguageSwapButton extends StatefulWidget {
   final ValueChanged<AppLanguage>? onLanguageChanged;
   final AppLanguage initialLanguage;
@@ -40,7 +59,24 @@ class _LanguageSwapButtonState extends State<LanguageSwapButton> {
   @override
   void initState() {
     super.initState();
-    currentLanguage = widget.initialLanguage;
+    currentLanguage = widget.initialLanguage != AppLanguage.id
+        ? widget.initialLanguage
+        : AppLanguageController.currentLanguage;
+    AppLanguageController.instance.addListener(_onGlobalLanguageChanged);
+  }
+
+  void _onGlobalLanguageChanged() {
+    if (mounted && currentLanguage != AppLanguageController.currentLanguage) {
+      setState(() {
+        currentLanguage = AppLanguageController.currentLanguage;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    AppLanguageController.instance.removeListener(_onGlobalLanguageChanged);
+    super.dispose();
   }
 
   @override
@@ -87,6 +123,7 @@ class _LanguageSwapButtonState extends State<LanguageSwapButton> {
             setState(() {
               currentLanguage = selectedLang;
             });
+            AppLanguageController.setLanguage(selectedLang);
             widget.onLanguageChanged?.call(selectedLang);
 
             ScaffoldMessenger.of(context).hideCurrentSnackBar();
