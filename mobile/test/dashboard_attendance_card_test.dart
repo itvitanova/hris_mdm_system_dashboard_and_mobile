@@ -92,7 +92,7 @@ void main() {
       const item = DashboardAttendanceItem(
         type: DashboardAttendanceType.masuk,
         title: 'Masuk',
-        statusText: 'Tepat Waktu',
+        statusText: 'Tepat',
         isLate: false,
         dateText: '2 Nov 2026',
         timeText: '08:24 am',

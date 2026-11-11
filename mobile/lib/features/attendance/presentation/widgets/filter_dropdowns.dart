@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../root/presentation/widgets/language_swap_button.dart';
 import 'attendance_stat_card.dart';
 
 /// Enum Bulan untuk filter riwayat presensi
@@ -18,7 +19,26 @@ enum MonthEnum {
   november,
   desember;
 
-  String get name {
+  String get name => getName(AppLanguage.id);
+
+  String getName([AppLanguage language = AppLanguage.id]) {
+    if (language == AppLanguage.en) {
+      const namesEn = [
+        'January',
+        'February',
+        'March',
+        'April',
+        'May',
+        'June',
+        'July',
+        'August',
+        'September',
+        'October',
+        'November',
+        'December',
+      ];
+      return namesEn[index];
+    }
     switch (this) {
       case MonthEnum.januari:
         return 'Januari';
@@ -47,7 +67,26 @@ enum MonthEnum {
     }
   }
 
-  String get shortName {
+  String get shortName => getShortName(AppLanguage.id);
+
+  String getShortName([AppLanguage language = AppLanguage.id]) {
+    if (language == AppLanguage.en) {
+      const shortLabelsEn = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ];
+      return shortLabelsEn[index];
+    }
     const shortLabels = [
       'Jan',
       'Feb',
@@ -86,11 +125,13 @@ Color _statusDotColor(AttendanceStatType status) {
 class MonthFilterDropdown extends StatefulWidget {
   final MonthEnum? selected;
   final ValueChanged<MonthEnum?> onChanged;
+  final AppLanguage language;
 
   const MonthFilterDropdown({
     super.key,
     required this.selected,
     required this.onChanged,
+    this.language = AppLanguage.id,
   });
 
   @override
@@ -127,6 +168,7 @@ class _MonthFilterDropdownState extends State<MonthFilterDropdown> {
             color: Colors.transparent,
             child: _MonthPanel(
               selected: widget.selected,
+              language: widget.language,
               onSelect: (value) {
                 _close();
                 widget.onChanged(value);
@@ -186,7 +228,10 @@ class _MonthFilterDropdownState extends State<MonthFilterDropdown> {
             SizedBox(width: 8.w),
             Expanded(
               child: Text(
-                widget.selected?.name ?? 'Semua Bulan',
+                widget.selected?.getName(widget.language) ??
+                    (widget.language == AppLanguage.en
+                        ? 'All Months'
+                        : 'Semua Bulan'),
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 12.sp,
@@ -218,8 +263,13 @@ class _MonthFilterDropdownState extends State<MonthFilterDropdown> {
 class _MonthPanel extends StatelessWidget {
   final MonthEnum? selected;
   final ValueChanged<MonthEnum?> onSelect;
+  final AppLanguage language;
 
-  const _MonthPanel({required this.selected, required this.onSelect});
+  const _MonthPanel({
+    required this.selected,
+    required this.onSelect,
+    this.language = AppLanguage.id,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -277,7 +327,7 @@ class _MonthPanel extends StatelessWidget {
                                 : AppColors.filterSlateBg,
                           ),
                           child: Text(
-                            month.shortName,
+                            month.getShortName(language),
                             style: TextStyle(
                               fontFamily: 'Inter',
                               fontSize: 11.5.sp,
@@ -322,7 +372,7 @@ class _MonthPanel extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                'Semua Bulan',
+                language == AppLanguage.en ? 'All Months' : 'Semua Bulan',
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 12.sp,
@@ -559,11 +609,13 @@ class _YearPanel extends StatelessWidget {
 class StatusFilterDropdown extends StatefulWidget {
   final AttendanceStatType? selected;
   final ValueChanged<AttendanceStatType?> onChanged;
+  final AppLanguage language;
 
   const StatusFilterDropdown({
     super.key,
     required this.selected,
     required this.onChanged,
+    this.language = AppLanguage.id,
   });
 
   @override
@@ -600,6 +652,7 @@ class _StatusFilterDropdownState extends State<StatusFilterDropdown> {
             color: Colors.transparent,
             child: _StatusPanel(
               selected: widget.selected,
+              language: widget.language,
               onSelect: (value) {
                 _close();
                 widget.onChanged(value);
@@ -675,7 +728,10 @@ class _StatusFilterDropdownState extends State<StatusFilterDropdown> {
             SizedBox(width: 8.w),
             Expanded(
               child: Text(
-                widget.selected?.label ?? 'Semua Kehadiran',
+                widget.selected?.getLabel(widget.language) ??
+                    (widget.language == AppLanguage.en
+                        ? 'All Attendance'
+                        : 'Semua Kehadiran'),
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 12.sp,
@@ -707,8 +763,13 @@ class _StatusFilterDropdownState extends State<StatusFilterDropdown> {
 class _StatusPanel extends StatelessWidget {
   final AttendanceStatType? selected;
   final ValueChanged<AttendanceStatType?> onSelect;
+  final AppLanguage language;
 
-  const _StatusPanel({required this.selected, required this.onSelect});
+  const _StatusPanel({
+    required this.selected,
+    required this.onSelect,
+    this.language = AppLanguage.id,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -781,7 +842,7 @@ class _StatusPanel extends StatelessWidget {
                               SizedBox(width: 8.w),
                               Expanded(
                                 child: Text(
-                                  status.label,
+                                  status.getLabel(language),
                                   style: TextStyle(
                                     fontFamily: 'Inter',
                                     fontSize: 11.5.sp,
@@ -852,7 +913,9 @@ class _StatusPanel extends StatelessWidget {
             SizedBox(width: 8.w),
             Expanded(
               child: Text(
-                'Semua Kehadiran',
+                language == AppLanguage.en
+                    ? 'All Attendance'
+                    : 'Semua Kehadiran',
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 12.sp,

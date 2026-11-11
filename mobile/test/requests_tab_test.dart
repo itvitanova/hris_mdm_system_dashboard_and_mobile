@@ -6,9 +6,17 @@ import 'package:mdm_hris/core/workspace.dart';
 import 'package:mdm_hris/features/requests/presentation/pages/modules/dedicated_module_screen.dart';
 import 'package:mdm_hris/features/requests/presentation/widgets/services_hub/service_module_card.dart';
 import 'package:mdm_hris/features/requests/request_detail.dart';
+import 'package:mdm_hris/features/root/presentation/widgets/language_swap_button.dart';
 import 'package:mdm_hris/features/root/presentation/widgets/requests_tab.dart';
 
 void main() {
+  setUp(() {
+    AppLanguageController.reset();
+  });
+
+  tearDown(() {
+    AppLanguageController.reset();
+  });
   group('RequestsTab Hub Portal Tests', () {
     testWidgets(
       'renders 5 service cards and opens DedicatedModuleScreen on tap',
@@ -114,6 +122,68 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(openedWidget, isA<ApprovalsScreen>());
+      },
+    );
+
+    testWidgets(
+      'switches language to English via global AppLanguageController and ensures LanguageSwapButton is not in RequestsTab',
+      (tester) async {
+        final workspace = Workspace({
+          'requests': [],
+          'employees': [],
+          'attendancePolicy': {},
+        });
+
+        await tester.pumpWidget(
+          ScreenUtilInit(
+            designSize: const Size(375, 812),
+            minTextAdapt: true,
+            builder: (context, child) => MaterialApp(
+              home: RequestsTab(
+                api: ApiClient(),
+                workspace: workspace,
+                onRefresh: () async {},
+                open: (w) async {},
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // 1. Initially ID
+        expect(find.text('Pengajuan'), findsOneWidget);
+        expect(find.text('Layanan & Permohonan Mandiri'), findsOneWidget);
+        expect(find.text('Pusat Layanan Mandiri'), findsOneWidget);
+        expect(find.text('Pusat Persetujuan'), findsOneWidget);
+        expect(find.text('Katalog Pengajuan'), findsOneWidget);
+        expect(find.text('Cuti'), findsOneWidget);
+
+        // 2. LanguageSwapButton must NOT exist in RequestsTab (only in Dashboard)
+        expect(find.byKey(const Key('dashboard_language_swap_button')), findsNothing);
+
+        // 3. Switch language globally to English
+        AppLanguageController.setLanguage(AppLanguage.en);
+        await tester.pumpAndSettle();
+
+        // 4. Verify texts switched to English automatically
+        expect(find.text('Submissions'), findsOneWidget);
+        expect(find.text('Self-Service & Employee Requests'), findsOneWidget);
+        expect(find.text('Self-Service Hub'), findsOneWidget);
+        expect(find.text('Approval Center'), findsOneWidget);
+        expect(find.text('Submission Catalog'), findsOneWidget);
+        expect(find.text('Leave'), findsOneWidget);
+        expect(find.text('Permission'), findsOneWidget);
+        expect(find.text('Overtime'), findsOneWidget);
+
+        await tester.scrollUntilVisible(
+          find.byKey(const ValueKey('filter_segment_Semua')),
+          150,
+          scrollable: find.byType(Scrollable),
+        );
+        expect(find.text('Recent Submissions'), findsOneWidget);
+        expect(find.text('All'), findsOneWidget);
+        expect(find.text('Pending'), findsOneWidget);
+        expect(find.text('Finished'), findsOneWidget);
       },
     );
   });

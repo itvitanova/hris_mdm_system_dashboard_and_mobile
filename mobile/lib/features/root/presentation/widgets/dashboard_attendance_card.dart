@@ -13,6 +13,8 @@ class DashboardAttendanceItem {
   final String statusText;
   final bool isLate;
   final int lateMinutes;
+  final bool isEarly;
+  final int earlyMinutes;
   final String dateText;
   final String timeText;
   final String method;
@@ -25,6 +27,8 @@ class DashboardAttendanceItem {
     required this.statusText,
     required this.isLate,
     this.lateMinutes = 0,
+    this.isEarly = false,
+    this.earlyMinutes = 0,
     required this.dateText,
     required this.timeText,
     this.method = 'Via Phone',
@@ -38,6 +42,8 @@ class DashboardAttendanceItem {
     String? statusText,
     bool? isLate,
     int? lateMinutes,
+    bool? isEarly,
+    int? earlyMinutes,
     String? dateText,
     String? timeText,
     String? method,
@@ -50,6 +56,8 @@ class DashboardAttendanceItem {
       statusText: statusText ?? this.statusText,
       isLate: isLate ?? this.isLate,
       lateMinutes: lateMinutes ?? this.lateMinutes,
+      isEarly: isEarly ?? this.isEarly,
+      earlyMinutes: earlyMinutes ?? this.earlyMinutes,
       dateText: dateText ?? this.dateText,
       timeText: timeText ?? this.timeText,
       method: method ?? this.method,
@@ -76,8 +84,14 @@ class DashboardAttendanceItem {
         language == AppLanguage.en ? 'Check Out' : 'Pulang';
     final String masukTitle =
         language == AppLanguage.en ? 'Check In' : 'Masuk';
-    final String onTimeText =
-        language == AppLanguage.en ? 'On Time' : 'Tepat Waktu';
+    final String inOnTimeText =
+        language == AppLanguage.en ? 'On Time' : 'Tepat';
+    final String inLateText =
+        language == AppLanguage.en ? 'Late' : 'Telat';
+    final String outDoneText =
+        language == AppLanguage.en ? 'Done' : 'Selesai';
+    final String outEarlyText =
+        language == AppLanguage.en ? 'Early' : 'Awal';
     const String methodText = 'Via Phone';
 
     for (final att in list) {
@@ -86,6 +100,18 @@ class DashboardAttendanceItem {
       final String? checkIn = _extractString(att, 'checkIn');
       final String status = _extractString(att, 'status') ?? 'Hadir';
       final int lateMinutes = _extractInt(att, 'lateMinutes');
+      final int earlyMinutes = _extractInt(att, 'earlyMinutes');
+
+      final bool isLate = _extractBool(att, 'isLate') ||
+          status.toLowerCase() == 'terlambat' ||
+          status.toLowerCase() == 'telat' ||
+          status.toLowerCase() == 'late' ||
+          status.toLowerCase().contains('terlambat') ||
+          status.toLowerCase().contains('telat') ||
+          lateMinutes > 0;
+      final bool isEarly = _extractBool(att, 'earlyDeparture') ||
+          status.toLowerCase() == 'pulang awal' ||
+          earlyMinutes > 0;
 
       final bool isToday = _isSameDay(dateStr, now) ||
           (treatLatestAsToday && dateStr == latestDateInList);
@@ -99,8 +125,11 @@ class DashboardAttendanceItem {
           DashboardAttendanceItem(
             type: DashboardAttendanceType.pulang,
             title: pulangTitle,
-            statusText: onTimeText,
+            statusText: isEarly ? outEarlyText : outDoneText,
             isLate: false,
+            lateMinutes: 0,
+            isEarly: isEarly,
+            earlyMinutes: earlyMinutes,
             dateText: _formatDate(dateStr, language),
             timeText: _formatTime(checkOut),
             method: methodText,
@@ -116,21 +145,35 @@ class DashboardAttendanceItem {
           checkIn.trim().isNotEmpty &&
           checkIn.trim() != '—' &&
           checkIn.trim() != '-') {
-        final isLate =
-            lateMinutes > 0 || status.toLowerCase() == 'terlambat';
-        final String lateText = language == AppLanguage.en
-            ? (lateMinutes > 0 ? 'Late (${lateMinutes}m)' : 'Late')
-            : (lateMinutes > 0 ? 'Terlambat (${lateMinutes}m)' : 'Terlambat');
-
         items.add(
           DashboardAttendanceItem(
             type: DashboardAttendanceType.masuk,
             title: masukTitle,
-            statusText: isLate ? lateText : onTimeText,
+            statusText: isLate ? inLateText : inOnTimeText,
             isLate: isLate,
             lateMinutes: lateMinutes,
+            isEarly: false,
+            earlyMinutes: 0,
             dateText: _formatDate(dateStr, language),
             timeText: _formatTime(checkIn),
+            method: methodText,
+            isToday: isToday,
+            rawData: att,
+          ),
+        );
+        if (limit != null && items.length >= limit) break;
+      } else if (isLate || status.toLowerCase() == 'hadir') {
+        items.add(
+          DashboardAttendanceItem(
+            type: DashboardAttendanceType.masuk,
+            title: masukTitle,
+            statusText: isLate ? inLateText : inOnTimeText,
+            isLate: isLate,
+            lateMinutes: lateMinutes,
+            isEarly: false,
+            earlyMinutes: 0,
+            dateText: _formatDate(dateStr, language),
+            timeText: '--:--',
             method: methodText,
             isToday: isToday,
             rawData: att,
@@ -147,7 +190,9 @@ class DashboardAttendanceItem {
           (checkOut == null ||
               checkOut.trim().isEmpty ||
               checkOut.trim() == '—' ||
-              checkOut.trim() == '-')) {
+              checkOut.trim() == '-') &&
+          !isLate &&
+          status.toLowerCase() != 'hadir') {
         final statusTitle = status.isNotEmpty
             ? '${status[0].toUpperCase()}${status.substring(1)}'
             : 'Absensi';
@@ -214,6 +259,19 @@ class DashboardAttendanceItem {
       }
     } catch (_) {}
     return 0;
+  }
+
+  static bool _extractBool(dynamic att, String key) {
+    if (att is Map) {
+      final v = att[key];
+      if (v is bool) return v;
+      if (v == 'true' || v == 1) return true;
+    }
+    try {
+      if (key == 'isLate') return att.isLate == true;
+      if (key == 'earlyDeparture') return att.earlyDeparture == true;
+    } catch (_) {}
+    return false;
   }
 
   static String _formatDate(String dateStr,
@@ -588,42 +646,44 @@ class DashboardAttendanceCard extends StatelessWidget {
   }
 
   Widget _buildStatusBadge(bool isToday) {
+    final bool isWarning = item.isLate || item.isEarly;
+
     final textColor = isToday
         ? Colors.white
-        : (item.type == DashboardAttendanceType.pulang
-            ? const Color(0xFF0284C7)
-            : (item.isLate
-                ? const Color(0xFFB91C1C)
+        : (isWarning
+            ? const Color(0xFFB91C1C)
+            : (item.type == DashboardAttendanceType.pulang
+                ? const Color(0xFF0284C7)
                 : (item.type == DashboardAttendanceType.masuk
                     ? const Color(0xFF047857)
                     : const Color(0xFF475569))));
 
     final bgColor = isToday
         ? Colors.white.withValues(alpha: 0.20)
-        : (item.type == DashboardAttendanceType.pulang
-            ? const Color(0xFFE0F2FE)
-            : (item.isLate
-                ? const Color(0xFFFEECEC)
+        : (isWarning
+            ? const Color(0xFFFEECEC)
+            : (item.type == DashboardAttendanceType.pulang
+                ? const Color(0xFFE0F2FE)
                 : (item.type == DashboardAttendanceType.masuk
                     ? const Color(0xFFE8FAF3)
                     : const Color(0xFFF1F5F9))));
 
     final borderColor = isToday
         ? Colors.white.withValues(alpha: 0.45)
-        : (item.type == DashboardAttendanceType.pulang
-            ? const Color(0xFFBAE6FD)
-            : (item.isLate
-                ? const Color(0xFFFECACA)
+        : (isWarning
+            ? const Color(0xFFFECACA)
+            : (item.type == DashboardAttendanceType.pulang
+                ? const Color(0xFFBAE6FD)
                 : (item.type == DashboardAttendanceType.masuk
                     ? const Color(0xFFA7F3D0)
                     : const Color(0xFFE2E8F0))));
 
     final dotColor = isToday
-        ? (item.isLate ? const Color(0xFFF87171) : const Color(0xFF34D399))
-        : (item.type == DashboardAttendanceType.pulang
-            ? const Color(0xFF0284C7)
-            : (item.isLate
-                ? const Color(0xFFDC2626)
+        ? (isWarning ? const Color(0xFFF87171) : const Color(0xFF34D399))
+        : (isWarning
+            ? const Color(0xFFDC2626)
+            : (item.type == DashboardAttendanceType.pulang
+                ? const Color(0xFF0284C7)
                 : (item.type == DashboardAttendanceType.masuk
                     ? const Color(0xFF059669)
                     : const Color(0xFF64748B))));

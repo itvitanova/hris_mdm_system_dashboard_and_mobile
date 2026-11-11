@@ -13,6 +13,7 @@ import '../widgets/dashboard_tab.dart';
 import '../widgets/requests_tab.dart';
 import '../widgets/payroll_tab.dart';
 import '../widgets/profile_tab.dart';
+import '../widgets/language_swap_button.dart';
 
 class RootPage extends StatefulWidget {
   const RootPage({
@@ -46,6 +47,7 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
     _controller.addListener(() {
       if (mounted) setState(() {});
     });
+    AppLanguageController.instance.addListener(_handleLanguageChange);
 
     WidgetsBinding.instance.addObserver(this);
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
@@ -53,6 +55,10 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
         unawaited(_refreshVisible());
       }
     });
+  }
+
+  void _handleLanguageChange() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _refreshVisible() async {
@@ -74,6 +80,7 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    AppLanguageController.instance.removeListener(_handleLanguageChange);
     _refreshTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _controller.dispose();
@@ -156,6 +163,7 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
   }
 
   List<PersistentBottomNavBarItem> _navBarsItems() {
+    final isEn = AppLanguageController.currentLanguage == AppLanguage.en;
     final unreadCount = widget.workspace
         .mine('requests')
         .where((r) => r['unread'] == true)
@@ -173,16 +181,16 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
             'assets/icon/home-2.svg',
             colorFilter: const ColorFilter.mode(AppColors.deepTeal, BlendMode.srcIn),
           ),
-          label: 'Beranda',
+          label: isEn ? 'Home' : 'Beranda',
         ),
         inactiveIcon: _tabIcon(
           svg: SvgPicture.asset(
             'assets/icon/home-2-not-active.svg',
             colorFilter: const ColorFilter.mode(Colors.grey, BlendMode.srcIn),
           ),
-          label: 'Beranda',
+          label: isEn ? 'Home' : 'Beranda',
         ),
-        title: 'Beranda',
+        title: isEn ? 'Home' : 'Beranda',
         textStyle: AppTextStyles.inter12MediumDeepTeal,
         activeColorPrimary: AppColors.deepTeal,
         inactiveColorPrimary: Colors.grey,
@@ -195,7 +203,7 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
             height: 24,
             colorFilter: const ColorFilter.mode(AppColors.deepTeal, BlendMode.srcIn),
           ),
-          label: 'Pengajuan',
+          label: isEn ? 'Requests' : 'Pengajuan',
           badgeCount: unreadCount,
         ),
         inactiveIcon: _tabIcon(
@@ -203,10 +211,10 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
             'assets/icon/note-add.svg',
             colorFilter: const ColorFilter.mode(Colors.grey, BlendMode.srcIn),
           ),
-          label: 'Pengajuan',
+          label: isEn ? 'Requests' : 'Pengajuan',
           badgeCount: unreadCount,
         ),
-        title: 'Pengajuan',
+        title: isEn ? 'Requests' : 'Pengajuan',
         textStyle: AppTextStyles.inter12MediumDeepTeal,
         activeColorPrimary: AppColors.deepTeal,
         inactiveColorPrimary: Colors.grey,
@@ -218,7 +226,7 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
             width: 24,
             height: 24,
           ),
-          label: 'Persetujuan',
+          label: isEn ? 'Approvals' : 'Persetujuan',
           badgeCount: pendingApprovals,
         ),
         inactiveIcon: _tabIcon(
@@ -228,10 +236,10 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
             height: 24,
             colorFilter: const ColorFilter.mode(Colors.grey, BlendMode.srcIn),
           ),
-          label: 'Persetujuan',
+          label: isEn ? 'Approvals' : 'Persetujuan',
           badgeCount: pendingApprovals,
         ),
-        title: 'Persetujuan',
+        title: isEn ? 'Approvals' : 'Persetujuan',
         textStyle: AppTextStyles.inter12MediumDeepTeal,
         activeColorPrimary: AppColors.deepTeal,
         inactiveColorPrimary: Colors.grey,
@@ -244,16 +252,16 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
             height: 24,
             colorFilter: const ColorFilter.mode(AppColors.deepTeal, BlendMode.srcIn),
           ),
-          label: 'Slip gaji',
+          label: isEn ? 'Payslip' : 'Slip gaji',
         ),
         inactiveIcon: _tabIcon(
           svg: SvgPicture.asset(
             'assets/icon/empty-wallet.svg',
             colorFilter: const ColorFilter.mode(Colors.grey, BlendMode.srcIn),
           ),
-          label: 'Slip gaji',
+          label: isEn ? 'Payslip' : 'Slip gaji',
         ),
-        title: 'Slip gaji',
+        title: isEn ? 'Payslip' : 'Slip gaji',
         textStyle: AppTextStyles.inter12MediumDeepTeal,
         activeColorPrimary: AppColors.deepTeal,
         inactiveColorPrimary: Colors.grey,
@@ -264,16 +272,16 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
             'assets/icon/profile.svg',
             colorFilter: const ColorFilter.mode(AppColors.deepTeal, BlendMode.srcIn),
           ),
-          label: 'Profil',
+          label: isEn ? 'Profile' : 'Profil',
         ),
         inactiveIcon: _tabIcon(
           svg: SvgPicture.asset(
             'assets/icon/profile-not-active.svg',
             colorFilter: const ColorFilter.mode(Colors.grey, BlendMode.srcIn),
           ),
-          label: 'Profil',
+          label: isEn ? 'Profile' : 'Profil',
         ),
-        title: 'Profil',
+        title: isEn ? 'Profile' : 'Profil',
         textStyle: AppTextStyles.inter12MediumDeepTeal,
         activeColorPrimary: AppColors.deepTeal,
         inactiveColorPrimary: Colors.grey,

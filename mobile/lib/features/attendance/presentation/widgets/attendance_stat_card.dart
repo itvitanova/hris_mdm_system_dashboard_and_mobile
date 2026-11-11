@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
+import '../../../root/presentation/widgets/language_swap_button.dart';
 
 /// Jenis kategori statistik presensi
 enum AttendanceStatType {
@@ -11,16 +12,19 @@ enum AttendanceStatType {
   belumAbsen;
 
   /// Label ringkas & jelas
-  String get label {
+  String get label => getLabel(AppLanguage.id);
+
+  String getLabel([AppLanguage language = AppLanguage.id]) {
+    final isEn = language == AppLanguage.en;
     switch (this) {
       case AttendanceStatType.sudahAbsen:
-        return 'SUDAH ABSEN';
+        return isEn ? 'CHECKED IN' : 'SUDAH ABSEN';
       case AttendanceStatType.tepatWaktu:
-        return 'TEPAT WAKTU';
+        return isEn ? 'ON TIME' : 'TEPAT WAKTU';
       case AttendanceStatType.terlambat:
-        return 'TERLAMBAT';
+        return isEn ? 'LATE' : 'TERLAMBAT';
       case AttendanceStatType.belumAbsen:
-        return 'BELUM ABSEN';
+        return isEn ? 'ABSENT' : 'BELUM ABSEN';
     }
   }
 
@@ -65,6 +69,7 @@ class AttendanceStatCard extends StatelessWidget {
   final int count;
   final bool isSelected;
   final VoidCallback? onTap;
+  final AppLanguage language;
 
   AttendanceStatCard({
     super.key,
@@ -73,6 +78,7 @@ class AttendanceStatCard extends StatelessWidget {
     AttendanceStatItem? item,
     this.isSelected = false,
     this.onTap,
+    this.language = AppLanguage.id,
   })  : assert(
           (type != null && count != null) || item != null,
           'Either (type and count) or item must be provided',
@@ -163,7 +169,7 @@ class AttendanceStatCard extends StatelessWidget {
                     ),
                     SizedBox(height: 2.h),
                     Text(
-                      type.label,
+                      type.getLabel(language),
                       style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 9.5.sp,

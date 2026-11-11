@@ -16,6 +16,7 @@ import '../../../requests/presentation/widgets/services_hub/service_module_card.
 import '../../../requests/presentation/pages/modules/dedicated_module_screen.dart';
 import '../../../home/presentation/bloc/workspace_bloc.dart';
 import '../../../home/presentation/bloc/workspace_state.dart';
+import 'language_swap_button.dart';
 
 /// Halaman Hub Pengajuan Utama (Tab 'Pengajuan' di Bottom Navbar)
 /// Berisi Hero Action Banner, Bento Layout Simetris 5 Modul Layanan Mandiri,
@@ -27,18 +28,23 @@ class RequestsTab extends StatefulWidget {
     required this.workspace,
     required this.onRefresh,
     required this.open,
+    this.initialLanguage = AppLanguage.id,
   });
 
   final ApiClient api;
   final Workspace workspace;
   final Future<void> Function() onRefresh;
   final Future<void> Function(Widget) open;
+  final AppLanguage initialLanguage;
 
   @override
   State<RequestsTab> createState() => _RequestsTabState();
 }
 
 class _RequestsTabState extends State<RequestsTab> {
+  late AppLanguage _currentLanguage = widget.initialLanguage != AppLanguage.id
+      ? widget.initialLanguage
+      : AppLanguageController.currentLanguage;
   String _selectedFilter = 'Semua';
 
   ApiClient get api => widget.api;
@@ -65,11 +71,29 @@ class _RequestsTabState extends State<RequestsTab> {
   @override
   void initState() {
     super.initState();
+    _currentLanguage = widget.initialLanguage != AppLanguage.id
+        ? widget.initialLanguage
+        : AppLanguageController.currentLanguage;
+    AppLanguageController.instance.addListener(_onGlobalLanguageChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _tryGetRequestBloc(context)?.add(const RequestLoadRequested());
       }
     });
+  }
+
+  void _onGlobalLanguageChanged() {
+    if (mounted && _currentLanguage != AppLanguageController.currentLanguage) {
+      setState(() {
+        _currentLanguage = AppLanguageController.currentLanguage;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    AppLanguageController.instance.removeListener(_onGlobalLanguageChanged);
+    super.dispose();
   }
 
   Future<void> _handleRefresh() async {
@@ -87,6 +111,7 @@ class _RequestsTabState extends State<RequestsTab> {
   }
 
   Widget _buildHeroActionBanner() {
+    final isEn = _currentLanguage == AppLanguage.en;
     return Container(
       margin: EdgeInsets.only(bottom: 18.h),
       decoration: BoxDecoration(
@@ -164,9 +189,9 @@ class _RequestsTabState extends State<RequestsTab> {
                     ),
                   ),
                   SizedBox(width: 5.w),
-                  const Text(
-                    'Pusat Layanan Mandiri',
-                    style: TextStyle(
+                  Text(
+                    isEn ? 'Self-Service Hub' : 'Pusat Layanan Mandiri',
+                    style: const TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
@@ -178,9 +203,11 @@ class _RequestsTabState extends State<RequestsTab> {
               ),
             ),
             SizedBox(height: 8.h),
-            const Text(
-              'Pusat Layanan & Persetujuan',
-              style: TextStyle(
+            Text(
+              isEn
+                  ? 'Service & Approval Center'
+                  : 'Pusat Layanan & Persetujuan',
+              style: const TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
@@ -190,7 +217,9 @@ class _RequestsTabState extends State<RequestsTab> {
             ),
             SizedBox(height: 3.h),
             Text(
-              'Tinjau persetujuan pengajuan tim kerja atau akses formulir melalui modul layanan mandiri di bawah.',
+              isEn
+                  ? 'Review team approvals or access submission forms via the self-service modules below.'
+                  : 'Tinjau persetujuan pengajuan tim kerja atau akses formulir melalui modul layanan mandiri di bawah.',
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 11,
@@ -230,9 +259,9 @@ class _RequestsTabState extends State<RequestsTab> {
                         color: const Color(0xFF0F766E),
                       ),
                       SizedBox(width: 5.w),
-                      const Text(
-                        'Pusat Persetujuan',
-                        style: TextStyle(
+                      Text(
+                        isEn ? 'Approval Center' : 'Pusat Persetujuan',
+                        style: const TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 11.5,
                           fontWeight: FontWeight.w700,
@@ -254,7 +283,12 @@ class _RequestsTabState extends State<RequestsTab> {
   }
 
   Widget _buildSegmentedFilterBar() {
-    final segments = ['Semua', 'Menunggu', 'Selesai'];
+    final isEn = _currentLanguage == AppLanguage.en;
+    final segments = [
+      (key: 'Semua', label: isEn ? 'All' : 'Semua'),
+      (key: 'Menunggu', label: isEn ? 'Pending' : 'Menunggu'),
+      (key: 'Selesai', label: isEn ? 'Finished' : 'Selesai'),
+    ];
 
     return Container(
       height: 38.h,
@@ -265,15 +299,15 @@ class _RequestsTabState extends State<RequestsTab> {
       ),
       child: Row(
         children: segments.map((segment) {
-          final isSelected = _selectedFilter == segment;
+          final isSelected = _selectedFilter == segment.key;
           return Expanded(
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                key: ValueKey('filter_segment_$segment'),
+                key: ValueKey('filter_segment_${segment.key}'),
                 onTap: () {
                   setState(() {
-                    _selectedFilter = segment;
+                    _selectedFilter = segment.key;
                   });
                 },
                 borderRadius: BorderRadius.circular(7.r),
@@ -304,7 +338,7 @@ class _RequestsTabState extends State<RequestsTab> {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    segment,
+                    segment.label,
                     style: TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 11.5,
@@ -339,6 +373,7 @@ class _RequestsTabState extends State<RequestsTab> {
   }
 
   Widget _buildScaffold(BuildContext context, List<Map<String, dynamic>> rows) {
+    final isEn = _currentLanguage == AppLanguage.en;
     final unreadCount = rows.where((r) => r['unread'] == true).length;
 
     // Data request riil karyawan dari workspace
@@ -376,13 +411,13 @@ class _RequestsTabState extends State<RequestsTab> {
         .where((r) => r.status == SubmissionStatus.menunggu)
         .fold<int>(0, (sum, r) => sum + (r.days ?? 0));
     final currentLeaveBalance = (baseLeaveBalance - pendingLeaveDays).clamp(0, 999);
-    final cutiMetricStr = '$currentLeaveBalance Hari';
+    final cutiMetricStr = '$currentLeaveBalance ${isEn ? 'Days' : 'Hari'}';
 
     // 2. Lembur: Total durasi jam lembur yang disetujui
     final totalLemburHours = lemburRequests
         .where((r) => r.status == SubmissionStatus.disetujui)
         .fold<int>(0, (sum, r) => sum + (r.hours ?? 0));
-    final lemburMetricStr = '$totalLemburHours Jam';
+    final lemburMetricStr = '$totalLemburHours ${isEn ? 'Hours' : 'Jam'}';
 
     // 3. Reimbursement: Total nominal klaim yang disetujui
     final totalReimburseAmount = reimburseRequests
@@ -397,13 +432,15 @@ class _RequestsTabState extends State<RequestsTab> {
     final medicalMetricStr = rupiah(totalMedicalAmount);
 
     // 5. Petty Cash: Jumlah permohonan kas kecil yang diajukan
-    final pettyCashMetricStr = '${pettyCashRequests.length} Pengajuan';
+    final pettyCashMetricStr = '${pettyCashRequests.length} ${isEn ? 'Submissions' : 'Pengajuan'}';
 
     // 6. GA: Jumlah permohonan sarana GA aktif / terkini
     final activeGaCount = gaRequests
         .where((r) => r.status == SubmissionStatus.menunggu || r.status == SubmissionStatus.perluRevisi)
         .length;
-    final gaMetricStr = activeGaCount > 0 ? '$activeGaCount Aktif' : '${gaRequests.length} Pengajuan';
+    final gaMetricStr = activeGaCount > 0
+        ? '$activeGaCount ${isEn ? 'Active' : 'Aktif'}'
+        : '${gaRequests.length} ${isEn ? 'Submissions' : 'Pengajuan'}';
 
     // Terapkan filter status
     final filteredIndices = <int>[];
@@ -440,6 +477,7 @@ class _RequestsTabState extends State<RequestsTab> {
         ),
         child: UniversalRequestCard(
           data: model,
+          language: _currentLanguage,
           onDetailPressed: () => _navigateAndRefresh(
             RequestDetailScreen(
               api: api,
@@ -471,10 +509,10 @@ class _RequestsTabState extends State<RequestsTab> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
-          children: const [
+          children: [
             Text(
-              'Pengajuan',
-              style: TextStyle(
+              isEn ? 'Submissions' : 'Pengajuan',
+              style: const TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -482,10 +520,12 @@ class _RequestsTabState extends State<RequestsTab> {
                 letterSpacing: -0.3,
               ),
             ),
-            SizedBox(height: 1.5),
+            const SizedBox(height: 1.5),
             Text(
-              'Layanan & Permohonan Mandiri',
-              style: TextStyle(
+              isEn
+                  ? 'Self-Service & Employee Requests'
+                  : 'Layanan & Permohonan Mandiri',
+              style: const TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 11,
                 fontWeight: FontWeight.w400,
@@ -605,9 +645,9 @@ class _RequestsTabState extends State<RequestsTab> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Katalog Pengajuan',
-                    style: TextStyle(
+                  Text(
+                    isEn ? 'Submission Catalog' : 'Katalog Pengajuan',
+                    style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                       color: Color(0xFF0F172A),
@@ -615,9 +655,11 @@ class _RequestsTabState extends State<RequestsTab> {
                     ),
                   ),
                   SizedBox(height: 2.h),
-                  const Text(
-                    'Pilih modul untuk melihat rekap kuota & riwayat privat Anda.',
-                    style: TextStyle(
+                  Text(
+                    isEn
+                        ? 'Select a module to view quota summary & private history.'
+                        : 'Pilih modul untuk melihat rekap kuota & riwayat privat Anda.',
+                    style: const TextStyle(
                       fontSize: 11.5,
                       color: Color(0xFF64748B),
                     ),
@@ -641,21 +683,22 @@ class _RequestsTabState extends State<RequestsTab> {
                         width: itemWidth,
                         height: itemHeight,
                         child: ServiceModuleCard(
-                          title: 'Cuti',
-                          metricTag: 'Cuti Tahunan',
-                          description: 'Cuti tahunan & urusan penting',
+                          title: isEn ? 'Leave' : 'Cuti',
+                          metricTag: isEn ? 'Annual Leave' : 'Cuti Tahunan',
+                          description: isEn ? 'Annual leave & personal time off' : 'Cuti tahunan & urusan penting',
                           icon: Icons.event_available_outlined,
                           onTap: () => _navigateAndRefresh(
                             DedicatedModuleScreen(
                               kind: SubmissionKind.cuti,
-                              moduleTitle: 'Pengajuan Cuti',
-                              keyMetricLabel: 'SISA KUOTA',
+                              moduleTitle: isEn ? 'Leave Request' : 'Pengajuan Cuti',
+                              keyMetricLabel: isEn ? 'REMAINING QUOTA' : 'SISA KUOTA',
                               keyMetricValue: cutiMetricStr,
                               keyMetricIcon: Icons.event_available_outlined,
                               api: api,
                               workspace: w,
                               open: open,
                               onRefresh: _handleRefresh,
+                              initialLanguage: _currentLanguage,
                             ),
                           ),
                         ),
@@ -665,21 +708,22 @@ class _RequestsTabState extends State<RequestsTab> {
                         width: itemWidth,
                         height: itemHeight,
                         child: ServiceModuleCard(
-                          title: 'Izin',
-                          metricTag: 'Surat Izin',
-                          description: 'Sakit & dispensasi kerja',
+                          title: isEn ? 'Permission' : 'Izin',
+                          metricTag: isEn ? 'Official Letter' : 'Surat Izin',
+                          description: isEn ? 'Sick leave & work dispensation' : 'Sakit & dispensasi kerja',
                           icon: Icons.medical_services_outlined,
                           onTap: () => _navigateAndRefresh(
                             DedicatedModuleScreen(
                               kind: SubmissionKind.izin,
-                              moduleTitle: 'Pengajuan Izin',
-                              keyMetricLabel: 'TOTAL IZIN',
-                              keyMetricValue: '${izinRequests.length} Pengajuan',
+                              moduleTitle: isEn ? 'Permission Request' : 'Pengajuan Izin',
+                              keyMetricLabel: isEn ? 'TOTAL PERMISSIONS' : 'TOTAL IZIN',
+                              keyMetricValue: '${izinRequests.length} ${isEn ? 'Submissions' : 'Pengajuan'}',
                               keyMetricIcon: Icons.medical_services_outlined,
                               api: api,
                               workspace: w,
                               open: open,
                               onRefresh: _handleRefresh,
+                              initialLanguage: _currentLanguage,
                             ),
                           ),
                         ),
@@ -689,21 +733,22 @@ class _RequestsTabState extends State<RequestsTab> {
                         width: itemWidth,
                         height: itemHeight,
                         child: ServiceModuleCard(
-                          title: 'Lembur',
-                          metricTag: 'Kompensasi',
-                          description: 'Tugas lembur & kompensasi',
+                          title: isEn ? 'Overtime' : 'Lembur',
+                          metricTag: isEn ? 'Compensation' : 'Kompensasi',
+                          description: isEn ? 'Overtime tasks & compensation' : 'Tugas lembur & kompensasi',
                           icon: Icons.access_time_rounded,
                           onTap: () => _navigateAndRefresh(
                             DedicatedModuleScreen(
                               kind: SubmissionKind.lembur,
-                              moduleTitle: 'Pengajuan Lembur',
-                              keyMetricLabel: 'TOTAL LEMBUR',
+                              moduleTitle: isEn ? 'Overtime Request' : 'Pengajuan Lembur',
+                              keyMetricLabel: isEn ? 'TOTAL OVERTIME' : 'TOTAL LEMBUR',
                               keyMetricValue: lemburMetricStr,
                               keyMetricIcon: Icons.access_time_rounded,
                               api: api,
                               workspace: w,
                               open: open,
                               onRefresh: _handleRefresh,
+                              initialLanguage: _currentLanguage,
                             ),
                           ),
                         ),
@@ -714,20 +759,21 @@ class _RequestsTabState extends State<RequestsTab> {
                         height: itemHeight,
                         child: ServiceModuleCard(
                           title: 'Reimbursement',
-                          metricTag: 'Klaim Biaya',
-                          description: 'Transport, makan & klien',
+                          metricTag: isEn ? 'Expense Claim' : 'Klaim Biaya',
+                          description: isEn ? 'Transport, meals & clients' : 'Transport, makan & klien',
                           icon: Icons.receipt_long_rounded,
                           onTap: () => _navigateAndRefresh(
                             DedicatedModuleScreen(
                               kind: SubmissionKind.reimbursement,
-                              moduleTitle: 'Klaim Reimbursement',
-                              keyMetricLabel: 'TOTAL KLAIM',
+                              moduleTitle: isEn ? 'Reimbursement Claim' : 'Klaim Reimbursement',
+                              keyMetricLabel: isEn ? 'TOTAL CLAIMS' : 'TOTAL KLAIM',
                               keyMetricValue: reimburseMetricStr,
                               keyMetricIcon: Icons.receipt_long_rounded,
                               api: api,
                               workspace: w,
                               open: open,
                               onRefresh: _handleRefresh,
+                              initialLanguage: _currentLanguage,
                             ),
                           ),
                         ),
@@ -738,20 +784,21 @@ class _RequestsTabState extends State<RequestsTab> {
                         height: itemHeight,
                         child: ServiceModuleCard(
                           title: 'Medical Claim',
-                          metricTag: 'Plafon Medis',
-                          description: 'Rawat jalan & pengobatan',
+                          metricTag: isEn ? 'Medical Quota' : 'Plafon Medis',
+                          description: isEn ? 'Outpatient & health expenses' : 'Rawat jalan & pengobatan',
                           icon: Icons.health_and_safety_outlined,
                           onTap: () => _navigateAndRefresh(
                             DedicatedModuleScreen(
                               kind: SubmissionKind.medicalClaim,
                               moduleTitle: 'Medical Claim',
-                              keyMetricLabel: 'TOTAL KLAIM',
+                              keyMetricLabel: isEn ? 'TOTAL CLAIMS' : 'TOTAL KLAIM',
                               keyMetricValue: medicalMetricStr,
                               keyMetricIcon: Icons.health_and_safety_outlined,
                               api: api,
                               workspace: w,
                               open: open,
                               onRefresh: _handleRefresh,
+                              initialLanguage: _currentLanguage,
                             ),
                           ),
                         ),
@@ -762,20 +809,21 @@ class _RequestsTabState extends State<RequestsTab> {
                         height: itemHeight,
                         child: ServiceModuleCard(
                           title: 'Petty Cash',
-                          metricTag: 'Kas Kecil',
-                          description: 'Permohonan dana operasional',
+                          metricTag: isEn ? 'Petty Cash' : 'Kas Kecil',
+                          description: isEn ? 'Operational cash requests' : 'Permohonan dana operasional',
                           icon: Icons.payments_outlined,
                           onTap: () => _navigateAndRefresh(
                             DedicatedModuleScreen(
                               kind: SubmissionKind.pettyCash,
-                              moduleTitle: 'Pengajuan Petty Cash',
-                              keyMetricLabel: 'TOTAL PENGAJUAN',
+                              moduleTitle: isEn ? 'Petty Cash Request' : 'Pengajuan Petty Cash',
+                              keyMetricLabel: isEn ? 'TOTAL SUBMISSIONS' : 'TOTAL PENGAJUAN',
                               keyMetricValue: pettyCashMetricStr,
                               keyMetricIcon: Icons.payments_outlined,
                               api: api,
                               workspace: w,
                               open: open,
                               onRefresh: _handleRefresh,
+                              initialLanguage: _currentLanguage,
                             ),
                           ),
                         ),
@@ -785,21 +833,24 @@ class _RequestsTabState extends State<RequestsTab> {
                         width: constraints.maxWidth,
                         child: ServiceModuleCard(
                           title: 'General Affair',
-                          metricTag: 'Fasilitas & GA',
-                          description: 'Pengadaan barang, logistik & sarana kantor',
+                          metricTag: isEn ? 'Facilities & GA' : 'Fasilitas & GA',
+                          description: isEn
+                              ? 'Equipment procurement, logistics & facilities'
+                              : 'Pengadaan barang, logistik & sarana kantor',
                           icon: Icons.inventory_2_outlined,
                           isFeatured: true,
                           onTap: () => _navigateAndRefresh(
                             DedicatedModuleScreen(
                               kind: SubmissionKind.generalAffair,
                               moduleTitle: 'General Affair',
-                              keyMetricLabel: 'PERMOHONAN GA',
+                              keyMetricLabel: isEn ? 'GA REQUESTS' : 'PERMOHONAN GA',
                               keyMetricValue: gaMetricStr,
                               keyMetricIcon: Icons.inventory_2_outlined,
                               api: api,
                               workspace: w,
                               open: open,
                               onRefresh: _handleRefresh,
+                              initialLanguage: _currentLanguage,
                             ),
                           ),
                         ),
@@ -813,9 +864,9 @@ class _RequestsTabState extends State<RequestsTab> {
               SizedBox(height: 18.h),
 
               // ==================== 2. PENGAJUAN TERKINI ====================
-              const Text(
-                'Pengajuan Terkini',
-                style: TextStyle(
+              Text(
+                isEn ? 'Recent Submissions' : 'Pengajuan Terkini',
+                style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
                   color: Color(0xFF0F172A),
@@ -823,9 +874,11 @@ class _RequestsTabState extends State<RequestsTab> {
                 ),
               ),
               SizedBox(height: 4.h),
-              const Text(
-                'Pantau status dan tindak lanjut pengajuan terbaru Anda.',
-                style: TextStyle(
+              Text(
+                isEn
+                    ? 'Track the status and next steps of your latest submissions.'
+                    : 'Pantau status dan tindak lanjut pengajuan terbaru Anda.',
+                style: const TextStyle(
                   fontSize: 11.5,
                   color: Color(0xFF64748B),
                 ),
@@ -864,8 +917,12 @@ class _RequestsTabState extends State<RequestsTab> {
                       SizedBox(height: 10.h),
                       Text(
                         _selectedFilter == 'Semua'
-                            ? 'Belum ada pengajuan aktif saat ini.'
-                            : 'Belum ada pengajuan dengan status "$_selectedFilter".',
+                            ? (isEn
+                                ? 'No active submissions at the moment.'
+                                : 'Belum ada pengajuan aktif saat ini.')
+                            : (isEn
+                                ? 'No submissions with status "${_selectedFilter == 'Menunggu' ? 'Pending' : 'Finished'}".'
+                                : 'Belum ada pengajuan dengan status "$_selectedFilter".'),
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontFamily: 'Inter',
@@ -875,10 +932,12 @@ class _RequestsTabState extends State<RequestsTab> {
                         ),
                       ),
                       SizedBox(height: 4.h),
-                      const Text(
-                        'Pilih salah satu modul layanan di atas untuk mengajukan permohonan baru.',
+                      Text(
+                        isEn
+                            ? 'Choose one of the service modules above to submit a new request.'
+                            : 'Pilih salah satu modul layanan di atas untuk mengajukan permohonan baru.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 11,
                           color: Color(0xFF94A3B8),
@@ -894,13 +953,15 @@ class _RequestsTabState extends State<RequestsTab> {
                     padding: EdgeInsets.only(top: 2.h, bottom: 0),
                     child: Center(
                       child: Text(
-                        'Menampilkan 2 pengajuan terbaru. Buka modul katalog untuk riwayat lengkap.',
+                        isEn
+                            ? 'Showing 2 latest submissions. Open catalog module for full history.'
+                            : 'Menampilkan 2 pengajuan terbaru. Buka modul katalog untuk riwayat lengkap.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 11,
                           fontWeight: FontWeight.w400,
-                          color: const Color(0xFF94A3B8),
+                          color: Color(0xFF94A3B8),
                           fontStyle: FontStyle.italic,
                         ),
                       ),

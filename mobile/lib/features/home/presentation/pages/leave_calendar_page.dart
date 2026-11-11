@@ -236,11 +236,6 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
     final today = DateTime.now();
     final todayBirthdays = birthdaysOnDate(selected);
     final monthlyBirthdays = birthdaysInMonth(month);
-    final locationName = text(
-      widget.workspace.attendancePolicy,
-      'name',
-      text(widget.workspace.settings, 'locationName', 'Kantor Pusat'),
-    );
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -328,90 +323,6 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
             children: [
-              // ==================== 0. HEADER INFO KANTOR / LOKASI ====================
-              Container(
-                margin: const EdgeInsets.only(bottom: 14),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: const Color(0xFFE2E8F0),
-                    width: 0.8,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFEF3C7),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFFFDE68A)),
-                      ),
-                      child: const Icon(
-                        Icons.cake_rounded,
-                        size: 18,
-                        color: Color(0xFFD97706),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Lokasi Penugasan',
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF64748B),
-                            ),
-                          ),
-                          Text(
-                            locationName,
-                            style: const TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF0F172A),
-                              letterSpacing: -0.1,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFFBEB),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: const Color(0xFFFDE68A), width: 0.8),
-                          ),
-                          child: Text(
-                            '${monthlyBirthdays.length} Bulan Ini',
-                            style: const TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFFB45309),
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
               // ==================== 1. KARTU KALENDER EKSEKUTIF ====================
               Container(
                 decoration: BoxDecoration(

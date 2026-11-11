@@ -8,11 +8,11 @@ import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../attendance/daily_attendance.dart';
 import '../../../attendance/presentation/pages/attendance_history_page.dart';
+import '../../../attendance/presentation/widgets/attendance_daily_card.dart';
 import '../../../attendance/presentation/widgets/attendance_detail_modal.dart';
 import '../../../attendance/presentation/widgets/attendance_modal_bottom_sheet.dart';
 import '../../../requests/request_notifications.dart';
 import 'compact_attendance_card.dart';
-import 'dashboard_attendance_card.dart';
 import 'language_swap_button.dart';
 
 class DashboardTab extends StatefulWidget {
@@ -34,11 +34,32 @@ class DashboardTab extends StatefulWidget {
 }
 
 class _DashboardTabState extends State<DashboardTab> {
-  AppLanguage _currentLanguage = AppLanguage.id;
+  late AppLanguage _currentLanguage = AppLanguageController.currentLanguage;
 
   ApiClient get api => widget.api;
   Workspace get w => widget.workspace;
   Future<void> Function(Widget) get open => widget.open;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentLanguage = AppLanguageController.currentLanguage;
+    AppLanguageController.instance.addListener(_onGlobalLanguageChanged);
+  }
+
+  void _onGlobalLanguageChanged() {
+    if (mounted && _currentLanguage != AppLanguageController.currentLanguage) {
+      setState(() {
+        _currentLanguage = AppLanguageController.currentLanguage;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    AppLanguageController.instance.removeListener(_onGlobalLanguageChanged);
+    super.dispose();
+  }
 
   Future<void> _openAttendanceModal(BuildContext context) async {
     await showModalBottomSheet<bool>(
@@ -134,12 +155,13 @@ class _DashboardTabState extends State<DashboardTab> {
   }
 
   Widget _buildGreetingAndName(String name) {
+    final isEn = _currentLanguage == AppLanguage.en;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          'Selamat Datang 👋',
+          isEn ? 'Welcome 👋' : 'Selamat Datang 👋',
           style: TextStyle(
             fontFamily: 'Inter',
             fontSize: 11.sp,
@@ -441,6 +463,7 @@ class _DashboardTabState extends State<DashboardTab> {
 
   @override
   Widget build(BuildContext context) {
+    final isEn = _currentLanguage == AppLanguage.en;
     final daily = DailyAttendance(w);
     final attendance = w.mine('attendance')
       ..sort((a, b) => text(b, 'date').compareTo(text(a, 'date')));
@@ -518,40 +541,44 @@ class _DashboardTabState extends State<DashboardTab> {
                         width: width,
                         child: _AttendanceStatCard(
                           icon: UIcons.regularRounded.calendar_check,
-                          title: 'Sudah Absen',
-                          subTitle: 'bulan ini',
+                          title: isEn ? 'Checked In' : 'Sudah Absen',
+                          subTitle: isEn ? 'this month' : 'bulan ini',
                           day: '$sudahAbsen',
-                          description: 'SUDAH ABSEN',
+                          unit: isEn ? 'days' : 'hari',
+                          description: isEn ? 'CHECKED IN' : 'SUDAH ABSEN',
                         ),
                       ),
                       SizedBox(
                         width: width,
                         child: _AttendanceStatCard(
                           icon: UIcons.regularRounded.clock,
-                          title: 'Tepat Waktu',
-                          subTitle: 'bulan ini',
+                          title: isEn ? 'On Time' : 'Tepat Waktu',
+                          subTitle: isEn ? 'this month' : 'bulan ini',
                           day: '$tepatWaktu',
-                          description: 'TEPAT WAKTU',
+                          unit: isEn ? 'days' : 'hari',
+                          description: isEn ? 'ON TIME' : 'TEPAT WAKTU',
                         ),
                       ),
                       SizedBox(
                         width: width,
                         child: _AttendanceStatCard(
                           icon: UIcons.regularRounded.alarm_exclamation,
-                          title: 'Terlambat',
-                          subTitle: 'bulan ini',
+                          title: isEn ? 'Late' : 'Terlambat',
+                          subTitle: isEn ? 'this month' : 'bulan ini',
                           day: '$terlambat',
-                          description: 'TERLAMBAT',
+                          unit: isEn ? 'days' : 'hari',
+                          description: isEn ? 'LATE' : 'TERLAMBAT',
                         ),
                       ),
                       SizedBox(
                         width: width,
                         child: _AttendanceStatCard(
                           icon: UIcons.regularRounded.calendar_minus,
-                          title: 'Belum Absen',
-                          subTitle: 'bulan ini',
+                          title: isEn ? 'Absent' : 'Belum Absen',
+                          subTitle: isEn ? 'this month' : 'bulan ini',
                           day: '$belumAbsen',
-                          description: 'BELUM ABSEN',
+                          unit: isEn ? 'days' : 'hari',
+                          description: isEn ? 'ABSENT' : 'BELUM ABSEN',
                         ),
                       ),
                     ],
@@ -574,7 +601,7 @@ class _DashboardTabState extends State<DashboardTab> {
                   children: [
                     Expanded(
                       child: Text(
-                        'Your activity',
+                        isEn ? 'Your activity' : 'Aktivitas Anda',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppTextStyles.inter14MediumPrimary,
@@ -605,6 +632,7 @@ class _DashboardTabState extends State<DashboardTab> {
                               AttendanceHistoryPage(
                                 api: api,
                                 workspace: w,
+                                initialLanguage: _currentLanguage,
                               ),
                             );
                           },
@@ -616,7 +644,7 @@ class _DashboardTabState extends State<DashboardTab> {
                             child: FittedBox(
                               fit: BoxFit.scaleDown,
                               child: Text(
-                                'View all',
+                                isEn ? 'View all' : 'Lihat semua',
                                 maxLines: 1,
                                 style: AppTextStyles.inter12MediumWhite,
                               ),
@@ -631,19 +659,16 @@ class _DashboardTabState extends State<DashboardTab> {
               SizedBox(height: 17.w),
               Builder(
                 builder: (context) {
-                  final recentAttendanceItems =
-                      DashboardAttendanceItem.fromAttendanceList(
-                    attendance,
-                    limit: 2,
-                    language: _currentLanguage,
-                  );
+                  final recentAttendanceRecords = attendance.take(2).toList();
 
-                  if (recentAttendanceItems.isEmpty) {
+                  if (recentAttendanceRecords.isEmpty) {
                     return Container(
                       padding: EdgeInsets.symmetric(vertical: 24.w),
                       alignment: Alignment.center,
                       child: Text(
-                        'Belum ada catatan kehadiran.',
+                        isEn
+                            ? 'No attendance records yet.'
+                            : 'Belum ada catatan kehadiran.',
                         style: AppTextStyles.inter128RegularSecondary,
                       ),
                     );
@@ -651,23 +676,21 @@ class _DashboardTabState extends State<DashboardTab> {
 
                   return Column(
                     children: [
-                      for (int i = 0; i < recentAttendanceItems.length; i++) ...[
-                        DashboardAttendanceCard(
-                          key: ValueKey('dash_$i'),
-                          item: recentAttendanceItems[i],
-                          isHighlighted: i == 0 && recentAttendanceItems[i].isToday,
+                      for (int i = 0; i < recentAttendanceRecords.length; i++) ...[
+                        AttendanceDailyCard(
+                          key: ValueKey('dash_daily_$i'),
+                          raw: Map<String, dynamic>.from(recentAttendanceRecords[i]),
+                          isHighlighted: i == 0,
+                          language: _currentLanguage,
                           onTap: () {
-                            if (recentAttendanceItems[i].rawData is Map) {
-                              showAttendanceDetailModal(
-                                context,
-                                Map<String, dynamic>.from(
-                                  recentAttendanceItems[i].rawData as Map,
-                                ),
-                              );
-                            }
+                            showAttendanceDetailModal(
+                              context,
+                              Map<String, dynamic>.from(recentAttendanceRecords[i]),
+                              language: _currentLanguage,
+                            );
                           },
                         ),
-                        if (i < recentAttendanceItems.length - 1)
+                        if (i < recentAttendanceRecords.length - 1)
                           SizedBox(height: 10.w),
                       ],
                     ],
@@ -688,6 +711,7 @@ class _AttendanceStatCard extends StatelessWidget {
     required this.title,
     required this.subTitle,
     required this.day,
+    required this.unit,
     required this.description,
   });
 
@@ -695,6 +719,7 @@ class _AttendanceStatCard extends StatelessWidget {
   final String title;
   final String subTitle;
   final String day;
+  final String unit;
   final String description;
 
   @override
@@ -765,7 +790,7 @@ class _AttendanceStatCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '$day hari',
+                '$day $unit',
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 17.sp,
