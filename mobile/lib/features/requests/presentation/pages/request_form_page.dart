@@ -14,6 +14,7 @@ import '../widgets/form_sections/attachment_card.dart';
 import '../widgets/form_sections/overtime_form_section.dart';
 import '../widgets/form_sections/petty_cash_form_section.dart';
 import '../widgets/form_sections/cuti_izin_form_section.dart';
+import '../widgets/form_card_input.dart';
 import '../../../../core/utils/image_compressor.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../home/presentation/bloc/workspace_bloc.dart';
@@ -221,7 +222,12 @@ class _RequestFormState extends State<RequestForm> {
 
   int get totalExpenses => expenses.fold<int>(
     0,
-    (sum, e) => sum + (int.tryParse(e.amount.text) ?? 0),
+    (sum, e) {
+      final q = int.tryParse(e.qty.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 1;
+      final p = int.tryParse(e.unitPrice.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+      final a = int.tryParse(e.amount.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? (q * p);
+      return sum + a;
+    },
   );
 
   int get leaveDays {
@@ -268,28 +274,29 @@ class _RequestFormState extends State<RequestForm> {
 
   String _formatDisplayDate(DateTime date) {
     const months = [
-      'Januari',
-      'Februari',
-      'Maret',
-      'April',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
       'Mei',
-      'Juni',
-      'Juli',
-      'Agustus',
-      'September',
-      'Oktober',
-      'November',
-      'Desember',
+      'Jun',
+      'Jul',
+      'Agu',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
     ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 
   Future<void> expenseDate(ExpenseDraft item) async {
+    final now = DateTime.now();
     final next = await showCustomDatePickerDialog(
       context: context,
-      initialDate: item.date,
+      initialDate: item.date.isAfter(now) ? now : item.date,
       firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      lastDate: now,
       title: 'PILIH TANGGAL TRANSAKSI',
     );
     if (next != null && mounted) setState(() => item.date = next);
@@ -421,13 +428,42 @@ class _RequestFormState extends State<RequestForm> {
       notify(context, 'Mohon lengkapi formulir sebelum mengirim.');
       return;
     }
-    if (kind == 'Reimbursement' && expenses.any((e) => e.receiptId.isEmpty)) {
-      const msg = 'Unggah bukti untuk setiap rincian pengeluaran.';
-      setState(() => error = msg);
-      notify(context, 'Perhatian: $msg');
-      return;
-    }
-    if (end.isBefore(start)) {
+    if (kind == 'Reimbursement') {
+      if (expenses.isEmpty) {
+        const msg = 'Tambahkan minimal satu rincian pengeluaran.';
+        setState(() => error = msg);
+        notify(context, 'Perhatian: $msg');
+        return;
+      }
+      if (expenses.any((e) => e.receiptId.isEmpty)) {
+        const msg = 'Unggah bukti untuk setiap rincian pengeluaran.';
+        setState(() => error = msg);
+        notify(context, 'Perhatian: $msg');
+        return;
+      }
+      final now = DateTime.now();
+      final todayDate = DateTime(now.year, now.month, now.day);
+      if (expenses.any((e) {
+        final itemDate = DateTime(e.date.year, e.date.month, e.date.day);
+        return itemDate.isAfter(todayDate);
+      })) {
+        const msg = 'Tanggal transaksi tidak boleh di masa depan.';
+        setState(() => error = msg);
+        notify(context, 'Perhatian: $msg');
+        return;
+      }
+      if (expenses.any((e) {
+        final q = int.tryParse(e.qty.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 1;
+        final p = int.tryParse(e.unitPrice.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+        final a = int.tryParse(e.amount.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? (q * p);
+        return a <= 0;
+      })) {
+        const msg = 'Nominal setiap rincian pengeluaran harus lebih dari nol.';
+        setState(() => error = msg);
+        notify(context, 'Perhatian: $msg');
+        return;
+      }
+    } else if (end.isBefore(start)) {
       const msg = 'Tanggal selesai tidak boleh sebelum tanggal mulai.';
       setState(() => error = msg);
       notify(context, 'Perhatian: $msg');
@@ -455,7 +491,8 @@ class _RequestFormState extends State<RequestForm> {
           _selectedAttachmentName!.isNotEmpty &&
           kind != 'Lembur' &&
           kind != 'Cuti' &&
-          kind != 'Petty Cash') {
+          kind != 'Petty Cash' &&
+          kind != 'Reimbursement') {
         metadataItems.add('Lampiran: $_selectedAttachmentName');
       }
 
@@ -466,15 +503,24 @@ class _RequestFormState extends State<RequestForm> {
       final isRevision = widget.initialRequest?['id'] != null &&
           widget.initialRequest!['id'].toString().isNotEmpty;
 
+      final reimbursementStart = expenses.isNotEmpty
+          ? expenses.map((e) => e.date).reduce((a, b) => a.isBefore(b) ? a : b)
+          : DateTime.now();
+      final reimbursementEnd = expenses.isNotEmpty
+          ? expenses.map((e) => e.date).reduce((a, b) => a.isAfter(b) ? a : b)
+          : DateTime.now();
+
       final payload = <String, dynamic>{
         'kind': kind,
         'title': title.text.trim(),
         'description': fullDescription,
-        'startDate': dateOnly(start),
+        'startDate': dateOnly(
+          kind == 'Reimbursement' ? reimbursementStart : start,
+        ),
         'endDate': dateOnly(
-          kind == 'Lembur' || kind == 'General Affair'
-              ? start
-              : end,
+          kind == 'Reimbursement'
+              ? reimbursementEnd
+              : (kind == 'Lembur' || kind == 'General Affair' ? start : end),
         ),
         if (isRevision) ...{
           'id': widget.initialRequest!['id'].toString(),
@@ -491,11 +537,13 @@ class _RequestFormState extends State<RequestForm> {
         if (kind == 'Izin' && selectedIzinType != null && selectedIzinType!.isNotEmpty) ...{
           'permissionType': selectedIzinType,
         },
-        if (_selectedAttachmentId != null && _selectedAttachmentId!.isNotEmpty) ...{
-          'attachmentId': _selectedAttachmentId,
-        } else if (widget.initialRequest?['attachmentId'] != null &&
-            widget.initialRequest!['attachmentId'].toString().isNotEmpty) ...{
-          'attachmentId': widget.initialRequest!['attachmentId'].toString(),
+        if (kind != 'Reimbursement') ...{
+          if (_selectedAttachmentId != null && _selectedAttachmentId!.isNotEmpty) ...{
+            'attachmentId': _selectedAttachmentId,
+          } else if (widget.initialRequest?['attachmentId'] != null &&
+              widget.initialRequest!['attachmentId'].toString().isNotEmpty) ...{
+            'attachmentId': widget.initialRequest!['attachmentId'].toString(),
+          },
         },
         if (kind == 'Lembur')
           'hours': (int.tryParse(hours.text) ??
@@ -781,56 +829,15 @@ class _RequestFormState extends State<RequestForm> {
                         : 'Judul Pengajuan *',
                   ),
                   SizedBox(height: 8.h),
-                  Container(
+                  FormCardTextInput(
+                    controller: title,
                     height: 48.h,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10.r),
-                      color: Colors.white,
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color.fromRGBO(0, 0, 0, 0.04),
-                          blurRadius: 10,
-                          offset: Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Center(
-                      child: TextFormField(
-                        controller: title,
-                        maxLength: 160,
-                        buildCounter:
-                            (context,
-                                {required currentLength,
-                                required isFocused,
-                                maxLength}) => null,
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 13.sp,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF0F172A),
-                        ),
-                        decoration: InputDecoration(
-                          isDense: true,
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          contentPadding:
-                              EdgeInsets.symmetric(horizontal: 14.w),
-                          hintText: (kind == 'Izin' || kind == 'Reimbursement' || kind == 'General Affair')
-                              ? 'Ringkasan keperluan Anda'
-                              : 'Judul',
-                          hintStyle: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 13.sp,
-                            color: const Color(0xFF94A3B8),
-                          ),
-                        ),
-                        validator: requiredText,
-                        onChanged: (_) => setState(() {}),
-                      ),
-                    ),
+                    maxLength: 160,
+                    hintText: (kind == 'Izin' || kind == 'Reimbursement' || kind == 'General Affair')
+                        ? 'Ringkasan keperluan Anda'
+                        : 'Judul',
+                    validator: requiredText,
+                    onChanged: (_) => setState(() {}),
                   ),
 
                   SizedBox(height: 16.h),
@@ -842,76 +849,17 @@ class _RequestFormState extends State<RequestForm> {
                         : 'Keterangan / Alasan *',
                   ),
                   SizedBox(height: 8.h),
-                  Container(
-                    padding: EdgeInsets.fromLTRB(14.w, 12.h, 14.w, 10.h),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10.r),
-                      color: Colors.white,
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color.fromRGBO(0, 0, 0, 0.04),
-                          blurRadius: 10,
-                          offset: Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        TextFormField(
-                          controller: description,
-                          minLines: 4,
-                          maxLines: 5,
-                          maxLength: 3000,
-                          textAlignVertical: TextAlignVertical.top,
-                          buildCounter:
-                              (context,
-                                  {required currentLength,
-                                  required isFocused,
-                                  maxLength}) => null,
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 13.sp,
-                            fontWeight: FontWeight.w400,
-                            color: const Color(0xFF0F172A),
-                            height: 1.4,
-                          ),
-                          decoration: InputDecoration(
-                            isDense: true,
-                            filled: true,
-                            fillColor: Colors.white,
-                            border: InputBorder.none,
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                            contentPadding: EdgeInsets.zero,
-                            hintText: (kind == 'Izin' || kind == 'Reimbursement' || kind == 'General Affair')
-                                ? 'Jelaskan kebutuhan dan cantumkan referensi dokumen pendukung'
-                                : 'Keperluan / rincian',
-                            hintStyle: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 13.sp,
-                              color: const Color(0xFF94A3B8),
-                            ),
-                          ),
-                          validator: requiredText,
-                          onChanged: (_) => setState(() {}),
-                        ),
-                        SizedBox(height: 8.h),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              '${description.text.length}/3000 karakter',
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 11.sp,
-                                color: const Color(0xFF94A3B8),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                  FormCardTextInput(
+                    controller: description,
+                    minLines: 4,
+                    maxLines: 5,
+                    maxLength: 3000,
+                    showCounter: true,
+                    hintText: (kind == 'Izin' || kind == 'Reimbursement' || kind == 'General Affair')
+                        ? 'Jelaskan kebutuhan dan cantumkan referensi dokumen pendukung'
+                        : 'Keperluan / rincian',
+                    validator: requiredText,
+                    onChanged: (_) => setState(() {}),
                   ),
 
                   SizedBox(height: 16.h),
@@ -944,120 +892,137 @@ class _RequestFormState extends State<RequestForm> {
                     SizedBox(height: 16.h),
                     ErrorNotice(error!),
                   ],
-
-                  SizedBox(height: 24.h),
-
-                  // ================= ACTION BUTTONS (BATAL & KIRIM) =================
-                  Row(
-                    children: [
-                      // Tombol Batal
-                      Expanded(
-                        flex: 1,
-                        child: OutlinedButton(
-                          onPressed: busy || uploading
-                              ? null
-                              : () => Navigator.pop(context),
-                          style: OutlinedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(vertical: 12.h),
-                            side: const BorderSide(color: Color(0xFFCBD5E1)),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10.r),
-                            ),
-                          ),
-                          child: Text(
-                            'Batal',
-                            style: TextStyle(
-                              fontSize: 13.sp,
-                              fontWeight: FontWeight.w500,
-                              color: const Color(0xFF64748B),
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 10.w),
-                      // Tombol Kirim Pengajuan Tunggal
-                      Expanded(
-                        flex: 2,
-                        child: Container(
-                          height: 44.h,
-                          decoration: BoxDecoration(
-                            gradient: (busy || uploading)
-                                ? const LinearGradient(
-                                    colors: [
-                                      Color(0xFF94A3B8),
-                                      Color(0xFF64748B),
-                                    ],
-                                  )
-                                : const LinearGradient(
-                                    colors: [
-                                      Color(0xFF0F766E),
-                                      Color(0xFF14B8A6),
-                                    ],
-                                  ),
-                            borderRadius: BorderRadius.circular(5.r),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x200F766E),
-                                blurRadius: 8,
-                                offset: Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: (busy || uploading) ? null : submit,
-                              borderRadius: BorderRadius.circular(5.r),
-                              child: Center(
-                                child: busy
-                                    ? const SizedBox(
-                                        width: 18,
-                                        height: 18,
-                                        child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                    : Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const Icon(
-                                            Icons.send_rounded,
-                                            size: 15,
-                                            color: Colors.white,
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Flexible(
-                                            child: Text(
-                                              'Kirim pengajuan',
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: TextStyle(
-                                                fontSize: 12.5.sp,
-                                                fontWeight: FontWeight.w600,
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  SizedBox(height: 20.h),
+                  SizedBox(height: 16.h),
                 ],
               ),
             ),
           ),
         ),
+        bottomNavigationBar: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Color.fromRGBO(0, 0, 0, 0.05),
+                blurRadius: 10,
+                offset: Offset(0, -4),
+              ),
+            ],
+            border: Border(
+              top: BorderSide(color: Color(0xFFF1F5F9), width: 1.2),
+            ),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(18.w, 10.h, 18.w, 12.h),
+              child: _buildActionButtons(),
+            ),
+          ),
+        ),
       ),
+    );
+  }
+
+  Widget _buildActionButtons() {
+    return Row(
+      children: [
+        // Tombol Batal
+        Expanded(
+          flex: 1,
+          child: OutlinedButton(
+            onPressed: busy || uploading ? null : () => Navigator.pop(context),
+            style: OutlinedButton.styleFrom(
+              padding: EdgeInsets.symmetric(vertical: 12.h),
+              side: const BorderSide(color: Color(0xFFCBD5E1)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.r),
+              ),
+            ),
+            child: Text(
+              'Batal',
+              style: TextStyle(
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF64748B),
+              ),
+            ),
+          ),
+        ),
+        SizedBox(width: 10.w),
+        // Tombol Kirim Pengajuan Tunggal
+        Expanded(
+          flex: 2,
+          child: Container(
+            height: 44.h,
+            decoration: BoxDecoration(
+              gradient: (busy || uploading)
+                  ? const LinearGradient(
+                      colors: [
+                        Color(0xFF94A3B8),
+                        Color(0xFF64748B),
+                      ],
+                    )
+                  : const LinearGradient(
+                      colors: [
+                        Color(0xFF0F766E),
+                        Color(0xFF14B8A6),
+                      ],
+                    ),
+              borderRadius: BorderRadius.circular(5.r),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x200F766E),
+                  blurRadius: 8,
+                  offset: Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: (busy || uploading) ? null : submit,
+                borderRadius: BorderRadius.circular(5.r),
+                child: Center(
+                  child: busy
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.send_rounded,
+                              size: 15,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                'Kirim pengajuan',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 12.5.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -1262,54 +1227,13 @@ class _RequestFormState extends State<RequestForm> {
       // 2. Judul pengajuan *
       _buildSectionTitle('Judul pengajuan *'),
       SizedBox(height: 8.h),
-      Container(
+      FormCardTextInput(
+        controller: title,
         height: 48.h,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10.r),
-          color: Colors.white,
-          boxShadow: const [
-            BoxShadow(
-              color: Color.fromRGBO(0, 0, 0, 0.04),
-              blurRadius: 10,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Center(
-          child: TextFormField(
-            controller: title,
-            maxLength: 160,
-            buildCounter: (
-              context, {
-              required currentLength,
-              required isFocused,
-              maxLength,
-            }) => null,
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 13.sp,
-              fontWeight: FontWeight.w500,
-              color: const Color(0xFF0F172A),
-            ),
-            decoration: InputDecoration(
-              isDense: true,
-              filled: true,
-              fillColor: Colors.white,
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 14.w),
-              hintText: 'Ringkasan keperluan Anda',
-              hintStyle: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 13.sp,
-                color: const Color(0xFF94A3B8),
-              ),
-            ),
-            validator: requiredText,
-            onChanged: (_) => setState(() {}),
-          ),
-        ),
+        maxLength: 160,
+        hintText: 'Ringkasan keperluan Anda',
+        validator: requiredText,
+        onChanged: (_) => setState(() {}),
       ),
       SizedBox(height: 16.h),
 
@@ -1332,76 +1256,16 @@ class _RequestFormState extends State<RequestForm> {
       // 5. Detail keperluan / referensi bukti *
       _buildSectionTitle('Detail keperluan / referensi bukti *'),
       SizedBox(height: 8.h),
-      Container(
-        padding: EdgeInsets.fromLTRB(14.w, 12.h, 14.w, 10.h),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10.r),
-          color: Colors.white,
-          boxShadow: const [
-            BoxShadow(
-              color: Color.fromRGBO(0, 0, 0, 0.04),
-              blurRadius: 10,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextFormField(
-              controller: description,
-              minLines: 4,
-              maxLines: 5,
-              maxLength: 3000,
-              textAlignVertical: TextAlignVertical.top,
-              buildCounter: (
-                context, {
-                required currentLength,
-                required isFocused,
-                maxLength,
-              }) => null,
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 13.sp,
-                fontWeight: FontWeight.w400,
-                color: const Color(0xFF0F172A),
-                height: 1.4,
-              ),
-              decoration: InputDecoration(
-                isDense: true,
-                filled: true,
-                fillColor: Colors.white,
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                contentPadding: EdgeInsets.zero,
-                hintText:
-                    'Jelaskan kebutuhan dan cantumkan referensi dokumen pendukung',
-                hintStyle: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 13.sp,
-                  color: const Color(0xFF94A3B8),
-                ),
-              ),
-              validator: requiredText,
-              onChanged: (_) => setState(() {}),
-            ),
-            SizedBox(height: 8.h),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Text(
-                  '${description.text.length}/3000 karakter',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 11.sp,
-                    color: const Color(0xFF94A3B8),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+      FormCardTextInput(
+        controller: description,
+        minLines: 4,
+        maxLines: 5,
+        maxLength: 3000,
+        showCounter: true,
+        hintText:
+            'Jelaskan kebutuhan dan cantumkan referensi dokumen pendukung',
+        validator: requiredText,
+        onChanged: (_) => setState(() {}),
       ),
       SizedBox(height: 16.h),
 
@@ -1444,54 +1308,13 @@ class _RequestFormState extends State<RequestForm> {
       // 1. Judul pengajuan *
       _buildSectionTitle('Judul pengajuan *'),
       SizedBox(height: 8.h),
-      Container(
+      FormCardTextInput(
+        controller: title,
         height: 48.h,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10.r),
-          color: Colors.white,
-          boxShadow: const [
-            BoxShadow(
-              color: Color.fromRGBO(0, 0, 0, 0.04),
-              blurRadius: 10,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Center(
-          child: TextFormField(
-            controller: title,
-            maxLength: 160,
-            buildCounter: (
-              context, {
-              required currentLength,
-              required isFocused,
-              maxLength,
-            }) => null,
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 13.sp,
-              fontWeight: FontWeight.w500,
-              color: const Color(0xFF0F172A),
-            ),
-            decoration: InputDecoration(
-              isDense: true,
-              filled: true,
-              fillColor: Colors.white,
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 14.w),
-              hintText: 'Ringkasan keperluan Anda',
-              hintStyle: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 13.sp,
-                color: const Color(0xFF94A3B8),
-              ),
-            ),
-            validator: requiredText,
-            onChanged: (_) => setState(() {}),
-          ),
-        ),
+        maxLength: 160,
+        hintText: 'Ringkasan keperluan Anda',
+        validator: requiredText,
+        onChanged: (_) => setState(() {}),
       ),
       SizedBox(height: 16.h),
 
@@ -1536,76 +1359,16 @@ class _RequestFormState extends State<RequestForm> {
       // 6. Detail keperluan / referensi bukti *
       _buildSectionTitle('Detail keperluan / referensi bukti *'),
       SizedBox(height: 8.h),
-      Container(
-        padding: EdgeInsets.fromLTRB(14.w, 12.h, 14.w, 10.h),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10.r),
-          color: Colors.white,
-          boxShadow: const [
-            BoxShadow(
-              color: Color.fromRGBO(0, 0, 0, 0.04),
-              blurRadius: 10,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextFormField(
-              controller: description,
-              minLines: 4,
-              maxLines: 5,
-              maxLength: 3000,
-              textAlignVertical: TextAlignVertical.top,
-              buildCounter: (
-                context, {
-                required currentLength,
-                required isFocused,
-                maxLength,
-              }) => null,
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 13.sp,
-                fontWeight: FontWeight.w400,
-                color: const Color(0xFF0F172A),
-                height: 1.4,
-              ),
-              decoration: InputDecoration(
-                isDense: true,
-                filled: true,
-                fillColor: Colors.white,
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                contentPadding: EdgeInsets.zero,
-                hintText:
-                    'Jelaskan kebutuhan dan cantumkan referensi dokumen pendukung',
-                hintStyle: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 13.sp,
-                  color: const Color(0xFF94A3B8),
-                ),
-              ),
-              validator: requiredText,
-              onChanged: (_) => setState(() {}),
-            ),
-            SizedBox(height: 8.h),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Text(
-                  '${description.text.length}/3000 karakter',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 11.sp,
-                    color: const Color(0xFF94A3B8),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+      FormCardTextInput(
+        controller: description,
+        minLines: 4,
+        maxLines: 5,
+        maxLength: 3000,
+        showCounter: true,
+        hintText:
+            'Jelaskan kebutuhan dan cantumkan referensi dokumen pendukung',
+        validator: requiredText,
+        onChanged: (_) => setState(() {}),
       ),
       SizedBox(height: 16.h),
 
@@ -1747,81 +1510,51 @@ class _RequestFormState extends State<RequestForm> {
   }
 
   Widget _buildMedicalClaimAmountCard() {
-    return Container(
+    return FormCardTextInput(
+      controller: amount,
       height: 48.h,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10.r),
-        boxShadow: const [
-          BoxShadow(
-            color: Color.fromRGBO(0, 0, 0, 0.04),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
+      keyboardType: TextInputType.number,
+      inputFormatters: [
+        FilteringTextInputFormatter.digitsOnly,
+        ThousandsSeparatorInputFormatter(),
+      ],
+      style: TextStyle(
+        fontFamily: 'Inter',
+        fontSize: 13.5.sp,
+        fontWeight: FontWeight.w600,
+        color: const Color(0xFF0F172A),
       ),
-      child: Center(
-        child: TextFormField(
-          controller: amount,
-          keyboardType: TextInputType.number,
-          inputFormatters: [
-            FilteringTextInputFormatter.digitsOnly,
-            ThousandsSeparatorInputFormatter(),
-          ],
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 13.5.sp,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF0F172A),
-          ),
-          decoration: InputDecoration(
-            isDense: true,
-            filled: true,
-            fillColor: Colors.white,
-            border: InputBorder.none,
-            enabledBorder: InputBorder.none,
-            focusedBorder: InputBorder.none,
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: 14.w,
-            ),
-            prefixIcon: Padding(
-              padding: EdgeInsets.only(left: 14.w, right: 8.w),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Rp',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 13.5.sp,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF0F766E),
-                    ),
-                  ),
-                ],
+      prefixIcon: Padding(
+        padding: EdgeInsets.only(left: 14.w, right: 8.w),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Rp',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 13.5.sp,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF0F766E),
               ),
             ),
-            prefixIconConstraints: const BoxConstraints(
-              minWidth: 0,
-              minHeight: 0,
-            ),
-            hintText: '0',
-            hintStyle: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 13.5.sp,
-              fontWeight: FontWeight.w400,
-              color: const Color(0xFF94A3B8),
-            ),
-          ),
-          validator: (value) {
-            final raw = (value ?? '').replaceAll(RegExp(r'[^0-9]'), '');
-            final val = int.tryParse(raw) ?? 0;
-            if (val <= 0) return 'Biaya perawatan wajib diisi';
-            return null;
-          },
-          onChanged: (_) => setState(() {}),
+          ],
         ),
       ),
+      hintText: '0',
+      hintStyle: TextStyle(
+        fontFamily: 'Inter',
+        fontSize: 13.5.sp,
+        fontWeight: FontWeight.w400,
+        color: const Color(0xFF94A3B8),
+      ),
+      validator: (value) {
+        final raw = (value ?? '').replaceAll(RegExp(r'[^0-9]'), '');
+        final val = int.tryParse(raw) ?? 0;
+        if (val <= 0) return 'Biaya perawatan wajib diisi';
+        return null;
+      },
+      onChanged: (_) => setState(() {}),
     );
   }
 
@@ -1850,104 +1583,34 @@ class _RequestFormState extends State<RequestForm> {
       children: [
         _buildSectionTitle('Jenis izin *'),
         SizedBox(height: 8.h),
-        Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10.r),
-            color: Colors.white,
-            boxShadow: const [
-              BoxShadow(
-                color: Color.fromRGBO(0, 0, 0, 0.04),
-                blurRadius: 10,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: ButtonTheme(
-            alignedDropdown: true,
-            child: DropdownButtonFormField<String>(
-              key: const ValueKey('izin_type_dropdown'),
-              isExpanded: true,
-              padding: EdgeInsets.symmetric(
-                horizontal: 14.w,
-                vertical: 12.h,
-              ),
-              initialValue: selectedIzinType,
-              hint: Text(
-                'Pilih jenis izin',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.w400,
-                  color: const Color(0xFF94A3B8),
+        FormCardDropdownInput<String>(
+          dropdownKey: const ValueKey('izin_type_dropdown'),
+          initialValue: selectedIzinType,
+          hintText: 'Pilih jenis izin',
+          items: izinTypes
+              .map(
+                (t) => DropdownMenuItem<String>(
+                  value: t,
+                  child: Text(t),
                 ),
-              ),
-              icon: Icon(
-                Icons.keyboard_arrow_down_rounded,
-                size: 20.sp,
-                color: const Color(0xFF64748B),
-              ),
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 13.sp,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF0F172A),
-              ),
-              dropdownColor: Colors.white,
-              borderRadius: BorderRadius.circular(10.r),
-              decoration: InputDecoration(
-                isDense: true,
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.r),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.r),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.r),
-                  borderSide: const BorderSide(
-                    color: Color(0xFF0D9488),
-                    width: 1.2,
-                  ),
-                ),
-                errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.r),
-                  borderSide: const BorderSide(
-                    color: Color(0xFFEF4444),
-                    width: 1.2,
-                  ),
-                ),
-                contentPadding: EdgeInsets.zero,
-              ),
-            items: izinTypes
-                .map(
-                  (t) => DropdownMenuItem<String>(
-                    value: t,
-                    child: Text(t),
-                  ),
-                )
-                .toList(),
-            onChanged: (busy || uploading)
-                ? null
-                : (v) {
-                    setState(() {
-                      selectedIzinType = v;
-                    });
-                  },
-            validator: (v) {
-              if (kind == 'Izin' && (v == null || v.trim().isEmpty)) {
-                return 'Pilih jenis izin';
-              }
-              return null;
-            },
-          ),
+              )
+              .toList(),
+          onChanged: (busy || uploading)
+              ? null
+              : (v) {
+                  setState(() {
+                    selectedIzinType = v;
+                  });
+                },
+          validator: (v) {
+            if (kind == 'Izin' && (v == null || v.trim().isEmpty)) {
+              return 'Pilih jenis izin';
+            }
+            return null;
+          },
         ),
-      ),
-    ],
-  );
+      ],
+    );
   }
 
   Widget _buildReimbursementAccountInfo() {
@@ -2338,8 +2001,6 @@ class _RequestFormState extends State<RequestForm> {
                               fontWeight: FontWeight.w600,
                               color: const Color(0xFF0F172A),
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         const Icon(
@@ -2358,80 +2019,83 @@ class _RequestFormState extends State<RequestForm> {
 
           // 2. Kategori * (Dropdown sesuai katalog web)
           _buildInputCard(
-            child: DropdownButtonFormField<String>(
-              initialValue: item.category.text.isNotEmpty ? item.category.text : null,
-              isExpanded: true,
-              dropdownColor: Colors.white,
-              borderRadius: BorderRadius.circular(10.r),
-              icon: const Icon(
-                Icons.keyboard_arrow_down_rounded,
-                color: Color(0xFF64748B),
-              ),
-              hint: Text(
-                'Pilih kategori',
+            child: ButtonTheme(
+              alignedDropdown: true,
+              child: DropdownButtonFormField<String>(
+                initialValue: item.category.text.isNotEmpty ? item.category.text : null,
+                isExpanded: true,
+                dropdownColor: Colors.white,
+                borderRadius: BorderRadius.circular(10.r),
+                icon: const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: Color(0xFF64748B),
+                ),
+                hint: Text(
+                  'Pilih kategori',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 12.5.sp,
+                    color: const Color(0xFF94A3B8),
+                  ),
+                ),
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 12.5.sp,
-                  color: const Color(0xFF94A3B8),
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF0F172A),
                 ),
-              ),
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 12.5.sp,
-                fontWeight: FontWeight.w500,
-                color: const Color(0xFF0F172A),
-              ),
-              decoration: InputDecoration(
-                labelText: 'Kategori *',
-                labelStyle: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 12.sp,
-                  color: const Color(0xFF64748B),
-                ),
-                contentPadding: EdgeInsets.all(12.w),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.r),
-                  borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.r),
-                  borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.r),
-                  borderSide:
-                      const BorderSide(color: Color(0xFF0D9488), width: 1.5),
-                ),
-              ),
-              items: [
-                ...reimbursementCategories,
-                if (item.category.text.isNotEmpty &&
-                    !reimbursementCategories.contains(item.category.text))
-                  item.category.text,
-              ].map((cat) {
-                return DropdownMenuItem<String>(
-                  value: cat,
-                  child: Text(
-                    cat,
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 12.5.sp,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF0F172A),
-                    ),
-                    overflow: TextOverflow.ellipsis,
+                decoration: InputDecoration(
+                  labelText: 'Kategori *',
+                  labelStyle: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 12.sp,
+                    color: const Color(0xFF64748B),
                   ),
-                );
-              }).toList(),
-              onChanged: (busy || uploading)
-                  ? null
-                  : (val) {
-                      setState(() {
-                        item.category.text = val ?? '';
-                      });
-                    },
-              validator: (val) =>
-                  val == null || val.trim().isEmpty ? 'Wajib memilih kategori' : null,
+                  contentPadding: EdgeInsets.all(12.w),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.r),
+                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.r),
+                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.r),
+                    borderSide:
+                        const BorderSide(color: Color(0xFF0D9488), width: 1.5),
+                  ),
+                ),
+                items: [
+                  ...reimbursementCategories,
+                  if (item.category.text.isNotEmpty &&
+                      !reimbursementCategories.contains(item.category.text))
+                    item.category.text,
+                ].map((cat) {
+                  return DropdownMenuItem<String>(
+                    value: cat,
+                    child: Text(
+                      cat,
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 12.5.sp,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF0F172A),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  );
+                }).toList(),
+                onChanged: (busy || uploading)
+                    ? null
+                    : (val) {
+                        setState(() {
+                          item.category.text = val ?? '';
+                        });
+                      },
+                validator: (val) =>
+                    val == null || val.trim().isEmpty ? 'Wajib memilih kategori' : null,
+              ),
             ),
           ),
           SizedBox(height: 12.h),
@@ -2540,7 +2204,7 @@ class _RequestFormState extends State<RequestForm> {
                       color: const Color(0xFF0F172A),
                     ),
                     decoration: InputDecoration(
-                      labelText: 'Harga satuan (Rp)',
+                      labelText: 'Harga satuan (Rp) *',
                       hintText: '0',
                       prefixText: 'Rp ',
                       prefixStyle: TextStyle(
@@ -2570,6 +2234,11 @@ class _RequestFormState extends State<RequestForm> {
                       setState(() {
                         item.recalculateAmount();
                       });
+                    },
+                    validator: (v) {
+                      final clean = (v ?? '').replaceAll(RegExp(r'[^0-9]'), '');
+                      final n = int.tryParse(clean) ?? 0;
+                      return n < 1 ? 'Harga satuan wajib diisi' : null;
                     },
                   ),
                 ),
@@ -2612,14 +2281,12 @@ class _RequestFormState extends State<RequestForm> {
           ),
           SizedBox(height: 12.h),
 
-          // 6. Jumlah (Rp) *
+          // 6. Jumlah (Rp) * (Otomatis dari Qty × Harga satuan, tidak dapat diubah manual)
           _buildInputCard(
             child: TextFormField(
               key: const Key('reimbursement_amount_field'),
               controller: item.amount,
-              enabled: !busy && !uploading,
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              readOnly: true,
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 12.5.sp,
@@ -2627,7 +2294,7 @@ class _RequestFormState extends State<RequestForm> {
                 color: const Color(0xFF0F766E),
               ),
               decoration: InputDecoration(
-                labelText: 'Jumlah (Rp) *',
+                labelText: 'Jumlah (Rp) * (Otomatis)',
                 hintText: '0',
                 prefixText: 'Rp ',
                 prefixStyle: TextStyle(
@@ -2636,6 +2303,8 @@ class _RequestFormState extends State<RequestForm> {
                   fontWeight: FontWeight.w700,
                   color: const Color(0xFF0D9488),
                 ),
+                filled: true,
+                fillColor: const Color(0xFFF8FAFC),
                 contentPadding: EdgeInsets.all(12.w),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10.r),
@@ -2651,15 +2320,10 @@ class _RequestFormState extends State<RequestForm> {
                       const BorderSide(color: Color(0xFF0D9488), width: 1.5),
                 ),
               ),
-              onChanged: (_) {
-                setState(() {
-                  item.recalculateFromAmount();
-                });
-              },
               validator: (v) {
                 final n = int.tryParse(v ?? '') ?? 0;
                 return n < 1 || n > 1000000000000
-                    ? 'Isi jumlah yang valid'
+                    ? 'Isi harga satuan untuk menghitung jumlah'
                     : null;
               },
             ),
@@ -2931,6 +2595,8 @@ class ExpenseDraft {
     final p = int.tryParse(unitPrice.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
     if (p > 0) {
       amount.text = (q * p).toString();
+    } else {
+      amount.text = '';
     }
   }
 
@@ -2946,16 +2612,23 @@ class ExpenseDraft {
     final q = int.tryParse(qty.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 1;
     final p = int.tryParse(unitPrice.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
     final a = int.tryParse(amount.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? (q * p);
+
+    var desc = description.text.trim();
+    final spec = specification.text.trim();
+    final details = <String>[];
+    if (spec.isNotEmpty) details.add(spec);
+    if (q > 1) details.add('$q pcs');
+    if (p > 0) details.add('@Rp ${formatThousand(p)}');
+    if (details.isNotEmpty) {
+      desc = '$desc (${details.join(' · ')})';
+    }
+
     return {
       'date': dateOnly(date),
-      'description': description.text.trim(),
+      'description': desc,
       'category': category.text.trim(),
       'amount': a,
       'receiptId': receiptId,
-      'qty': q,
-      if (p > 0) 'unitPrice': p,
-      if (specification.text.trim().isNotEmpty)
-        'specification': specification.text.trim(),
     };
   }
 

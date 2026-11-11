@@ -80,5 +80,8 @@ void main() {
     await tester.tap(find.byIcon(Icons.close_rounded));
     await tester.pumpAndSettle();
     expect(find.text('Cuti Tahunan Liburan'), findsOneWidget);
+    expect(find.text('TidakAdaNama'), findsNothing);
+    final textField = tester.widget<TextField>(find.byType(TextField));
+    expect(textField.controller?.text, '');
   });
 }

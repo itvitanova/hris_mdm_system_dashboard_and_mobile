@@ -1,3 +1,5 @@
+import '../../../root/presentation/widgets/language_swap_button.dart';
+
 /// Status alur persetujuan pengajuan
 enum SubmissionStatus {
   menunggu,
@@ -35,5 +37,21 @@ enum SubmissionStatus {
       case SubmissionStatus.ditolak:
         return 'Ditolak';
     }
+  }
+
+  String getLabel([AppLanguage language = AppLanguage.id]) {
+    if (language == AppLanguage.en) {
+      switch (this) {
+        case SubmissionStatus.menunggu:
+          return 'Pending';
+        case SubmissionStatus.disetujui:
+          return 'Approved';
+        case SubmissionStatus.perluRevisi:
+          return 'Needs Revision';
+        case SubmissionStatus.ditolak:
+          return 'Rejected';
+      }
+    }
+    return displayName;
   }
 }

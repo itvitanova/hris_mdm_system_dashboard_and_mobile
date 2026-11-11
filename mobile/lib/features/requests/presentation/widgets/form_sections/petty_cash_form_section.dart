@@ -270,7 +270,7 @@ class PettyCashCategorySelector extends StatelessWidget {
   }
 }
 
-class PettyCashAmountCard extends StatelessWidget {
+class PettyCashAmountCard extends StatefulWidget {
   final TextEditingController controller;
   final int currentAmount;
   final ValueChanged<int> onAmountSelected;
@@ -289,168 +289,268 @@ class PettyCashAmountCard extends StatelessWidget {
   static const quickPresets = [50000, 100000, 250000, 500000];
 
   @override
+  State<PettyCashAmountCard> createState() => _PettyCashAmountCardState();
+}
+
+class _PettyCashAmountCardState extends State<PettyCashAmountCard> {
+  final GlobalKey<FormFieldState<String>> _fieldKey =
+      GlobalKey<FormFieldState<String>>();
+
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_onControllerChange);
+  }
+
+  @override
+  void didUpdateWidget(PettyCashAmountCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller.removeListener(_onControllerChange);
+      widget.controller.addListener(_onControllerChange);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onControllerChange);
+    super.dispose();
+  }
+
+  void _onControllerChange() {
+    if (mounted) {
+      final state = _fieldKey.currentState;
+      if (state != null && state.hasError) {
+        state.validate();
+      }
+      setState(() {});
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.fromLTRB(14.w, 12.h, 14.w, 12.h),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10.r),
-        color: Colors.white,
-        boxShadow: const [
-          BoxShadow(
-            color: Color.fromRGBO(0, 0, 0, 0.04),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                'Rp',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 15.sp,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF0D9488),
+    return FormField<String>(
+      key: _fieldKey,
+      initialValue: widget.controller.text,
+      validator: (_) {
+        final clean = widget.controller.text.replaceAll(RegExp(r'[^0-9]'), '');
+        final n = int.tryParse(clean) ?? 0;
+        return n < 1 || n > 1000000000000 ? 'Nominal tidak valid' : null;
+      },
+      builder: (FormFieldState<String> field) {
+        final bool hasError = field.hasError;
+        final String? errorText = field.errorText;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOutCubic,
+              padding: EdgeInsets.fromLTRB(14.w, 12.h, 14.w, 12.h),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10.r),
+                color: Colors.white,
+                border: Border.all(
+                  color: hasError
+                      ? const Color(0xFFEF4444)
+                      : Colors.transparent,
+                  width: 1.2,
                 ),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color.fromRGBO(0, 0, 0, 0.04),
+                    blurRadius: 10,
+                    offset: Offset(0, 4),
+                  ),
+                ],
               ),
-              SizedBox(width: 8.w),
-              Expanded(
-                child: TextFormField(
-                  controller: controller,
-                  enabled: !disabled,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    ThousandsSeparatorInputFormatter(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        'Rp',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 15.sp,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF0D9488),
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      Expanded(
+                        child: TextFormField(
+                          controller: widget.controller,
+                          enabled: !widget.disabled,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            ThousandsSeparatorInputFormatter(),
+                          ],
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF0F172A),
+                          ),
+                          decoration: InputDecoration(
+                            isDense: true,
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            errorBorder: InputBorder.none,
+                            focusedErrorBorder: InputBorder.none,
+                            errorStyle: const TextStyle(
+                              fontSize: 0,
+                              height: 0.001,
+                              color: Colors.transparent,
+                            ),
+                            contentPadding: EdgeInsets.zero,
+                            hintText: '0',
+                            hintStyle: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 15.sp,
+                              fontWeight: FontWeight.w400,
+                              color: const Color(0xFF94A3B8),
+                            ),
+                          ),
+                          onChanged: (val) {
+                            if (field.hasError) {
+                              field.validate();
+                            }
+                          },
+                        ),
+                      ),
+                      if (widget.currentAmount > 0)
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: widget.disabled ? null : widget.onClear,
+                            borderRadius: BorderRadius.circular(12.r),
+                            child: Padding(
+                              padding: EdgeInsets.all(4.w),
+                              child: Icon(
+                                Icons.close_rounded,
+                                size: 16.sp,
+                                color: const Color(0xFF94A3B8),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  SizedBox(height: 8.h),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Pilih nominal cepat di bawah atau masukkan angka manual:',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 11.sp,
+                            fontWeight: FontWeight.w400,
+                            color: const Color(0xFF94A3B8),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 10.h),
+                  Wrap(
+                    spacing: 6.w,
+                    runSpacing: 6.h,
+                    children: PettyCashAmountCard.quickPresets.map((preset) {
+                      final isMatch = widget.currentAmount == preset;
+                      final label = switch (preset) {
+                        50000 => 'Rp 50 rb',
+                        100000 => 'Rp 100 rb',
+                        250000 => 'Rp 250 rb',
+                        500000 => 'Rp 500 rb',
+                        _ => rupiah(preset),
+                      };
+                      return Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: widget.disabled
+                              ? null
+                              : () => widget.onAmountSelected(preset),
+                          borderRadius: BorderRadius.circular(6.r),
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 8.w,
+                              vertical: 4.h,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isMatch
+                                  ? const Color(0xFF0D9488)
+                                  : const Color(0xFFF0FDFA),
+                              borderRadius: BorderRadius.circular(6.r),
+                              border: Border.all(
+                                color: isMatch
+                                    ? const Color(0xFF0D9488)
+                                    : const Color(0xFF99F6E4),
+                                width: 0.8,
+                              ),
+                            ),
+                            child: Text(
+                              label,
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 10.5.sp,
+                                fontWeight: isMatch
+                                    ? FontWeight.w700
+                                    : FontWeight.w600,
+                                color: isMatch
+                                    ? Colors.white
+                                    : const Color(0xFF0F766E),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            ),
+            if (hasError && errorText != null) ...[
+              SizedBox(height: 5.h),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 4.w),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline_rounded,
+                      size: 13.w,
+                      color: const Color(0xFFEF4444),
+                    ),
+                    SizedBox(width: 4.w),
+                    Expanded(
+                      child: Text(
+                        errorText,
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 11.5.sp,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFFEF4444),
+                        ),
+                      ),
+                    ),
                   ],
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF0F172A),
-                  ),
-                  decoration: InputDecoration(
-                    isDense: true,
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    errorBorder: InputBorder.none,
-                    focusedErrorBorder: InputBorder.none,
-                    contentPadding: EdgeInsets.zero,
-                    hintText: '0',
-                    hintStyle: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 15.sp,
-                      fontWeight: FontWeight.w400,
-                      color: const Color(0xFF94A3B8),
-                    ),
-                  ),
-                  validator: (v) {
-                    final clean = (v ?? '').replaceAll(RegExp(r'[^0-9]'), '');
-                    final n = int.tryParse(clean) ?? 0;
-                    return n < 1 || n > 1000000000000
-                        ? 'Nominal tidak valid'
-                        : null;
-                  },
-                ),
-              ),
-              if (currentAmount > 0)
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: disabled ? null : onClear,
-                    borderRadius: BorderRadius.circular(12.r),
-                    child: Padding(
-                      padding: EdgeInsets.all(4.w),
-                      child: Icon(
-                        Icons.close_rounded,
-                        size: 16.sp,
-                        color: const Color(0xFF94A3B8),
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          SizedBox(height: 8.h),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Pilih nominal cepat di bawah atau masukkan angka manual:',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 11.sp,
-                    fontWeight: FontWeight.w400,
-                    color: const Color(0xFF94A3B8),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
-          ),
-          SizedBox(height: 10.h),
-          Wrap(
-            spacing: 6.w,
-            runSpacing: 6.h,
-            children: quickPresets.map((preset) {
-              final isMatch = currentAmount == preset;
-              final label = switch (preset) {
-                50000 => 'Rp 50 rb',
-                100000 => 'Rp 100 rb',
-                250000 => 'Rp 250 rb',
-                500000 => 'Rp 500 rb',
-                _ => rupiah(preset),
-              };
-              return Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: disabled ? null : () => onAmountSelected(preset),
-                  borderRadius: BorderRadius.circular(6.r),
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 8.w,
-                      vertical: 4.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isMatch
-                          ? const Color(0xFF0D9488)
-                          : const Color(0xFFF0FDFA),
-                      borderRadius: BorderRadius.circular(6.r),
-                      border: Border.all(
-                        color: isMatch
-                            ? const Color(0xFF0D9488)
-                            : const Color(0xFF99F6E4),
-                        width: 0.8,
-                      ),
-                    ),
-                    child: Text(
-                      label,
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 10.5.sp,
-                        fontWeight: isMatch
-                            ? FontWeight.w700
-                            : FontWeight.w600,
-                        color: isMatch
-                            ? Colors.white
-                            : const Color(0xFF0F766E),
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
+          ],
+        );
+      },
     );
   }
 }

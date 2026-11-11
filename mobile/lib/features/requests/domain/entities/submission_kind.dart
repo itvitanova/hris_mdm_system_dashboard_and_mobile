@@ -1,3 +1,5 @@
+import '../../../root/presentation/widgets/language_swap_button.dart';
+
 /// Jenis pengajuan resmi di PeopleOS HRIS MDM
 enum SubmissionKind {
   cuti,
@@ -53,5 +55,27 @@ enum SubmissionKind {
       case SubmissionKind.lembur:
         return 'Lembur';
     }
+  }
+
+  String getLabel([AppLanguage language = AppLanguage.id]) {
+    if (language == AppLanguage.en) {
+      switch (this) {
+        case SubmissionKind.cuti:
+          return 'Leave';
+        case SubmissionKind.izin:
+          return 'Permission';
+        case SubmissionKind.reimbursement:
+          return 'Reimbursement';
+        case SubmissionKind.medicalClaim:
+          return 'Medical Claim';
+        case SubmissionKind.pettyCash:
+          return 'Petty Cash';
+        case SubmissionKind.generalAffair:
+          return 'General Affair';
+        case SubmissionKind.lembur:
+          return 'Overtime';
+      }
+    }
+    return displayName;
   }
 }
