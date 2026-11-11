@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mdm_hris/core/theme/app_colors.dart';
 import 'package:mdm_hris/features/requests/domain/entities/submission_status.dart';
+import 'package:mdm_hris/features/root/presentation/widgets/language_swap_button.dart';
 
 Color _statusDotColor(SubmissionStatus status) {
   switch (status) {
@@ -15,19 +16,17 @@ Color _statusDotColor(SubmissionStatus status) {
   }
 }
 
-String _statusLabel(SubmissionStatus status) {
-  return status.displayName;
-}
-
 /// Widget Dropdown Filter Status Pengajuan Mandiri
 class SubmissionStatusFilterDropdown extends StatefulWidget {
   final SubmissionStatus? selected;
   final ValueChanged<SubmissionStatus?> onChanged;
+  final AppLanguage language;
 
   const SubmissionStatusFilterDropdown({
     super.key,
     required this.selected,
     required this.onChanged,
+    this.language = AppLanguage.id,
   });
 
   @override
@@ -66,6 +65,7 @@ class _SubmissionStatusFilterDropdownState
             color: Colors.transparent,
             child: _SubmissionStatusPanel(
               selected: widget.selected,
+              language: widget.language,
               onSelect: (value) {
                 _close();
                 widget.onChanged(value);
@@ -152,8 +152,10 @@ class _SubmissionStatusFilterDropdownState
             Expanded(
               child: Text(
                 widget.selected != null
-                    ? _statusLabel(widget.selected!)
-                    : 'Semua Status Pengajuan',
+                    ? widget.selected!.getLabel(widget.language)
+                    : (widget.language == AppLanguage.en
+                        ? 'All Submission Statuses'
+                        : 'Semua Status Pengajuan'),
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 13,
@@ -183,10 +185,12 @@ class _SubmissionStatusFilterDropdownState
 class _SubmissionStatusPanel extends StatelessWidget {
   final SubmissionStatus? selected;
   final ValueChanged<SubmissionStatus?> onSelect;
+  final AppLanguage language;
 
   const _SubmissionStatusPanel({
     required this.selected,
     required this.onSelect,
+    this.language = AppLanguage.id,
   });
 
   @override
@@ -273,7 +277,7 @@ class _SubmissionStatusPanel extends StatelessWidget {
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
-                                  _statusLabel(status),
+                                  status.getLabel(language),
                                   style: TextStyle(
                                     fontFamily: 'Inter',
                                     fontSize: 11.5,
@@ -359,7 +363,9 @@ class _SubmissionStatusPanel extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Semua Status Pengajuan',
+                language == AppLanguage.en
+                    ? 'All Submission Statuses'
+                    : 'Semua Status Pengajuan',
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 12,

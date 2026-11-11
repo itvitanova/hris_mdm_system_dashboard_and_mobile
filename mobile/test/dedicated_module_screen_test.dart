@@ -7,8 +7,17 @@ import 'package:mdm_hris/features/requests/domain/entities/submission_kind.dart'
 import 'package:mdm_hris/features/requests/presentation/pages/modules/dedicated_module_screen.dart';
 import 'package:mdm_hris/features/requests/presentation/widgets/services_hub/submission_status_filter_dropdown.dart';
 import 'package:mdm_hris/features/requests/request_form.dart';
+import 'package:mdm_hris/features/root/presentation/widgets/language_swap_button.dart';
 
 void main() {
+  setUp(() {
+    AppLanguageController.reset();
+  });
+
+  tearDown(() {
+    AppLanguageController.reset();
+  });
+
   group('DedicatedModuleScreen Tests', () {
     testWidgets(
       'renders dedicated cuti module with 2x2 stats, dropdown filter, and header (+) action',
@@ -71,8 +80,11 @@ void main() {
         expect(find.text('Lembur Maintenance & Backup Server'), findsNothing);
 
         // 4. Tap (+) hero button -> opens RequestForm locked to Cuti
-        await tester.drag(find.byType(Scrollable).first, const Offset(0, 300));
-        await tester.pumpAndSettle();
+        await tester.scrollUntilVisible(
+          find.text('Buat Pengajuan Cuti'),
+          -150,
+          scrollable: find.byType(Scrollable).first,
+        );
         expect(find.text('Buat Pengajuan Cuti'), findsOneWidget);
         await tester.tap(find.text('Buat Pengajuan Cuti'));
         await tester.pumpAndSettle();
@@ -480,7 +492,7 @@ void main() {
         );
         expect(find.byKey(const ValueKey('pagination_bar')), findsOneWidget);
         expect(find.text('Halaman 1 dari 2'), findsOneWidget);
-        expect(find.text('1–5 dari 8'), findsOneWidget);
+        expect(find.text('Menampilkan 1–5 dari 8 pengajuan'), findsOneWidget);
 
         // Tap Selanjutnya
         await tester.tap(find.byKey(const ValueKey('pagination_next_btn')));
@@ -507,7 +519,7 @@ void main() {
           scrollable: find.byType(Scrollable).first,
         );
         expect(find.text('Halaman 2 dari 2'), findsOneWidget);
-        expect(find.text('6–8 dari 8'), findsOneWidget);
+        expect(find.text('Menampilkan 6–8 dari 8 pengajuan'), findsOneWidget);
 
         // Tap Sebelumnya
         await tester.tap(find.byKey(const ValueKey('pagination_prev_btn')));
@@ -526,6 +538,138 @@ void main() {
           scrollable: find.byType(Scrollable).first,
         );
         expect(find.text('Pengajuan Cuti Nomor 0'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'empty state displays info message without Buat Pengajuan Baru button in empty state',
+      (tester) async {
+        final workspace = Workspace({
+          'requests': [],
+          'employees': [],
+        });
+
+        await tester.pumpWidget(
+          ScreenUtilInit(
+            designSize: const Size(375, 812),
+            minTextAdapt: true,
+            builder: (context, child) => MaterialApp(
+              home: DedicatedModuleScreen(
+                kind: SubmissionKind.cuti,
+                moduleTitle: 'Pengajuan Cuti & Izin',
+                keyMetricLabel: 'SISA KUOTA',
+                keyMetricValue: '10 Hari',
+                keyMetricIcon: Icons.event_available_outlined,
+                api: ApiClient(),
+                workspace: workspace,
+                open: (w) async {},
+                onRefresh: () async {},
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Top action button exists
+        expect(find.text('Buat Pengajuan Cuti'), findsOneWidget);
+
+        // Scroll to empty state
+        await tester.scrollUntilVisible(
+          find.text('Belum ada riwayat pengajuan cuti'),
+          100,
+          scrollable: find.byType(Scrollable).first,
+        );
+
+        // Empty state message exists
+        expect(
+          find.text('Belum ada riwayat pengajuan cuti'),
+          findsOneWidget,
+        );
+
+        // Empty state button 'Buat Pengajuan Baru' does NOT exist
+        expect(find.text('Buat Pengajuan Baru'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'switches language to English and updates all texts in DedicatedModuleScreen',
+      (tester) async {
+        final workspace = Workspace({
+          'requests': [
+            {
+              'id': 'cuti-1',
+              'kind': 'Cuti',
+              'title': 'Cuti Tahunan Pribadi',
+              'status': 'disetujui',
+              'days': 2,
+              'startDate': '2026-11-01',
+              'endDate': '2026-11-02',
+            },
+          ],
+          'employees': [],
+        });
+
+        await tester.pumpWidget(
+          ScreenUtilInit(
+            designSize: const Size(375, 812),
+            minTextAdapt: true,
+            builder: (context, child) => MaterialApp(
+              home: DedicatedModuleScreen(
+                kind: SubmissionKind.cuti,
+                moduleTitle: 'Pengajuan Cuti',
+                keyMetricLabel: 'SISA KUOTA',
+                keyMetricValue: '10 Hari',
+                keyMetricIcon: Icons.event_available_outlined,
+                api: ApiClient(),
+                workspace: workspace,
+                open: (w) async {},
+                onRefresh: () async {},
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // 1. Initially ID
+        expect(find.text('Pengajuan Cuti'), findsOneWidget);
+        expect(find.text('Layanan Cuti Tahunan'), findsOneWidget);
+        expect(find.text('Buat Pengajuan Cuti'), findsOneWidget);
+
+        // 2. LanguageSwapButton must NOT exist in DedicatedModuleScreen (only in Dashboard)
+        expect(find.byKey(const Key('dashboard_language_swap_button')), findsNothing);
+
+        // 3. Switch global language to ENG
+        AppLanguageController.setLanguage(AppLanguage.en);
+        await tester.pumpAndSettle();
+
+        // 4. Verify texts switched to English automatically
+        expect(find.text('Leave Request'), findsOneWidget);
+        expect(find.text('Manage leave quota & requests'), findsOneWidget);
+        expect(find.text('Annual Leave Service'), findsOneWidget);
+        expect(find.text('Need Time Off?'), findsOneWidget);
+        expect(find.text('Create Leave Request'), findsOneWidget);
+
+        // Stat cards
+        expect(find.text('APPROVED'), findsOneWidget);
+        expect(find.text('PENDING'), findsOneWidget);
+        expect(find.text('REJECTED'), findsOneWidget);
+        expect(find.text('NEEDS REVISION'), findsOneWidget);
+
+        // Filter Dropdown trigger
+        expect(find.text('All Submission Statuses'), findsOneWidget);
+
+        // Subtitle banner & count
+        expect(find.text('Leave History'), findsOneWidget);
+        expect(find.text('1 Submissions'), findsOneWidget);
+
+        // Pagination Bar
+        await tester.scrollUntilVisible(
+          find.byKey(const ValueKey('pagination_bar')),
+          100,
+          scrollable: find.byType(Scrollable).first,
+        );
+        expect(find.text('Page 1 of 1'), findsOneWidget);
+        expect(find.text('Showing 1–1 of 1 submissions'), findsOneWidget);
       },
     );
   });

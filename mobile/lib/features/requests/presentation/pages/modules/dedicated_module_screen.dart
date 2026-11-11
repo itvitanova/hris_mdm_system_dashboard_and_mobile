@@ -16,6 +16,7 @@ import 'package:mdm_hris/features/requests/presentation/widgets/services_hub/mod
 import 'package:mdm_hris/features/requests/presentation/widgets/services_hub/submission_status_filter_dropdown.dart';
 import 'package:mdm_hris/features/home/presentation/bloc/workspace_bloc.dart';
 import 'package:mdm_hris/features/home/presentation/bloc/workspace_state.dart';
+import 'package:mdm_hris/features/root/presentation/widgets/language_swap_button.dart';
 
 /// Halaman Khusus (Dedicated Screen) untuk Setiap Modul Pengajuan Mandiri
 /// Dilengkapi rekap statistik 2x2 korporat, filter status dropdown, dan header riwayat dengan tombol (+) tanpa FAB dan tanpa banner.
@@ -30,6 +31,7 @@ class DedicatedModuleScreen extends StatefulWidget {
   final Future<void> Function(Widget) open;
   final Future<void> Function() onRefresh;
   final List<Widget>? customActions;
+  final AppLanguage initialLanguage;
 
   const DedicatedModuleScreen({
     super.key,
@@ -43,6 +45,7 @@ class DedicatedModuleScreen extends StatefulWidget {
     required this.open,
     required this.onRefresh,
     this.customActions,
+    this.initialLanguage = AppLanguage.id,
   });
 
   @override
@@ -51,6 +54,9 @@ class DedicatedModuleScreen extends StatefulWidget {
 
 class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
   static const int _itemsPerPage = 5;
+  late AppLanguage _currentLanguage = widget.initialLanguage != AppLanguage.id
+      ? widget.initialLanguage
+      : AppLanguageController.currentLanguage;
   SubmissionStatus? _selectedStatusFilter;
   int _currentPage = 1;
 
@@ -75,6 +81,10 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
   @override
   void initState() {
     super.initState();
+    _currentLanguage = widget.initialLanguage != AppLanguage.id
+        ? widget.initialLanguage
+        : AppLanguageController.currentLanguage;
+    AppLanguageController.instance.addListener(_onGlobalLanguageChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _tryGetRequestBloc(context)?.add(
@@ -82,6 +92,20 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
         );
       }
     });
+  }
+
+  void _onGlobalLanguageChanged() {
+    if (mounted && _currentLanguage != AppLanguageController.currentLanguage) {
+      setState(() {
+        _currentLanguage = AppLanguageController.currentLanguage;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    AppLanguageController.instance.removeListener(_onGlobalLanguageChanged);
+    super.dispose();
   }
 
   Future<void> _handleRefresh() async {
@@ -144,7 +168,47 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
     );
   }
 
-  String _getModuleSubtitle(SubmissionKind kind) {
+  String _getModuleTitle(SubmissionKind kind, AppLanguage language) {
+    if (language == AppLanguage.en) {
+      switch (kind) {
+        case SubmissionKind.cuti:
+          return 'Leave Request';
+        case SubmissionKind.izin:
+          return 'Permission Request';
+        case SubmissionKind.lembur:
+          return 'Overtime Request';
+        case SubmissionKind.reimbursement:
+          return 'Reimbursement Claim';
+        case SubmissionKind.medicalClaim:
+          return 'Medical Claim';
+        case SubmissionKind.pettyCash:
+          return 'Petty Cash Request';
+        case SubmissionKind.generalAffair:
+          return 'General Affair';
+      }
+    }
+    return widget.moduleTitle;
+  }
+
+  String _getModuleSubtitle(SubmissionKind kind, AppLanguage language) {
+    if (language == AppLanguage.en) {
+      switch (kind) {
+        case SubmissionKind.cuti:
+          return 'Manage leave quota & requests';
+        case SubmissionKind.izin:
+          return 'Sick leave & work dispensation records';
+        case SubmissionKind.lembur:
+          return 'Task records & overtime compensation';
+        case SubmissionKind.reimbursement:
+          return 'Operational expenses & claims';
+        case SubmissionKind.medicalClaim:
+          return 'Outpatient & health expenses claim';
+        case SubmissionKind.pettyCash:
+          return 'Operational petty cash requests';
+        case SubmissionKind.generalAffair:
+          return 'Procurement, assets & workplace facilities';
+      }
+    }
     switch (kind) {
       case SubmissionKind.cuti:
         return 'Kelola kuota & permohonan cuti';
@@ -164,48 +228,63 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
   }
 
   Widget _buildModuleHeroActionBanner() {
+    final isEn = _currentLanguage == AppLanguage.en;
     final (badgeText, headline, subtitle, buttonText) = switch (widget.kind) {
       SubmissionKind.cuti => (
-          'Layanan Cuti Tahunan',
-          'Perlu Cuti Kerja?',
-          'Ajukan permohonan cuti tahunan atau urusan penting.',
-          'Buat Pengajuan Cuti',
+          isEn ? 'Annual Leave Service' : 'Layanan Cuti Tahunan',
+          isEn ? 'Need Time Off?' : 'Perlu Cuti Kerja?',
+          isEn
+              ? 'Apply for annual leave or important personal affairs.'
+              : 'Ajukan permohonan cuti tahunan atau urusan penting.',
+          isEn ? 'Create Leave Request' : 'Buat Pengajuan Cuti',
         ),
       SubmissionKind.izin => (
-          'Layanan Izin & Sakit',
-          'Perlu Izin Tidak Masuk?',
-          'Ajukan izin sakit atau dispensasi kerja dengan lampiran dokumen.',
-          'Buat Pengajuan Izin',
+          isEn ? 'Permission & Sick Leave' : 'Layanan Izin & Sakit',
+          isEn ? 'Need Work Permission?' : 'Perlu Izin Tidak Masuk?',
+          isEn
+              ? 'Submit sick leave or work dispensation with attachments.'
+              : 'Ajukan izin sakit atau dispensasi kerja dengan lampiran dokumen.',
+          isEn ? 'Create Permission Request' : 'Buat Pengajuan Izin',
         ),
       SubmissionKind.lembur => (
-          'Layanan Lembur',
-          'Ada Penugasan Lembur?',
-          'Catat tugas lembur untuk kompensasi kerja yang akurat.',
-          'Buat Pengajuan Lembur',
+          isEn ? 'Overtime Service' : 'Layanan Lembur',
+          isEn ? 'Assigned Overtime?' : 'Ada Penugasan Lembur?',
+          isEn
+              ? 'Record overtime tasks for accurate work compensation.'
+              : 'Catat tugas lembur untuk kompensasi kerja yang akurat.',
+          isEn ? 'Create Overtime Request' : 'Buat Pengajuan Lembur',
         ),
       SubmissionKind.reimbursement => (
-          'Klaim Biaya Operasional',
-          'Klaim Biaya Pengeluaran?',
-          'Ajukan penggantian dana transportasi, makan, dan dinas.',
-          'Ajukan Reimbursement',
+          isEn ? 'Operational Expense Claim' : 'Klaim Biaya Operasional',
+          isEn ? 'Claim Your Expenses?' : 'Klaim Biaya Pengeluaran?',
+          isEn
+              ? 'Submit claim for transport, meals, and business trips.'
+              : 'Ajukan penggantian dana transportasi, makan, dan dinas.',
+          isEn ? 'Submit Reimbursement' : 'Ajukan Reimbursement',
         ),
       SubmissionKind.medicalClaim => (
-          'Klaim Biaya Medis',
-          'Klaim Rawat Jalan / Inap?',
-          'Penggantian biaya kesehatan dan rawat jalan karyawan.',
-          'Ajukan Medical Claim',
+          isEn ? 'Medical Expense Claim' : 'Klaim Biaya Medis',
+          isEn ? 'Inpatient / Outpatient Claim?' : 'Klaim Rawat Jalan / Inap?',
+          isEn
+              ? 'Reimbursement of employee medical and healthcare costs.'
+              : 'Penggantian biaya kesehatan dan rawat jalan karyawan.',
+          isEn ? 'Submit Medical Claim' : 'Ajukan Medical Claim',
         ),
       SubmissionKind.pettyCash => (
-          'Permohonan Kas Kecil',
-          'Butuh Dana Kas Kecil?',
-          'Permohonan uang muka atau dana operasional cepat kantor.',
-          'Ajukan Petty Cash',
+          isEn ? 'Petty Cash Request' : 'Permohonan Kas Kecil',
+          isEn ? 'Need Petty Cash Funds?' : 'Butuh Dana Kas Kecil?',
+          isEn
+              ? 'Request cash advance or quick office operational funds.'
+              : 'Permohonan uang muka atau dana operasional cepat kantor.',
+          isEn ? 'Request Petty Cash' : 'Ajukan Petty Cash',
         ),
       SubmissionKind.generalAffair => (
-          'Fasilitas & Sarana GA',
-          'Kebutuhan Sarana Kerja?',
-          'Pengadaan barang, perbaikan inventaris, dan fasilitas kerja.',
-          'Ajukan General Affair',
+          isEn ? 'GA Facilities & Supplies' : 'Fasilitas & Sarana GA',
+          isEn ? 'Need Work Equipment?' : 'Kebutuhan Sarana Kerja?',
+          isEn
+              ? 'Procurement, inventory repair, and workplace facilities.'
+              : 'Pengadaan barang, perbaikan inventaris, dan fasilitas kerja.',
+          isEn ? 'Request General Affair' : 'Ajukan General Affair',
         ),
     };
 
@@ -395,6 +474,7 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
   }
 
   Widget _buildScaffold(BuildContext context, List<Map<String, dynamic>> rows) {
+    final isEn = _currentLanguage == AppLanguage.en;
     final allRequests = _getAllKindRequests(rows);
     final approvedCount = allRequests
         .where((r) => r.status == SubmissionStatus.disetujui)
@@ -448,7 +528,7 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              widget.moduleTitle,
+              _getModuleTitle(widget.kind, _currentLanguage),
               style: const TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 16.5,
@@ -459,7 +539,7 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
             ),
             const SizedBox(height: 1.5),
             Text(
-              _getModuleSubtitle(widget.kind),
+              _getModuleSubtitle(widget.kind, _currentLanguage),
               style: const TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 11,
@@ -593,9 +673,9 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                 children: [
                   Expanded(
                     child: ModuleStatCard(
-                      title: 'Disetujui',
-                      subTitle: 'pengajuan',
-                      label: 'DISETUJUI',
+                      title: isEn ? 'Approved' : 'Disetujui',
+                      subTitle: isEn ? 'submissions' : 'pengajuan',
+                      label: isEn ? 'APPROVED' : 'DISETUJUI',
                       value: '$approvedCount',
                       icon: Icons.check_circle_outline_rounded,
                       isSelected: _selectedStatusFilter == SubmissionStatus.disetujui,
@@ -611,9 +691,9 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                   SizedBox(width: 10.w),
                   Expanded(
                     child: ModuleStatCard(
-                      title: 'Menunggu',
-                      subTitle: 'dalam proses',
-                      label: 'MENUNGGU',
+                      title: isEn ? 'Pending' : 'Menunggu',
+                      subTitle: isEn ? 'in review' : 'dalam proses',
+                      label: isEn ? 'PENDING' : 'MENUNGGU',
                       value: '$pendingCount',
                       icon: Icons.access_time_rounded,
                       isSelected: _selectedStatusFilter == SubmissionStatus.menunggu,
@@ -633,9 +713,9 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                 children: [
                   Expanded(
                     child: ModuleStatCard(
-                      title: 'Ditolak',
-                      subTitle: 'tidak disetujui',
-                      label: 'DITOLAK',
+                      title: isEn ? 'Rejected' : 'Ditolak',
+                      subTitle: isEn ? 'declined' : 'tidak disetujui',
+                      label: isEn ? 'REJECTED' : 'DITOLAK',
                       value: '$onlyRejectedCount',
                       icon: Icons.highlight_off_rounded,
                       isSelected: _selectedStatusFilter == SubmissionStatus.ditolak,
@@ -651,9 +731,9 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                   SizedBox(width: 10.w),
                   Expanded(
                     child: ModuleStatCard(
-                      title: 'Perlu Revisi',
-                      subTitle: 'perlu tindak',
-                      label: 'PERLU REVISI',
+                      title: isEn ? 'Needs Revision' : 'Perlu Revisi',
+                      subTitle: isEn ? 'action needed' : 'perlu tindak',
+                      label: isEn ? 'NEEDS REVISION' : 'PERLU REVISI',
                       value: '$revisionCount',
                       icon: Icons.edit_note_rounded,
                       isSelected: _selectedStatusFilter ==
@@ -678,6 +758,7 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                   Expanded(
                     child: SubmissionStatusFilterDropdown(
                       selected: _selectedStatusFilter,
+                      language: _currentLanguage,
                       onChanged: (status) {
                         setState(() {
                           _selectedStatusFilter = status;
@@ -717,9 +798,13 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                         SizedBox(width: 8.w),
                         Flexible(
                           child: Text(
-                            widget.kind == SubmissionKind.medicalClaim
-                                ? 'Riwayat Pengajuan'
-                                : 'Riwayat Pengajuan ${widget.kind.displayName}',
+                            isEn
+                                ? (widget.kind == SubmissionKind.medicalClaim
+                                    ? 'Submission History'
+                                    : '${widget.kind.getLabel(AppLanguage.en)} History')
+                                : (widget.kind == SubmissionKind.medicalClaim
+                                    ? 'Riwayat Pengajuan'
+                                    : 'Riwayat Pengajuan ${widget.kind.displayName}'),
                             style: TextStyle(
                               fontFamily: 'Inter',
                               fontSize: 15.sp,
@@ -747,7 +832,9 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                       ),
                     ),
                     child: Text(
-                      '${filteredRequests.length} Pengajuan',
+                      isEn
+                          ? '${filteredRequests.length} Submissions'
+                          : '${filteredRequests.length} Pengajuan',
                       style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 11.5.sp,
@@ -761,8 +848,12 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
               SizedBox(height: 4.h),
               Text(
                 _selectedStatusFilter != null
-                    ? 'Menampilkan pengajuan berstatus "${_selectedStatusFilter!.displayName}" (${filteredRequests.length} ditemukan).'
-                    : 'Pantau proses persetujuan dan riwayat pengajuan ${widget.kind.displayName.toLowerCase()} Anda.',
+                    ? (isEn
+                        ? 'Showing submissions with status "${_selectedStatusFilter!.getLabel(AppLanguage.en)}" (${filteredRequests.length} found).'
+                        : 'Menampilkan pengajuan berstatus "${_selectedStatusFilter!.displayName}" (${filteredRequests.length} ditemukan).')
+                    : (isEn
+                        ? 'Track approval process and your ${widget.kind.getLabel(AppLanguage.en).toLowerCase()} history.'
+                        : 'Pantau proses persetujuan dan riwayat pengajuan ${widget.kind.displayName.toLowerCase()} Anda.'),
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 11.5.sp,
@@ -788,31 +879,18 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                       SizedBox(height: 8.h),
                       Text(
                         _selectedStatusFilter != null
-                            ? 'Tidak ada pengajuan berstatus "${_selectedStatusFilter!.displayName}"'
-                            : 'Belum ada riwayat pengajuan ${widget.kind.displayName.toLowerCase()}',
+                            ? (isEn
+                                ? 'No submissions with status "${_selectedStatusFilter!.getLabel(AppLanguage.en)}"'
+                                : 'Tidak ada pengajuan berstatus "${_selectedStatusFilter!.displayName}"')
+                            : (isEn
+                                ? 'No ${widget.kind.getLabel(AppLanguage.en).toLowerCase()} submission history yet'
+                                : 'Belum ada riwayat pengajuan ${widget.kind.displayName.toLowerCase()}'),
+                        textAlign: TextAlign.center,
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 13.sp,
                           fontWeight: FontWeight.w500,
                           color: const Color(0xFF94A3B8),
-                        ),
-                      ),
-                      SizedBox(height: 10.h),
-                      TextButton.icon(
-                        onPressed: _openCreateForm,
-                        icon: Icon(
-                          Icons.add_rounded,
-                          size: 16.sp,
-                          color: const Color(0xFF0D9488),
-                        ),
-                        label: Text(
-                          'Buat Pengajuan Baru',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 12.5.sp,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF0D9488),
-                          ),
                         ),
                       ),
                     ],
@@ -824,6 +902,7 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                     padding: EdgeInsets.only(bottom: 10.h),
                     child: UniversalRequestCard(
                       data: model,
+                      language: _currentLanguage,
                       onDetailPressed: () => _navigateAndRefresh(
                         RequestDetailScreen(
                           api: widget.api,
@@ -858,6 +937,22 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
     );
   }
 
+  List<int> _calculateVisiblePages(int current, int total) {
+    if (total <= 5) {
+      return List.generate(total, (i) => i + 1);
+    }
+    int start = current - 2;
+    int end = current + 2;
+    if (start < 1) {
+      start = 1;
+      end = 5;
+    } else if (end > total) {
+      end = total;
+      start = total - 4;
+    }
+    return List.generate(end - start + 1, (i) => start + i);
+  }
+
   Widget _buildPaginationBar(
     int currentPage,
     int totalPages,
@@ -865,181 +960,184 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
     int endIndex,
     int totalItems,
   ) {
-    if (totalItems <= _itemsPerPage) {
-      return const SizedBox.shrink();
-    }
-
     final hasPrev = currentPage > 1;
     final hasNext = currentPage < totalPages;
+    final visiblePages = _calculateVisiblePages(currentPage, totalPages);
+    final isEn = _currentLanguage == AppLanguage.en;
 
     return Container(
       key: const ValueKey('pagination_bar'),
-      margin: EdgeInsets.only(top: 4.h, bottom: 8.h),
-      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+      margin: EdgeInsets.only(top: 8.h, bottom: 12.h),
+      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 0.8),
+        borderRadius: BorderRadius.circular(14.r),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x060F172A),
-            blurRadius: 6,
-            offset: Offset(0, 2),
+            color: Color(0x080F172A),
+            blurRadius: 10,
+            offset: Offset(0, 3),
           ),
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Tombol Sebelumnya
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              key: const ValueKey('pagination_prev_btn'),
-              onTap: hasPrev
-                  ? () => setState(() => _currentPage = currentPage - 1)
-                  : null,
-              borderRadius: BorderRadius.circular(8.r),
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
-                decoration: BoxDecoration(
-                  color: hasPrev
-                      ? const Color(0xFFF8FAFC)
-                      : const Color(0xFFF1F5F9),
+          // 1. Teks Info di Atas (Halaman X dari Y & Menampilkan A-B dari N)
+          Text(
+            isEn
+                ? 'Page $currentPage of $totalPages'
+                : 'Halaman $currentPage dari $totalPages',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF1E293B),
+            ),
+          ),
+          SizedBox(height: 2.h),
+          Text(
+            totalItems == 0
+                ? (isEn ? 'No submissions' : 'Tidak ada pengajuan')
+                : (isEn
+                    ? 'Showing ${startIndex + 1}\u2013$endIndex of $totalItems submissions'
+                    : 'Menampilkan ${startIndex + 1}\u2013$endIndex dari $totalItems pengajuan'),
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 11.sp,
+              fontWeight: FontWeight.w400,
+              color: const Color(0xFF64748B),
+            ),
+          ),
+          SizedBox(height: 10.h),
+
+          // 2. Deretan Tombol Angka Standar [<] [ 1 ] [ 2 ] [ 3 ] [>]
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Tombol Panah Kiri (<)
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  key: const ValueKey('pagination_prev_btn'),
+                  onTap: hasPrev
+                      ? () => setState(() => _currentPage = currentPage - 1)
+                      : null,
                   borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(
-                    color: hasPrev
-                        ? const Color(0xFFCBD5E1)
-                        : const Color(0xFFE2E8F0),
-                    width: 0.8,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
+                  child: Container(
+                    width: 34.w,
+                    height: 34.w,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: hasPrev
+                          ? const Color(0xFFF8FAFC)
+                          : const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(8.r),
+                      border: Border.all(
+                        color: hasPrev
+                            ? const Color(0xFFCBD5E1)
+                            : const Color(0xFFE2E8F0),
+                        width: 0.8,
+                      ),
+                    ),
+                    child: Icon(
                       Icons.chevron_left_rounded,
-                      size: 16.sp,
+                      size: 20.sp,
                       color: hasPrev
                           ? const Color(0xFF0F172A)
                           : const Color(0xFF94A3B8),
                     ),
-                    SizedBox(width: 2.w),
-                    Text(
-                      'Sebelumnya',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 11.sp,
-                        fontWeight: FontWeight.w600,
-                        color: hasPrev
-                            ? const Color(0xFF0F172A)
-                            : const Color(0xFF94A3B8),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ),
 
-          // Info Halaman
-          Flexible(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 4.w),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+              SizedBox(width: 6.w),
+
+              // Kotak-Kotak Angka Halaman
+              ...visiblePages.map((page) {
+                final isActive = page == currentPage;
+                return Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 3.w),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: isActive
+                          ? null
+                          : () => setState(() => _currentPage = page),
+                      borderRadius: BorderRadius.circular(8.r),
+                      child: Container(
+                        width: 34.w,
+                        height: 34.w,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: isActive
+                              ? const Color(0xFF0D9488)
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(8.r),
+                          border: Border.all(
+                            color: isActive
+                                ? const Color(0xFF0D9488)
+                                : const Color(0xFFCBD5E1),
+                            width: 0.8,
+                          ),
+                        ),
+                        child: Text(
+                          '$page',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 12.5.sp,
+                            fontWeight: isActive
+                                ? FontWeight.w700
+                                : FontWeight.w600,
+                            color: isActive
+                                ? Colors.white
+                                : const Color(0xFF1E293B),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }),
+
+              SizedBox(width: 6.w),
+
+              // Tombol Panah Kanan (>)
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  key: const ValueKey('pagination_next_btn'),
+                  onTap: hasNext
+                      ? () => setState(() => _currentPage = currentPage + 1)
+                      : null,
+                  borderRadius: BorderRadius.circular(8.r),
+                  child: Container(
+                    width: 34.w,
+                    height: 34.w,
+                    alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF0FDFA),
-                      borderRadius: BorderRadius.circular(6.r),
+                      color: hasNext
+                          ? const Color(0xFFF8FAFC)
+                          : const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(8.r),
                       border: Border.all(
-                        color: const Color(0xFFCCFBF1),
+                        color: hasNext
+                            ? const Color(0xFFCBD5E1)
+                            : const Color(0xFFE2E8F0),
                         width: 0.8,
                       ),
                     ),
-                    child: Text(
-                      'Halaman $currentPage dari $totalPages',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 11.sp,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF0F766E),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 2.h),
-                  Text(
-                    '${startIndex + 1}–$endIndex dari $totalItems',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 10.sp,
-                      fontWeight: FontWeight.w400,
-                      color: const Color(0xFF64748B),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Tombol Selanjutnya
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              key: const ValueKey('pagination_next_btn'),
-              onTap: hasNext
-                  ? () => setState(() => _currentPage = currentPage + 1)
-                  : null,
-              borderRadius: BorderRadius.circular(8.r),
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
-                decoration: BoxDecoration(
-                  color: hasNext
-                      ? const Color(0xFFF8FAFC)
-                      : const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(
-                    color: hasNext
-                        ? const Color(0xFFCBD5E1)
-                        : const Color(0xFFE2E8F0),
-                    width: 0.8,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Selanjutnya',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 11.sp,
-                        fontWeight: FontWeight.w600,
-                        color: hasNext
-                            ? const Color(0xFF0F172A)
-                            : const Color(0xFF94A3B8),
-                      ),
-                    ),
-                    SizedBox(width: 2.w),
-                    Icon(
+                    child: Icon(
                       Icons.chevron_right_rounded,
-                      size: 16.sp,
+                      size: 20.sp,
                       color: hasNext
                           ? const Color(0xFF0F172A)
                           : const Color(0xFF94A3B8),
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
         ],
       ),

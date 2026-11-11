@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../root/presentation/widgets/language_swap_button.dart';
 import '../../../domain/entities/submission_status.dart';
 import '../../../domain/entities/universal_request_item.dart';
 import 'request_card_config.dart';
@@ -21,6 +22,7 @@ class UniversalRequestCard extends StatelessWidget {
   final VoidCallback? onDetailPressed;
   final VoidCallback? onRevisePressed;
   final bool showApplicant;
+  final AppLanguage language;
 
   const UniversalRequestCard({
     super.key,
@@ -29,14 +31,16 @@ class UniversalRequestCard extends StatelessWidget {
     this.onDetailPressed,
     this.onRevisePressed,
     this.showApplicant = false,
+    this.language = AppLanguage.id,
   });
 
   @override
   Widget build(BuildContext context) {
-    final kindConfig = RequestCardHelper.getKindConfig(data);
+    final kindConfig = RequestCardHelper.getKindConfig(data, language);
     final statusConfig = RequestCardHelper.getStatusConfig(
       data.status,
       data.kind,
+      language,
     );
     final isRevision = data.status == SubmissionStatus.perluRevisi;
 
@@ -247,6 +251,7 @@ class UniversalRequestCard extends StatelessWidget {
                                 RequestCardHelper.formatDateRange(
                                   data.startDate,
                                   data.endDate,
+                                  language,
                                 ),
                                 style: const TextStyle(
                                   fontFamily: 'Inter',
@@ -292,9 +297,11 @@ class UniversalRequestCard extends StatelessWidget {
                                     color: Colors.white,
                                   ),
                                   SizedBox(width: 4.w),
-                                  const Text(
-                                    'Perbaiki pengajuan',
-                                    style: TextStyle(
+                                  Text(
+                                    language == AppLanguage.en
+                                        ? 'Revise submission'
+                                        : 'Perbaiki pengajuan',
+                                    style: const TextStyle(
                                       fontFamily: 'Inter',
                                       fontSize: 11,
                                       fontWeight: FontWeight.w700,
@@ -328,6 +335,7 @@ class UniversalRequestCard extends StatelessWidget {
                                     RequestCardHelper.formatDateRange(
                                       data.startDate,
                                       data.endDate,
+                                      language,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,

@@ -1764,10 +1764,19 @@ class _ApprovalsState extends State<ApprovalsScreen> {
   bool history = false;
   bool changed = false;
   String query = '';
+  late final TextEditingController _searchController;
+
   @override
   void initState() {
     super.initState();
+    _searchController = TextEditingController();
     load();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> load() async {
@@ -2017,6 +2026,7 @@ class _ApprovalsState extends State<ApprovalsScreen> {
         ],
       ),
       child: TextField(
+        controller: _searchController,
         decoration: InputDecoration(
           hintText: 'Cari pemohon atau pengajuan...',
           hintStyle: const TextStyle(
@@ -2032,7 +2042,10 @@ class _ApprovalsState extends State<ApprovalsScreen> {
           suffixIcon: query.isNotEmpty
               ? IconButton(
                   icon: const Icon(Icons.close_rounded, size: 18, color: Color(0xFF94A3B8)),
-                  onPressed: () => setState(() => query = ''),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() => query = '');
+                  },
                 )
               : null,
           filled: true,

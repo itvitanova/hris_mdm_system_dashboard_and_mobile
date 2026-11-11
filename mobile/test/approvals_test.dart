@@ -273,11 +273,6 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Hapus rincian 2'));
       await tester.pumpAndSettle();
-      await tester.scrollUntilVisible(
-        find.text('Kirim pengajuan'),
-        250,
-        scrollable: find.byType(Scrollable).first,
-      );
       await tester.tap(find.text('Kirim pengajuan'));
       await tester.pumpAndSettle();
       expect(

@@ -67,7 +67,7 @@ func (a *App) SubmitRequest(ctx context.Context, actor domain.Actor, input domai
 		if emp.Status == "Nonaktif" {
 			return ErrForbidden
 		}
-		r := domain.Request{ID: ID(), Version: 2, Revision: 1, EmployeeID: emp.ID, EmployeeName: emp.Name, Kind: input.Kind, Title: strings.TrimSpace(input.Title), Description: strings.TrimSpace(input.Description), StartDate: input.StartDate, EndDate: input.EndDate, Amount: input.Amount, Hours: input.Hours, CreatedAt: now(), Status: "Menunggu", History: []domain.ApprovalEvent{}, Category: input.Category, Priority: input.Priority, Location: input.Location, AttachmentName: input.AttachmentName, PermissionType: input.PermissionType}
+		r := domain.Request{ID: ID(), Version: 2, Revision: 1, EmployeeID: emp.ID, EmployeeName: emp.Name, Kind: input.Kind, Title: strings.TrimSpace(input.Title), Description: strings.TrimSpace(input.Description), StartDate: input.StartDate, EndDate: input.EndDate, Amount: input.Amount, Hours: input.Hours, CreatedAt: now(), Status: "Menunggu", History: []domain.ApprovalEvent{}, Category: input.Category, Priority: input.Priority, Location: input.Location, AttachmentName: input.AttachmentName, AttachmentID: input.AttachmentID, PermissionType: input.PermissionType}
 		if input.ID != "" {
 			var old domain.Request
 			if s.Get(ctx, "requests", input.ID, &old) != nil || old.EmployeeID != actor.EmployeeID {
@@ -103,7 +103,11 @@ func (a *App) SubmitRequest(ctx context.Context, actor domain.Actor, input domai
 			if zone, e := time.LoadLocation(settings.Timezone); e == nil {
 				today = time.Now().In(zone).Format("2006-01-02")
 			}
-			for _, item := range r.Items {
+			for i, item := range r.Items {
+				if item.Qty <= 0 && item.Quantity > 0 {
+					item.Qty = item.Quantity
+					r.Items[i].Qty = item.Quantity
+				}
 				if _, err := time.Parse("2006-01-02", item.Date); err != nil || item.Date > today {
 					return errors.New("tanggal transaksi tidak valid atau di masa depan")
 				}

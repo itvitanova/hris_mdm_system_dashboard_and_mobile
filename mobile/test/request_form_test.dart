@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mdm_hris/core/api_client.dart';
 import 'package:mdm_hris/features/requests/request_form.dart';
+import 'package:mdm_hris/features/requests/presentation/widgets/form_card_input.dart';
 
 class CaptureApi extends ApiClient {
   Map<String, dynamic>? payload;
@@ -89,11 +90,6 @@ void main() {
         await tester.enterText(field, '2');
       }
       final send = find.text('Kirim pengajuan');
-      await tester.scrollUntilVisible(
-        send,
-        250,
-        scrollable: find.byType(Scrollable).first,
-      );
       await tester.tap(send);
       await tester.pumpAndSettle();
       expect(api.payload?['kind'], kind);
@@ -264,9 +260,16 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Check dropdown exists
+      // Check dropdown exists and has alignedDropdown enabled
       final dropdown = find.byType(DropdownButtonFormField<String>);
       expect(dropdown, findsOneWidget);
+      final buttonTheme = tester.widget<ButtonTheme>(
+        find.ancestor(
+          of: dropdown,
+          matching: find.byType(ButtonTheme),
+        ),
+      );
+      expect(buttonTheme.data.alignedDropdown, isTrue);
 
       await tester.scrollUntilVisible(
         dropdown,
@@ -495,11 +498,6 @@ void main() {
       await tester.enterText(descField, 'Biaya konsultasi dokter dan obat flu');
 
       final sendButton = find.text('Kirim pengajuan');
-      await tester.scrollUntilVisible(
-        sendButton,
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
       await tester.tap(sendButton);
       await tester.pumpAndSettle();
 
@@ -597,9 +595,9 @@ void main() {
       expect(find.text('Kategori *'), findsOneWidget);
       expect(find.text('Deskripsi *'), findsOneWidget);
       expect(find.text('Qty'), findsOneWidget);
-      expect(find.text('Harga satuan (Rp)'), findsOneWidget);
+      expect(find.textContaining('Harga satuan (Rp)'), findsOneWidget);
       expect(find.text('Brand / Type & Spesifikasi'), findsOneWidget);
-      expect(find.text('Jumlah (Rp) *'), findsOneWidget);
+      expect(find.textContaining('Jumlah (Rp) *'), findsOneWidget);
       expect(find.text('Bukti transaksi *'), findsOneWidget);
 
       // Verify title & description inputs
@@ -629,9 +627,13 @@ void main() {
       await tester.enterText(unitPriceFinder, '25000');
       await tester.pumpAndSettle();
 
-      // Amount should auto-calculate: 3 * 25000 = 75000
+      // Amount should auto-calculate: 3 * 25000 = 75000 and be read-only
       final amountFinder = find.byKey(const Key('reimbursement_amount_field'));
       expect(amountFinder, findsOneWidget);
+      final textField = tester.widget<TextField>(
+        find.descendant(of: amountFinder, matching: find.byType(TextField)),
+      );
+      expect(textField.readOnly, isTrue);
       expect(find.widgetWithText(TextFormField, '75000'), findsOneWidget);
 
       // Enter Brand / Type & Spesifikasi
@@ -643,25 +645,295 @@ void main() {
 
       // Submit form
       final send = find.text('Kirim pengajuan');
-      await tester.scrollUntilVisible(
-        send,
-        250,
-        scrollable: find.byType(Scrollable).first,
-      );
       await tester.tap(send);
       await tester.pumpAndSettle();
 
       expect(api.payload?['kind'], 'Reimbursement');
       expect(api.payload?['title'], 'Pengadaan ATK');
       expect(api.payload?['amount'], 75000);
+      expect(api.payload?['startDate'], '2026-11-10');
+      expect(api.payload?['endDate'], '2026-11-10');
+      expect(api.payload?.containsKey('attachmentId'), isFalse);
       final items = api.payload?['items'] as List<dynamic>;
       expect(items.length, 1);
       final item = items[0] as Map<String, dynamic>;
-      expect(item['qty'], 3);
-      expect(item['unitPrice'], 25000);
-      expect(item['specification'], 'PaperOne A4 80gsm');
+      expect(item['description'], contains('PaperOne A4 80gsm'));
+      expect(item['description'], contains('3 pcs'));
       expect(item['amount'], 75000);
       expect(item['receiptId'], 'receipt-fixture-123');
+      expect(item.containsKey('qty'), isFalse);
+      expect(item.containsKey('quantity'), isFalse);
+      expect(item.containsKey('unitPrice'), isFalse);
+      expect(item.containsKey('specification'), isFalse);
+    },
+  );
+
+  testWidgets(
+    'Reimbursement blocks submission when receipt is missing or amount is zero',
+    (tester) async {
+      final api = CaptureApi();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: RequestForm(
+            api: api,
+            initialKind: 'Reimbursement',
+            initialRequest: {
+              'kind': 'Reimbursement',
+              'items': [
+                {
+                  'date': '2026-11-10',
+                  'description': 'Item tanpa receipt',
+                  'category': 'Transportasi',
+                  'amount': 50000,
+                  'receiptId': '',
+                },
+              ],
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final titleFinder = find.widgetWithText(
+        TextFormField,
+        'Ringkasan keperluan Anda',
+      );
+      await tester.enterText(titleFinder, 'Klaim Transport');
+
+      final descFinder = find.widgetWithText(
+        TextFormField,
+        'Jelaskan kebutuhan dan cantumkan referensi dokumen pendukung',
+      );
+      await tester.enterText(descFinder, 'Transportasi meeting');
+
+      // Attempt submit without receipt
+      final send = find.text('Kirim pengajuan');
+      await tester.tap(send);
+      await tester.pumpAndSettle();
+
+      // Should be blocked
+      expect(api.payload, isNull);
+      expect(find.textContaining('Unggah bukti'), findsWidgets);
+    },
+  );
+
+  testWidgets(
+    'displays red border on input card and error text underneath when validation fails on submit, and clears on change',
+    (tester) async {
+      final api = CaptureApi();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: RequestForm(
+            api: api,
+            initialKind: 'Cuti',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Submit immediately without inputs
+      final send = find.text('Kirim pengajuan');
+      await tester.tap(send);
+      await tester.pumpAndSettle();
+
+      // Form validation blocked
+      expect(api.payload, isNull);
+
+      // Verify error indicators: error text and warning icon appear
+      expect(find.text('Wajib diisi'), findsWidgets);
+      expect(find.byIcon(Icons.error_outline_rounded), findsWidgets);
+
+      // Verify the card container has red border
+      final formCardInputs = find.byType(FormCardTextInput);
+      expect(formCardInputs, findsWidgets);
+
+      final firstCardContainer = tester.widget<AnimatedContainer>(
+        find.descendant(
+          of: formCardInputs.first,
+          matching: find.byType(AnimatedContainer),
+        ),
+      );
+      final border = (firstCardContainer.decoration as BoxDecoration).border as Border;
+      expect(border.top.color, const Color(0xFFEF4444));
+
+      // Verify error text is NOT inside the AnimatedContainer (it is outside below)
+      final errorInsideContainer = find.descendant(
+        of: find.byWidget(firstCardContainer),
+        matching: find.text('Wajib diisi'),
+      );
+      expect(errorInsideContainer, findsNothing);
+
+      // Enter text into title
+      final titleFinder = find.widgetWithText(TextFormField, 'Judul');
+      await tester.enterText(titleFinder, 'Cuti Liburan');
+      await tester.pumpAndSettle();
+
+      // Title error is cleared and border returns to transparent
+      final updatedFirstCard = tester.widget<AnimatedContainer>(
+        find.descendant(
+          of: formCardInputs.first,
+          matching: find.byType(AnimatedContainer),
+        ),
+      );
+      final updatedBorder = (updatedFirstCard.decoration as BoxDecoration).border as Border;
+      expect(updatedBorder.top.color, Colors.transparent);
+    },
+  );
+
+  testWidgets(
+    'Izin dropdown displays red border and error text outside below dropdown card when unselected on submit',
+    (tester) async {
+      final api = CaptureApi();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: RequestForm(
+            api: api,
+            initialKind: 'Izin',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Fill title and description
+      final titleFinder = find.widgetWithText(TextFormField, 'Ringkasan keperluan Anda');
+      await tester.enterText(titleFinder, 'Izin Urusan Keluarga');
+
+      final descFinder = find.widgetWithText(
+        TextFormField,
+        'Jelaskan kebutuhan dan cantumkan referensi dokumen pendukung',
+      );
+      await tester.enterText(descFinder, 'Ada urusan penting di kampung');
+
+      // Leave dropdown unselected and submit
+      final send = find.text('Kirim pengajuan');
+      await tester.tap(send);
+      await tester.pumpAndSettle();
+
+      // Verify error appears for dropdown
+      expect(find.text('Pilih jenis izin'), findsWidgets);
+      expect(find.byIcon(Icons.error_outline_rounded), findsWidgets);
+
+      final dropdownInput = find.byType(FormCardDropdownInput<String>);
+      expect(dropdownInput, findsOneWidget);
+
+      final dropdownContainer = tester.widget<AnimatedContainer>(
+        find.descendant(
+          of: dropdownInput,
+          matching: find.byType(AnimatedContainer),
+        ),
+      );
+      final border = (dropdownContainer.decoration as BoxDecoration).border as Border;
+      expect(border.top.color, const Color(0xFFEF4444));
+
+      // Now select Sakit
+      final dropdown = find.byKey(const ValueKey('izin_type_dropdown'));
+      await tester.scrollUntilVisible(
+        dropdown,
+        -150,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(dropdown);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Sakit').last);
+      await tester.pumpAndSettle();
+
+      // Error clears
+      expect(find.text('Pilih jenis izin'), findsNothing);
+      final clearedContainer = tester.widget<AnimatedContainer>(
+        find.descendant(
+          of: dropdownInput,
+          matching: find.byType(AnimatedContainer),
+        ),
+      );
+      final clearedBorder = (clearedContainer.decoration as BoxDecoration).border as Border;
+      expect(clearedBorder.top.color, Colors.transparent);
+    },
+  );
+
+  testWidgets(
+    'Petty Cash amount card displays red border and error text outside when amount is zero on submit',
+    (tester) async {
+      final api = CaptureApi();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: RequestForm(
+            api: api,
+            initialKind: 'Petty Cash',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Fill title and description
+      final titleFinder = find.widgetWithText(TextFormField, 'Ringkasan keperluan Anda');
+      await tester.enterText(titleFinder, 'Beli Snack Meeting');
+
+      final descFinder = find.widgetWithText(
+        TextFormField,
+        'Jelaskan kebutuhan dan cantumkan referensi dokumen pendukung',
+      );
+      await tester.enterText(descFinder, 'Snack untuk tamu kantor');
+
+      // Submit with amount = 0
+      final send = find.text('Kirim pengajuan');
+      await tester.tap(send);
+      await tester.pumpAndSettle();
+
+      // Validation blocked
+      expect(api.payload, isNull);
+      expect(find.text('Nominal tidak valid'), findsOneWidget);
+      expect(find.byIcon(Icons.error_outline_rounded), findsWidgets);
+
+      // Tap preset chip 'Rp 50 rb'
+      final chip = find.text('Rp 50 rb');
+      await tester.scrollUntilVisible(
+        chip,
+        -100,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(chip);
+      await tester.pumpAndSettle();
+
+      // Error clears
+      expect(find.text('Nominal tidak valid'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'action buttons (Batal and Kirim pengajuan) are docked in bottomNavigationBar and visible without scrolling',
+    (tester) async {
+      final api = CaptureApi();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: RequestForm(
+            api: api,
+            initialKind: 'Cuti',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Find Scaffold
+      final scaffold = tester.widget<Scaffold>(find.byType(Scaffold));
+      expect(scaffold.bottomNavigationBar, isNotNull);
+
+      // Verify buttons are directly visible without scrolling
+      expect(find.text('Batal'), findsOneWidget);
+      expect(find.text('Kirim pengajuan'), findsOneWidget);
+
+      // Verify Batal and Kirim pengajuan are descendants of bottomNavigationBar
+      final bottomNavFinder = find.byWidget(scaffold.bottomNavigationBar!);
+      expect(
+        find.descendant(of: bottomNavFinder, matching: find.text('Batal')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: bottomNavFinder,
+          matching: find.text('Kirim pengajuan'),
+        ),
+        findsOneWidget,
+      );
     },
   );
 }

@@ -36,7 +36,7 @@ class LeaveDateRangeCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(8.r),
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
           decoration: BoxDecoration(
             color: const Color(0xFFF8FAFC),
             borderRadius: BorderRadius.circular(8.r),
@@ -44,35 +44,40 @@ class LeaveDateRangeCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 11.sp,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF64748B),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 11.sp,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF64748B),
+                  ),
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
               SizedBox(height: 4.h),
               Row(
                 children: [
                   Icon(icon, size: 14.sp, color: const Color(0xFF0D9488)),
-                  SizedBox(width: 6.w),
+                  SizedBox(width: 4.w),
                   Expanded(
-                    child: Text(
-                      valueText,
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF0F172A),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        valueText,
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF0F172A),
+                        ),
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  SizedBox(width: 2.w),
                   Icon(
                     Icons.keyboard_arrow_down_rounded,
                     size: 16.sp,

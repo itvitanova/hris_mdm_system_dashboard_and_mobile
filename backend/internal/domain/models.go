@@ -89,6 +89,7 @@ type Request struct {
 	Priority       string          `json:"priority,omitempty"`
 	Location       string          `json:"location,omitempty"`
 	AttachmentName string          `json:"attachmentName,omitempty"`
+	AttachmentID   string          `json:"attachmentId,omitempty"`
 	PermissionType string          `json:"permissionType,omitempty"`
 }
 type Inventory struct {

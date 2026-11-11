@@ -7,6 +7,7 @@ type ExpenseItem struct {
 	Amount        int64  `json:"amount"`
 	ReceiptID     string `json:"receiptId"`
 	Qty           int    `json:"qty,omitempty"`
+	Quantity      int    `json:"quantity,omitempty"`
 	UnitPrice     int64  `json:"unitPrice,omitempty"`
 	Specification string `json:"specification,omitempty"`
 }
