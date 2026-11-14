@@ -53,6 +53,7 @@ dependencies:
   flutter_screenutil: ^5.9.3
   google_fonts: ^8.1.0
   uicons: ^1.0.1
+  lottie: ^3.8.2
 
 dev_dependencies:
   flutter_test:
