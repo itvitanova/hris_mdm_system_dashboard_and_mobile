@@ -42,7 +42,11 @@ class _SplashScreenState extends State<SplashScreen>
     if (_completed || !mounted) return;
     _completed = true;
     _timer?.cancel();
-    widget.onAnimationComplete();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        widget.onAnimationComplete();
+      }
+    });
   }
 
   @override
@@ -55,6 +59,7 @@ class _SplashScreenState extends State<SplashScreen>
           child: Lottie.asset(
             'assets/lottie/vita_nova_logo.json',
             controller: _controller,
+            fit: BoxFit.contain,
             onLoaded: (composition) {
               _timer?.cancel();
               _controller.duration = composition.duration;
