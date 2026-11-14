@@ -20,6 +20,7 @@ import 'features/requests/presentation/bloc/request_bloc.dart';
 import 'features/payroll/presentation/bloc/payroll_bloc.dart';
 import 'shared/widgets.dart';
 import 'shared/theme.dart';
+import 'features/splash/presentation/pages/splash_screen.dart';
 
 class HrisApp extends StatefulWidget {
   const HrisApp({super.key, required this.api});
@@ -36,6 +37,7 @@ class _HrisAppState extends State<HrisApp> {
   late final AttendanceBloc _attendanceBloc;
   late final RequestBloc _requestBloc;
   late final PayrollBloc _payrollBloc;
+  bool _showSplash = true;
 
   @override
   void initState() {
@@ -87,46 +89,61 @@ class _HrisAppState extends State<HrisApp> {
       scaffoldMessengerKey: rootScaffoldMessengerKey,
       debugShowCheckedModeBanner: false,
       theme: hrisTheme(),
-      home: BlocBuilder<AuthBloc, AuthState>(
-        builder: (context, state) {
-          if (state is AuthBooting || state is AuthInitial) {
-            return const DashboardSkeleton();
-          }
+      home: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 400),
+        switchInCurve: Curves.easeIn,
+        switchOutCurve: Curves.easeOut,
+        child: _showSplash
+            ? SplashScreen(
+                key: const ValueKey('splash_screen'),
+                onAnimationComplete: () {
+                  if (mounted) {
+                    setState(() => _showSplash = false);
+                  }
+                },
+              )
+            : BlocBuilder<AuthBloc, AuthState>(
+                key: const ValueKey('auth_content'),
+                builder: (context, state) {
+                  if (state is AuthBooting || state is AuthInitial) {
+                    return const DashboardSkeleton();
+                  }
 
-          if (state is Unauthenticated && state.message != null) {
-            return Scaffold(
-              body: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(state.message!),
-                    TextButton(
-                      onPressed: () =>
-                          context.read<AuthBloc>().add(const AuthCheckRequested()),
-                      child: const Text('Coba lagi'),
-                    ),
-                  ],
-                ),
+                  if (state is Unauthenticated && state.message != null) {
+                    return Scaffold(
+                      body: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(state.message!),
+                            TextButton(
+                              onPressed: () =>
+                                  context.read<AuthBloc>().add(const AuthCheckRequested()),
+                              child: const Text('Coba lagi'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+
+                  if (state is Authenticated) {
+                    return WorkspaceLoader(
+                      key: const ValueKey('workspace_loader'),
+                      api: widget.api,
+                      onLogout: () =>
+                          context.read<AuthBloc>().add(const AuthLogoutRequested()),
+                    );
+                  }
+
+                  return LoginScreen(
+                    key: const ValueKey('login_screen'),
+                    api: widget.api,
+                    onLogin: () =>
+                        context.read<AuthBloc>().add(const AuthCheckRequested()),
+                  );
+                },
               ),
-            );
-          }
-
-          if (state is Authenticated) {
-            return WorkspaceLoader(
-              key: const ValueKey('workspace_loader'),
-              api: widget.api,
-              onLogout: () =>
-                  context.read<AuthBloc>().add(const AuthLogoutRequested()),
-            );
-          }
-
-          return LoginScreen(
-            key: const ValueKey('login_screen'),
-            api: widget.api,
-            onLogin: () =>
-                context.read<AuthBloc>().add(const AuthCheckRequested()),
-          );
-        },
       ),
     ),
     ),
