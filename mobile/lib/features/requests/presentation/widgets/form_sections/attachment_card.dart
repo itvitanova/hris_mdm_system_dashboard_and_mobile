@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:uicons/uicons.dart';
 import 'form_ui_components.dart';
 
 class FormAttachmentCard extends StatelessWidget {
@@ -36,7 +37,7 @@ class FormAttachmentCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(8.r),
                             ),
                             child: Icon(
-                              Icons.file_present_rounded,
+                              UIcons.regularRounded.document,
                               size: 20.sp,
                               color: Colors.white,
                             ),
@@ -101,7 +102,7 @@ class FormAttachmentCard extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              Icons.delete_outline_rounded,
+                              UIcons.regularRounded.trash,
                               size: 15.sp,
                               color: const Color(0xFFDC2626),
                             ),
@@ -138,7 +139,7 @@ class FormAttachmentCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Icon(
-                        Icons.upload_file_rounded,
+                        UIcons.regularRounded.cloud_upload,
                         size: 20.sp,
                         color: const Color(0xFF64748B),
                       ),
@@ -172,7 +173,7 @@ class FormAttachmentCard extends StatelessWidget {
                       ),
                     ),
                     Icon(
-                      Icons.add_circle_outline_rounded,
+                      UIcons.regularRounded.plus,
                       size: 18.sp,
                       color: const Color(0xFF94A3B8),
                     ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:uicons/uicons.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/workspace.dart';
 import '../../../../core/widgets/core_widgets.dart';
@@ -57,7 +58,7 @@ class _PayslipScreenState extends State<PayslipScreen> {
     final bg = isFinal ? const Color(0xFFDCFCE7) : const Color(0xFFFEF3C7);
     final textCol = isFinal ? const Color(0xFF166534) : const Color(0xFF92400E);
     final borderCol = isFinal ? const Color(0xFFBBF7D0) : const Color(0xFFFDE68A);
-    final icon = isFinal ? Icons.check_circle_rounded : Icons.schedule_rounded;
+    final icon = isFinal ? UIcons.regularRounded.badge_check : UIcons.regularRounded.clock;
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
@@ -183,7 +184,7 @@ class _PayslipScreenState extends State<PayslipScreen> {
                 Row(
                   children: [
                     Icon(
-                      isFinal ? Icons.verified_rounded : Icons.info_outline_rounded,
+                      isFinal ? UIcons.regularRounded.badge_check : UIcons.regularRounded.info,
                       size: 14.sp,
                       color: isFinal ? const Color(0xFF4ADE80) : const Color(0xFFFDE68A),
                     ),
@@ -247,10 +248,10 @@ class _PayslipScreenState extends State<PayslipScreen> {
                   borderRadius: BorderRadius.circular(10.r),
                   border: Border.all(color: const Color(0xFFCCFBF1), width: 1),
                 ),
-                child: const Icon(
-                  Icons.business_rounded,
+                child: Icon(
+                  UIcons.regularRounded.building,
                   size: 19,
-                  color: Color(0xFF0F766E),
+                  color: const Color(0xFF0F766E),
                 ),
               ),
               SizedBox(width: 10.w),
@@ -338,10 +339,10 @@ class _PayslipScreenState extends State<PayslipScreen> {
                   shape: BoxShape.circle,
                   border: Border.all(color: const Color(0xFFBBF7D0), width: 1),
                 ),
-                child: const Icon(
-                  Icons.trending_up_rounded,
+                child: Icon(
+                  UIcons.regularRounded.arrow_trend_up,
                   size: 17,
-                  color: Color(0xFF16A34A),
+                  color: const Color(0xFF16A34A),
                 ),
               ),
               SizedBox(width: 8.w),
@@ -460,10 +461,10 @@ class _PayslipScreenState extends State<PayslipScreen> {
                   shape: BoxShape.circle,
                   border: Border.all(color: const Color(0xFFFECACA), width: 1),
                 ),
-                child: const Icon(
-                  Icons.trending_down_rounded,
+                child: Icon(
+                  UIcons.regularRounded.arrow_trend_down,
                   size: 17,
-                  color: Color(0xFFDC2626),
+                  color: const Color(0xFFDC2626),
                 ),
               ),
               SizedBox(width: 8.w),
@@ -603,9 +604,9 @@ class _PayslipScreenState extends State<PayslipScreen> {
         titleSpacing: 0,
         centerTitle: false,
         leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_rounded,
-            color: Color(0xFF0F172A),
+          icon: Icon(
+            UIcons.regularRounded.angle_small_left,
+            color: const Color(0xFF0F172A),
           ),
           onPressed: () => Navigator.pop(context),
         ),
@@ -661,10 +662,10 @@ class _PayslipScreenState extends State<PayslipScreen> {
                         color: Color(0xFF0F766E),
                       ),
                     )
-                  : const Icon(
-                      Icons.share_outlined,
+                  : Icon(
+                      UIcons.regularRounded.share,
                       size: 18,
-                      color: Color(0xFF0F766E),
+                      color: const Color(0xFF0F766E),
                     ),
               padding: EdgeInsets.zero,
               tooltip: 'Bagikan / Unduh PDF',
@@ -700,7 +701,7 @@ class _PayslipScreenState extends State<PayslipScreen> {
                           color: Colors.white,
                         ),
                       )
-                    : Icon(Icons.picture_as_pdf_rounded, size: 18.sp),
+                    : Icon(UIcons.regularRounded.document, size: 18.sp),
                 label: Text(
                   busy ? 'Menyiapkan Dokumen…' : 'Unduh / Bagikan Slip Gaji (PDF)',
                   style: TextStyle(

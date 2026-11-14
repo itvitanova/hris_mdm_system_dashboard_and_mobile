@@ -16,6 +16,7 @@ import '../../../requests/presentation/widgets/services_hub/service_module_card.
 import '../../../requests/presentation/pages/modules/dedicated_module_screen.dart';
 import '../../../home/presentation/bloc/workspace_bloc.dart';
 import '../../../home/presentation/bloc/workspace_state.dart';
+import 'package:uicons/uicons.dart';
 import 'language_swap_button.dart';
 
 /// Halaman Hub Pengajuan Utama (Tab 'Pengajuan' di Bottom Navbar)
@@ -254,7 +255,7 @@ class _RequestsTabState extends State<RequestsTab> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        Icons.fact_check_rounded,
+                        UIcons.regularRounded.list_check,
                         size: 15.w,
                         color: const Color(0xFF0F766E),
                       ),
@@ -562,8 +563,8 @@ class _RequestsTabState extends State<RequestsTab> {
                 borderRadius: BorderRadius.circular(11.r),
                 onTap: () => _navigateAndRefresh(LeaveCalendarScreen(api: api, workspace: w)),
                 child: Icon(
-                  Icons.cake_outlined,
-                  size: 19.w,
+                  UIcons.regularRounded.calendar,
+                  size: 16.w,
                   color: const Color(0xFF334155),
                 ),
               ),
@@ -600,8 +601,8 @@ class _RequestsTabState extends State<RequestsTab> {
                   alignment: Alignment.center,
                   children: [
                     Icon(
-                      Icons.notifications_none_rounded,
-                      size: 19.w,
+                      UIcons.regularRounded.bell,
+                      size: 16.w,
                       color: const Color(0xFF334155),
                     ),
                     if (unreadCount > 0)
@@ -686,14 +687,14 @@ class _RequestsTabState extends State<RequestsTab> {
                           title: isEn ? 'Leave' : 'Cuti',
                           metricTag: isEn ? 'Annual Leave' : 'Cuti Tahunan',
                           description: isEn ? 'Annual leave & personal time off' : 'Cuti tahunan & urusan penting',
-                          icon: Icons.event_available_outlined,
+                          icon: UIcons.regularRounded.calendar_clock,
                           onTap: () => _navigateAndRefresh(
                             DedicatedModuleScreen(
                               kind: SubmissionKind.cuti,
                               moduleTitle: isEn ? 'Leave Request' : 'Pengajuan Cuti',
                               keyMetricLabel: isEn ? 'REMAINING QUOTA' : 'SISA KUOTA',
                               keyMetricValue: cutiMetricStr,
-                              keyMetricIcon: Icons.event_available_outlined,
+                              keyMetricIcon: UIcons.regularRounded.calendar_clock,
                               api: api,
                               workspace: w,
                               open: open,
@@ -711,14 +712,14 @@ class _RequestsTabState extends State<RequestsTab> {
                           title: isEn ? 'Permission' : 'Izin',
                           metricTag: isEn ? 'Official Letter' : 'Surat Izin',
                           description: isEn ? 'Sick leave & work dispensation' : 'Sakit & dispensasi kerja',
-                          icon: Icons.medical_services_outlined,
+                          icon: UIcons.regularRounded.treatment,
                           onTap: () => _navigateAndRefresh(
                             DedicatedModuleScreen(
                               kind: SubmissionKind.izin,
                               moduleTitle: isEn ? 'Permission Request' : 'Pengajuan Izin',
                               keyMetricLabel: isEn ? 'TOTAL PERMISSIONS' : 'TOTAL IZIN',
                               keyMetricValue: '${izinRequests.length} ${isEn ? 'Submissions' : 'Pengajuan'}',
-                              keyMetricIcon: Icons.medical_services_outlined,
+                              keyMetricIcon: UIcons.regularRounded.treatment,
                               api: api,
                               workspace: w,
                               open: open,
@@ -736,14 +737,14 @@ class _RequestsTabState extends State<RequestsTab> {
                           title: isEn ? 'Overtime' : 'Lembur',
                           metricTag: isEn ? 'Compensation' : 'Kompensasi',
                           description: isEn ? 'Overtime tasks & compensation' : 'Tugas lembur & kompensasi',
-                          icon: Icons.access_time_rounded,
+                          icon: UIcons.regularRounded.clock,
                           onTap: () => _navigateAndRefresh(
                             DedicatedModuleScreen(
                               kind: SubmissionKind.lembur,
                               moduleTitle: isEn ? 'Overtime Request' : 'Pengajuan Lembur',
                               keyMetricLabel: isEn ? 'TOTAL OVERTIME' : 'TOTAL LEMBUR',
                               keyMetricValue: lemburMetricStr,
-                              keyMetricIcon: Icons.access_time_rounded,
+                              keyMetricIcon: UIcons.regularRounded.clock,
                               api: api,
                               workspace: w,
                               open: open,
@@ -761,14 +762,14 @@ class _RequestsTabState extends State<RequestsTab> {
                           title: 'Reimbursement',
                           metricTag: isEn ? 'Expense Claim' : 'Klaim Biaya',
                           description: isEn ? 'Transport, meals & clients' : 'Transport, makan & klien',
-                          icon: Icons.receipt_long_rounded,
+                          icon: UIcons.regularRounded.receipt,
                           onTap: () => _navigateAndRefresh(
                             DedicatedModuleScreen(
                               kind: SubmissionKind.reimbursement,
                               moduleTitle: isEn ? 'Reimbursement Claim' : 'Klaim Reimbursement',
                               keyMetricLabel: isEn ? 'TOTAL CLAIMS' : 'TOTAL KLAIM',
                               keyMetricValue: reimburseMetricStr,
-                              keyMetricIcon: Icons.receipt_long_rounded,
+                              keyMetricIcon: UIcons.regularRounded.receipt,
                               api: api,
                               workspace: w,
                               open: open,
@@ -786,14 +787,14 @@ class _RequestsTabState extends State<RequestsTab> {
                           title: 'Medical Claim',
                           metricTag: isEn ? 'Medical Quota' : 'Plafon Medis',
                           description: isEn ? 'Outpatient & health expenses' : 'Rawat jalan & pengobatan',
-                          icon: Icons.health_and_safety_outlined,
+                          icon: UIcons.regularRounded.stethoscope,
                           onTap: () => _navigateAndRefresh(
                             DedicatedModuleScreen(
                               kind: SubmissionKind.medicalClaim,
                               moduleTitle: 'Medical Claim',
                               keyMetricLabel: isEn ? 'TOTAL CLAIMS' : 'TOTAL KLAIM',
                               keyMetricValue: medicalMetricStr,
-                              keyMetricIcon: Icons.health_and_safety_outlined,
+                              keyMetricIcon: UIcons.regularRounded.stethoscope,
                               api: api,
                               workspace: w,
                               open: open,
@@ -811,14 +812,14 @@ class _RequestsTabState extends State<RequestsTab> {
                           title: 'Petty Cash',
                           metricTag: isEn ? 'Petty Cash' : 'Kas Kecil',
                           description: isEn ? 'Operational cash requests' : 'Permohonan dana operasional',
-                          icon: Icons.payments_outlined,
+                          icon: UIcons.regularRounded.wallet,
                           onTap: () => _navigateAndRefresh(
                             DedicatedModuleScreen(
                               kind: SubmissionKind.pettyCash,
                               moduleTitle: isEn ? 'Petty Cash Request' : 'Pengajuan Petty Cash',
                               keyMetricLabel: isEn ? 'TOTAL SUBMISSIONS' : 'TOTAL PENGAJUAN',
                               keyMetricValue: pettyCashMetricStr,
-                              keyMetricIcon: Icons.payments_outlined,
+                              keyMetricIcon: UIcons.regularRounded.wallet,
                               api: api,
                               workspace: w,
                               open: open,
@@ -837,7 +838,7 @@ class _RequestsTabState extends State<RequestsTab> {
                           description: isEn
                               ? 'Equipment procurement, logistics & facilities'
                               : 'Pengadaan barang, logistik & sarana kantor',
-                          icon: Icons.inventory_2_outlined,
+                          icon: UIcons.regularRounded.boxes,
                           isFeatured: true,
                           onTap: () => _navigateAndRefresh(
                             DedicatedModuleScreen(
@@ -845,7 +846,7 @@ class _RequestsTabState extends State<RequestsTab> {
                               moduleTitle: 'General Affair',
                               keyMetricLabel: isEn ? 'GA REQUESTS' : 'PERMOHONAN GA',
                               keyMetricValue: gaMetricStr,
-                              keyMetricIcon: Icons.inventory_2_outlined,
+                              keyMetricIcon: UIcons.regularRounded.boxes,
                               api: api,
                               workspace: w,
                               open: open,
@@ -909,7 +910,7 @@ class _RequestsTabState extends State<RequestsTab> {
                           borderRadius: BorderRadius.circular(10.r),
                         ),
                         child: Icon(
-                          Icons.inbox_rounded,
+                          UIcons.regularRounded.inbox,
                           size: 22.w,
                           color: const Color(0xFF94A3B8),
                         ),

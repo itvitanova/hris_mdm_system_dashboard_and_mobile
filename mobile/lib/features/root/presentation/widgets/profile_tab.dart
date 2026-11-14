@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:uicons/uicons.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/workspace.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -141,7 +142,7 @@ class _ProfileTabState extends State<ProfileTab> {
                           ),
                           alignment: Alignment.center,
                           child: Icon(
-                            Icons.badge_outlined,
+                            UIcons.regularRounded.id_badge,
                             size: 20.sp,
                             color: AppColors.deepTeal,
                           ),
@@ -300,7 +301,7 @@ class _ProfileTabState extends State<ProfileTab> {
                         child: Row(
                           children: [
                             Icon(
-                              Icons.info_outline_rounded,
+                              UIcons.regularRounded.info,
                               size: 16.sp,
                               color: AppColors.deepTeal,
                             ),
@@ -439,7 +440,7 @@ class _ProfileTabState extends State<ProfileTab> {
                       child: Padding(
                         padding: EdgeInsets.only(left: 6.w),
                         child: Icon(
-                          Icons.copy_rounded,
+                          UIcons.regularRounded.copy,
                           size: 14.sp,
                           color: AppColors.deepTeal,
                         ),
@@ -510,7 +511,7 @@ class _ProfileTabState extends State<ProfileTab> {
                   children: [
                     Expanded(
                       child: _InfoCard(
-                        icon: Icons.qr_code,
+                        icon: UIcons.regularRounded.qrcode,
                         label: 'ID Karyawan',
                         value: empId,
                       ),
@@ -518,7 +519,7 @@ class _ProfileTabState extends State<ProfileTab> {
                     SizedBox(width: 12.w),
                     Expanded(
                       child: _InfoCard(
-                        icon: Icons.business_outlined,
+                        icon: UIcons.regularRounded.building,
                         label: 'Departemen',
                         value: dept,
                       ),
@@ -530,7 +531,7 @@ class _ProfileTabState extends State<ProfileTab> {
                   children: [
                     Expanded(
                       child: _InfoCard(
-                        icon: Icons.work_outline,
+                        icon: UIcons.regularRounded.briefcase,
                         label: 'Jabatan',
                         value: position,
                       ),
@@ -538,7 +539,7 @@ class _ProfileTabState extends State<ProfileTab> {
                     SizedBox(width: 12.w),
                     Expanded(
                       child: _InfoCard(
-                        icon: Icons.call_outlined,
+                        icon: UIcons.regularRounded.phone_call,
                         label: 'Nomor Telepon',
                         value: phone,
                       ),
@@ -586,7 +587,7 @@ class _ProfileTabState extends State<ProfileTab> {
 
                 // 1. Detail Data & Kepegawaian (Teal Gradient Button)
                 _SettingItem(
-                  icon: Icons.badge_outlined,
+                  icon: UIcons.regularRounded.id_badge,
                   label: 'Detail Data & Kepegawaian',
                   onTap: () => _showEmployeeDetailsModal(
                     empId: empId,
@@ -606,7 +607,7 @@ class _ProfileTabState extends State<ProfileTab> {
 
                 // 2. Keluar Akun (Danger Red Card)
                 _SettingItem(
-                  icon: Icons.logout_rounded,
+                  icon: UIcons.regularRounded.sign_out_alt,
                   label: 'Keluar Akun',
                   isLogout: true,
                   loading: loggingOut,
@@ -787,7 +788,7 @@ class _ProfileHeaderCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  Icons.mail_outline_rounded,
+                  UIcons.regularRounded.envelope,
                   size: 12.sp,
                   color: AppColors.deepTeal,
                 ),
@@ -836,7 +837,7 @@ class _ProfileHeaderCard extends StatelessWidget {
             alignment: Alignment.center,
             children: [
               Icon(
-                Icons.notifications_none_rounded,
+                UIcons.regularRounded.bell,
                 size: 19.sp,
                 color: const Color(0xFF0F172A),
               ),
@@ -1025,7 +1026,7 @@ class _SettingItem extends StatelessWidget {
                     ),
                   ),
                   Icon(
-                    Icons.chevron_right_rounded,
+                    UIcons.regularRounded.angle_small_right,
                     size: 22.sp,
                     color: const Color(0xFFFCA5A5),
                   ),
@@ -1110,7 +1111,7 @@ class _SettingItem extends StatelessWidget {
                   ),
                 ),
                 Icon(
-                  Icons.chevron_right_rounded,
+                  UIcons.regularRounded.angle_small_right,
                   size: 22.sp,
                   color: Colors.white.withValues(alpha: 0.85),
                 ),

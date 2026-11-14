@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:uicons/uicons.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -131,7 +132,7 @@ class _LoginScreenState extends State<LoginScreen> {
         content: Row(
           children: [
             Icon(
-              Icons.error_outline_rounded,
+              UIcons.regularRounded.exclamation,
               color: AppColors.white,
               size: 20.w,
             ),
@@ -231,7 +232,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        Icons.verified_user_rounded,
+                        UIcons.regularRounded.shield_check,
                         color: const Color(0xFF5EEAD4),
                         size: 15.w,
                       ),

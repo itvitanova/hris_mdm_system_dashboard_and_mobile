@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:uicons/uicons.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/workspace.dart';
 import '../../attendance_service.dart';
@@ -472,7 +473,7 @@ class _AttendanceModalBottomSheetState
               ),
               child: Center(
                 child: Icon(
-                  Icons.priority_high,
+                  UIcons.regularRounded.exclamation,
                   size: 14.sp,
                   color: Colors.white,
                 ),
@@ -540,7 +541,7 @@ class _AttendanceModalBottomSheetState
               ),
               child: Center(
                 child: Icon(
-                  Icons.priority_high,
+                  UIcons.regularRounded.exclamation,
                   size: 14.sp,
                   color: Colors.white,
                 ),
@@ -598,7 +599,7 @@ class _AttendanceModalBottomSheetState
             ),
             child: Center(
               child: Icon(
-                Icons.check,
+                UIcons.regularRounded.check,
                 size: 14.sp,
                 color: Colors.white,
               ),
@@ -656,7 +657,7 @@ class _AttendanceModalBottomSheetState
                     ),
                   )
                 : Icon(
-                    Icons.refresh_rounded,
+                    UIcons.regularRounded.refresh,
                     size: 18.sp,
                     color: const Color(0xFF334155),
                   ),
@@ -685,7 +686,7 @@ class _AttendanceModalBottomSheetState
           child: FilledButton.icon(
             onPressed: canProceed ? _goToStep2 : null,
             icon: Icon(
-              canProceed ? Icons.arrow_forward_rounded : Icons.lock_outline_rounded,
+              canProceed ? UIcons.regularRounded.angle_small_right : UIcons.regularRounded.lock,
               size: 18.sp,
               color: canProceed ? Colors.white : const Color(0xFF94A3B8),
             ),
@@ -737,7 +738,7 @@ class _AttendanceModalBottomSheetState
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    Icons.arrow_back,
+                    UIcons.regularRounded.angle_small_left,
                     size: 18.sp,
                     color: const Color(0xFF64748B),
                   ),
@@ -801,7 +802,7 @@ class _AttendanceModalBottomSheetState
               shape: BoxShape.circle,
             ),
             child: Center(
-              child: Icon(Icons.check, size: 12.sp, color: Colors.white),
+              child: Icon(UIcons.regularRounded.check, size: 12.sp, color: Colors.white),
             ),
           ),
           SizedBox(width: 8.w),
@@ -861,7 +862,7 @@ class _AttendanceModalBottomSheetState
                   ),
                   child: Center(
                     child: Icon(
-                      Icons.face_retouching_natural_rounded,
+                      UIcons.regularRounded.user,
                       size: 28.sp,
                       color: const Color(0xFFCCFBF1),
                     ),
@@ -994,7 +995,7 @@ class _AttendanceModalBottomSheetState
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.camera_alt_rounded,
+              UIcons.regularRounded.camera,
               size: 20.sp,
               color: Colors.white,
             ),

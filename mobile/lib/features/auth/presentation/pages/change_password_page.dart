@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:uicons/uicons.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
@@ -97,7 +98,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         content: Row(
           children: [
             Icon(
-              Icons.check_circle_rounded,
+              UIcons.regularRounded.check,
               color: Colors.white,
               size: 20.sp,
             ),
@@ -132,7 +133,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         content: Row(
           children: [
             Icon(
-              Icons.error_outline_rounded,
+              UIcons.regularRounded.exclamation,
               color: Colors.white,
               size: 20.sp,
             ),
@@ -207,8 +208,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         surfaceTintColor: AppColors.white,
         elevation: 0.5,
         leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_rounded,
+          icon: Icon(
+            UIcons.regularRounded.angle_small_left,
             color: AppColors.textPrimary,
           ),
           onPressed: () => Navigator.pop(context),
@@ -343,7 +344,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     ),
                     alignment: Alignment.center,
                     child: Icon(
-                      Icons.lock_reset_rounded,
+                      UIcons.regularRounded.lock,
                       color: Colors.white,
                       size: 28.sp,
                     ),
@@ -418,7 +419,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 ),
                 alignment: Alignment.center,
                 child: Icon(
-                  Icons.vpn_key_rounded,
+                  UIcons.regularRounded.key,
                   size: 18.sp,
                   color: AppColors.filterTealAccent,
                 ),
@@ -470,7 +471,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             style: _inputTextStyle,
             decoration: _inputDecoration(
               hint: 'Masukkan kata sandi saat ini',
-              prefixIcon: Icons.lock_outline_rounded,
+              prefixIcon: UIcons.regularRounded.lock,
               isObscure: _obscureCurrent,
               onToggleObscure: () {
                 setState(() => _obscureCurrent = !_obscureCurrent);
@@ -500,7 +501,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             style: _inputTextStyle,
             decoration: _inputDecoration(
               hint: 'Minimal 8 karakter',
-              prefixIcon: Icons.key_rounded,
+              prefixIcon: UIcons.regularRounded.key,
               isObscure: _obscureNew,
               onToggleObscure: () {
                 setState(() => _obscureNew = !_obscureNew);
@@ -536,7 +537,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             style: _inputTextStyle,
             decoration: _inputDecoration(
               hint: 'Ulangi kata sandi baru',
-              prefixIcon: Icons.shield_outlined,
+              prefixIcon: UIcons.regularRounded.shield_check,
               isObscure: _obscureConfirm,
               onToggleObscure: () {
                 setState(() => _obscureConfirm = !_obscureConfirm);
@@ -581,7 +582,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           Row(
             children: [
               Icon(
-                Icons.rule_rounded,
+                UIcons.regularRounded.list_check,
                 size: 15.sp,
                 color: const Color(0xFF475569),
               ),
@@ -627,8 +628,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       children: [
         Icon(
           isValid
-              ? Icons.check_circle_rounded
-              : Icons.radio_button_unchecked_rounded,
+              ? UIcons.regularRounded.check
+              : UIcons.regularRounded.circle,
           size: 16.sp,
           color: isValid ? const Color(0xFF00AA13) : const Color(0xFF94A3B8),
         ),
@@ -666,7 +667,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
-            Icons.info_outline_rounded,
+            UIcons.regularRounded.info,
             size: 18.sp,
             color: const Color(0xFF0D9488),
           ),
@@ -750,7 +751,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          Icons.lock_rounded,
+                          UIcons.regularRounded.lock,
                           size: 18.sp,
                           color: Colors.white,
                         ),
@@ -832,7 +833,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       ),
       suffixIcon: IconButton(
         icon: Icon(
-          isObscure ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+          isObscure ? UIcons.regularRounded.eye_crossed : UIcons.regularRounded.eye,
           size: 19.sp,
           color: const Color(0xFF94A3B8),
         ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:uicons/uicons.dart';
 
 /// Kartu Pemilih Rentang Tanggal Pengajuan Cuti / Izin / Periode
 class LeaveDateRangeCard extends StatelessWidget {
@@ -79,7 +80,7 @@ class LeaveDateRangeCard extends StatelessWidget {
                   ),
                   SizedBox(width: 2.w),
                   Icon(
-                    Icons.keyboard_arrow_down_rounded,
+                    UIcons.regularRounded.angle_small_down,
                     size: 16.sp,
                     color: const Color(0xFF94A3B8),
                   ),
@@ -116,7 +117,7 @@ class LeaveDateRangeCard extends StatelessWidget {
               Expanded(
                 child: _buildPickerBox(
                   label: startLabel,
-                  icon: Icons.calendar_today_rounded,
+                  icon: UIcons.regularRounded.calendar,
                   valueText: startDateText,
                   onTap: onPickStart,
                 ),
@@ -125,7 +126,7 @@ class LeaveDateRangeCard extends StatelessWidget {
               Expanded(
                 child: _buildPickerBox(
                   label: endLabel,
-                  icon: Icons.calendar_today_rounded,
+                  icon: UIcons.regularRounded.calendar,
                   valueText: endDateText,
                   onTap: onPickEnd,
                 ),
@@ -148,7 +149,7 @@ class LeaveDateRangeCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        Icons.access_time_rounded,
+                        UIcons.regularRounded.clock,
                         size: 15.sp,
                         color: const Color(0xFF64748B),
                       ),

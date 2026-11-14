@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:uicons/uicons.dart';
 import 'package:mdm_hris/core/api_client.dart';
 import 'package:mdm_hris/core/workspace.dart';
 import 'package:mdm_hris/core/theme/app_colors.dart';
@@ -426,7 +427,7 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            Icons.add_rounded,
+                            UIcons.regularRounded.plus,
                             size: 16.sp,
                             color: const Color(0xFF0F766E),
                           ),
@@ -516,9 +517,10 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
         elevation: 0.4,
         shadowColor: const Color(0x120F172A),
         leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_rounded,
-            color: Color(0xFF0F172A),
+          icon: Icon(
+            UIcons.regularRounded.angle_small_left,
+            color: const Color(0xFF0F172A),
+            size: 20,
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
@@ -583,10 +585,10 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                       workspace: widget.workspace,
                     ),
                   ),
-                  child: const Icon(
-                    Icons.calendar_month_outlined,
+                  child: Icon(
+                    UIcons.regularRounded.calendar,
                     size: 19,
-                    color: Color(0xFF334155),
+                    color: const Color(0xFF334155),
                   ),
                 ),
               ),
@@ -626,10 +628,10 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    const Icon(
-                      Icons.notifications_none_rounded,
+                    Icon(
+                      UIcons.regularRounded.bell,
                       size: 19,
-                      color: Color(0xFF334155),
+                      color: const Color(0xFF334155),
                     ),
                     if (unreadCount > 0)
                       Positioned(
@@ -677,7 +679,7 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                       subTitle: isEn ? 'submissions' : 'pengajuan',
                       label: isEn ? 'APPROVED' : 'DISETUJUI',
                       value: '$approvedCount',
-                      icon: Icons.check_circle_outline_rounded,
+                      icon: UIcons.regularRounded.check,
                       isSelected: _selectedStatusFilter == SubmissionStatus.disetujui,
                       onTap: () => setState(() {
                         _selectedStatusFilter = _selectedStatusFilter ==
@@ -695,7 +697,7 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                       subTitle: isEn ? 'in review' : 'dalam proses',
                       label: isEn ? 'PENDING' : 'MENUNGGU',
                       value: '$pendingCount',
-                      icon: Icons.access_time_rounded,
+                      icon: UIcons.regularRounded.clock,
                       isSelected: _selectedStatusFilter == SubmissionStatus.menunggu,
                       onTap: () => setState(() {
                         _selectedStatusFilter =
@@ -717,7 +719,7 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                       subTitle: isEn ? 'declined' : 'tidak disetujui',
                       label: isEn ? 'REJECTED' : 'DITOLAK',
                       value: '$onlyRejectedCount',
-                      icon: Icons.highlight_off_rounded,
+                      icon: UIcons.regularRounded.cross_circle,
                       isSelected: _selectedStatusFilter == SubmissionStatus.ditolak,
                       onTap: () => setState(() {
                         _selectedStatusFilter =
@@ -735,7 +737,7 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                       subTitle: isEn ? 'action needed' : 'perlu tindak',
                       label: isEn ? 'NEEDS REVISION' : 'PERLU REVISI',
                       value: '$revisionCount',
-                      icon: Icons.edit_note_rounded,
+                      icon: UIcons.regularRounded.edit,
                       isSelected: _selectedStatusFilter ==
                           SubmissionStatus.perluRevisi,
                       onTap: () => setState(() {
@@ -769,7 +771,7 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                   ),
                   SizedBox(width: 10.w),
                   _FilterIconButton(
-                    icon: Icons.refresh_rounded,
+                    icon: UIcons.regularRounded.refresh,
                     onTap: _handleRefresh,
                   ),
                 ],
@@ -872,7 +874,7 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                   child: Column(
                     children: [
                       Icon(
-                        Icons.inbox_rounded,
+                        UIcons.regularRounded.inbox,
                         size: 40.sp,
                         color: const Color(0xFF94A3B8),
                       ),
@@ -1041,7 +1043,7 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                       ),
                     ),
                     child: Icon(
-                      Icons.chevron_left_rounded,
+                      UIcons.regularRounded.angle_small_left,
                       size: 20.sp,
                       color: hasPrev
                           ? const Color(0xFF0F172A)
@@ -1128,7 +1130,7 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
                       ),
                     ),
                     child: Icon(
-                      Icons.chevron_right_rounded,
+                      UIcons.regularRounded.angle_small_right,
                       size: 20.sp,
                       color: hasNext
                           ? const Color(0xFF0F172A)

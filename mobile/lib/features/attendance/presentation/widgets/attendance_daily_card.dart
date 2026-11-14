@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:uicons/uicons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/workspace.dart';
@@ -258,7 +259,7 @@ class AttendanceDailyCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Icon(
-                              Icons.login_rounded,
+                              UIcons.regularRounded.sign_in_alt,
                               size: 15.sp,
                               color: isHighlighted
                                   ? Colors.white
@@ -323,7 +324,7 @@ class AttendanceDailyCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Icon(
-                              Icons.logout_rounded,
+                              UIcons.regularRounded.sign_out_alt,
                               size: 15.sp,
                               color: isHighlighted
                                   ? Colors.white

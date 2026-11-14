@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:uicons/uicons.dart';
 import 'form_ui_components.dart';
 
 class OvertimeDateDurationCard extends StatelessWidget {
@@ -34,7 +35,7 @@ class OvertimeDateDurationCard extends StatelessWidget {
               Expanded(
                 child: buildFormPickerBox(
                   label: 'Tanggal Lembur',
-                  icon: Icons.calendar_today_rounded,
+                  icon: UIcons.regularRounded.calendar,
                   valueText: dateText,
                   onTap: onPickDate,
                 ),
@@ -45,7 +46,7 @@ class OvertimeDateDurationCard extends StatelessWidget {
                   children: [
                     buildFormPickerBox(
                       label: 'Durasi Lembur',
-                      icon: Icons.access_time_rounded,
+                      icon: UIcons.regularRounded.clock,
                       valueText: displayHours,
                       onTap: onPickDuration,
                     ),
@@ -94,7 +95,7 @@ class OvertimeDateDurationCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      Icons.access_time_rounded,
+                      UIcons.regularRounded.clock,
                       size: 15.sp,
                       color: const Color(0xFF64748B),
                     ),

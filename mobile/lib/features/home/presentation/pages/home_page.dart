@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:uicons/uicons.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/workspace.dart';
 import '../../../../core/widgets/core_widgets.dart';
@@ -111,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           tooltip: 'Kalender ulang tahun',
           onPressed: () =>
               open(LeaveCalendarScreen(api: widget.api, workspace: w)),
-          icon: const Icon(Icons.cake_outlined),
+          icon: Icon(UIcons.regularRounded.cake_birthday),
         ),
         IconButton(
           tooltip: 'Notifikasi pengajuan',
@@ -120,7 +121,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           icon: Badge.count(
             count: w.mine('requests').where((r) => r['unread'] == true).length,
             isLabelVisible: w.mine('requests').any((r) => r['unread'] == true),
-            child: const Icon(Icons.notifications_outlined),
+            child: Icon(UIcons.regularRounded.bell),
           ),
         ),
         if (w.data['approvalAccess'] == true)
@@ -131,13 +132,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               label: Text(
                 '${w.rows("requests").where((r) => r["canReview"] == true).length}',
               ),
-              child: const Icon(Icons.fact_check_outlined),
+              child: Icon(UIcons.regularRounded.check),
             ),
           ),
         IconButton(
           tooltip: 'Segarkan data',
           onPressed: widget.onRefresh,
-          icon: const Icon(Icons.refresh),
+          icon: Icon(UIcons.regularRounded.refresh),
         ),
       ],
     ),
@@ -221,9 +222,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           children: [
             Row(
               children: [
-                const Icon(
-                  Icons.schedule_outlined,
-                  color: Color(0xFFB7CEFF),
+                Icon(
+                  UIcons.regularRounded.clock,
+                  color: const Color(0xFFB7CEFF),
                   size: 20,
                 ),
                 const SizedBox(width: 8),
@@ -237,9 +238,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   ),
                 ),
                 if (daily.completed)
-                  const Icon(
-                    Icons.check_circle_outline,
-                    color: Color(0xFFB7CEFF),
+                  Icon(
+                    UIcons.regularRounded.check,
+                    color: const Color(0xFFB7CEFF),
                   ),
               ],
             ),
@@ -289,10 +290,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   : () => open(AttendanceScreen(api: widget.api, workspace: w)),
               icon: Icon(
                 daily.completed
-                    ? Icons.check_circle_outline
+                    ? UIcons.regularRounded.check
                     : daily.checkedIn
-                    ? Icons.logout
-                    : Icons.login,
+                    ? UIcons.regularRounded.sign_out_alt
+                    : UIcons.regularRounded.sign_in_alt,
               ),
               label: Text(daily.label, textAlign: TextAlign.center),
             ),
@@ -303,12 +304,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         Panel(
           child: ListTile(
             contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.fact_check_outlined, color: brand),
+            leading: Icon(UIcons.regularRounded.check, color: brand),
             title: const Text('Persetujuan'),
             subtitle: Text(
               '${w.rows("requests").where((r) => r["canReview"] == true).length} pengajuan menunggu tindakan Anda',
             ),
-            trailing: const Icon(Icons.chevron_right),
+            trailing: Icon(UIcons.regularRounded.angle_small_right),
             onTap: () => open(ApprovalsScreen(api: widget.api)),
           ),
         ),
@@ -328,12 +329,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               _Summary(
                 label: 'Sisa cuti',
                 value: '$effectiveLeave hari',
-                icon: Icons.event_available_outlined,
+                icon: UIcons.regularRounded.calendar,
               ),
               _Summary(
                 label: 'Pengajuan menunggu',
                 value: '$pending',
-                icon: Icons.schedule_outlined,
+                icon: UIcons.regularRounded.clock,
               ),
             ];
             return stacked
@@ -414,7 +415,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       OutlinedButton.icon(
         onPressed: () =>
             open(LeaveCalendarScreen(api: widget.api, workspace: w)),
-        icon: const Icon(Icons.cake_outlined),
+        icon: Icon(UIcons.regularRounded.cake_birthday),
         label: const Text('Kalender ulang tahun rekan kerja'),
       ),
       const SizedBox(height: 12),
@@ -471,7 +472,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       const SizedBox(height: 20),
       FilledButton.icon(
         onPressed: () => open(RequestForm(api: widget.api, workspace: w)),
-        icon: const Icon(Icons.add),
+        icon: Icon(UIcons.regularRounded.plus),
         style: FilledButton.styleFrom(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(5),
@@ -502,12 +503,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     ),
                     StatusPill(text(r, 'status')),
                     if (r['unread'] == true)
-                      const Row(
+                      Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.circle, color: Color(0xFFB42318), size: 8),
-                          SizedBox(width: 6),
-                          Text(
+                          Icon(UIcons.regularRounded.circle, color: const Color(0xFFB42318), size: 8),
+                          const SizedBox(width: 6),
+                          const Text(
                             'Ada pembaruan',
                             style: TextStyle(
                               color: Color(0xFFB42318),
@@ -558,7 +559,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   onPressed: () => open(
                     RequestDetailScreen(api: widget.api, request: r, own: true),
                   ),
-                  icon: const Icon(Icons.article_outlined),
+                  icon: Icon(UIcons.regularRounded.document),
                   label: const Text('Rincian dan dokumen'),
                 ),
                 if (text(r, 'reviewNote', '').isNotEmpty)
@@ -609,7 +610,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   ),
                 ),
               ),
-              trailing: const Icon(Icons.chevron_right),
+              trailing: Icon(UIcons.regularRounded.angle_small_right),
               onTap: () => open(PayslipScreen(api: widget.api, slip: r)),
             ),
           ),
@@ -621,10 +622,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     Panel(
       child: Column(
         children: [
-          const CircleAvatar(
+          CircleAvatar(
             radius: 36,
-            backgroundColor: Color(0xFFDBEAFE),
-            child: Icon(Icons.person_outline, color: brand, size: 38),
+            backgroundColor: const Color(0xFFDBEAFE),
+            child: Icon(UIcons.regularRounded.user, color: brand, size: 38),
           ),
           const SizedBox(height: 16),
           Text(
@@ -668,7 +669,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     ),
     OutlinedButton.icon(
       onPressed: loggingOut ? null : logout,
-      icon: const Icon(Icons.logout),
+      icon: Icon(UIcons.regularRounded.sign_out_alt),
       label: Text(loggingOut ? 'Keluar…' : 'Keluar akun'),
     ),
   ];

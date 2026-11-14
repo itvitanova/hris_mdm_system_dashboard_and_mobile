@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uicons/uicons.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/workspace.dart';
 import '../../../../core/widgets/core_widgets.dart';
@@ -247,9 +248,9 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
         titleSpacing: 0,
         centerTitle: false,
         leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_rounded,
-            color: Color(0xFF0F172A),
+          icon: Icon(
+            UIcons.regularRounded.angle_small_left,
+            color: const Color(0xFF0F172A),
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
@@ -304,10 +305,10 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
               child: InkWell(
                 borderRadius: BorderRadius.circular(11),
                 onTap: load,
-                child: const Icon(
-                  Icons.refresh_rounded,
+                child: Icon(
+                  UIcons.regularRounded.refresh,
                   size: 19,
-                  color: Color(0xFF334155),
+                  color: const Color(0xFF334155),
                 ),
               ),
             ),
@@ -443,7 +444,7 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               _buildMonthNavButton(
-                                icon: Icons.chevron_left_rounded,
+                                icon: UIcons.regularRounded.angle_small_left,
                                 onTap: () => move(-1),
                               ),
                               Expanded(
@@ -464,7 +465,7 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
                                 ),
                               ),
                               _buildMonthNavButton(
-                                icon: Icons.chevron_right_rounded,
+                                icon: UIcons.regularRounded.angle_small_right,
                                 onTap: () => move(1),
                               ),
                             ],
@@ -576,7 +577,7 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
                 Center(
                   child: TextButton.icon(
                     onPressed: load,
-                    icon: const Icon(Icons.refresh_rounded, size: 16),
+                    icon: Icon(UIcons.regularRounded.refresh, size: 16),
                     label: const Text('Coba lagi muat data'),
                   ),
                 ),
@@ -599,10 +600,10 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
                         width: 0.8,
                       ),
                     ),
-                    child: const Icon(
-                      Icons.cake_rounded,
+                    child: Icon(
+                      UIcons.regularRounded.cake_birthday,
                       size: 15,
-                      color: Color(0xFFD97706),
+                      color: const Color(0xFFD97706),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -700,9 +701,9 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
                             color: const Color(0xFFF59E0B),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Center(
+                          child: Center(
                             child: Icon(
-                              Icons.cake_rounded,
+                              UIcons.regularRounded.cake_birthday,
                               size: 22,
                               color: Colors.white,
                             ),
@@ -763,10 +764,10 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
                   ),
                   child: Column(
                     children: [
-                      const Icon(
-                        Icons.cake_outlined,
+                      Icon(
+                        UIcons.regularRounded.cake_birthday,
                         size: 36,
-                        color: Color(0xFFF59E0B),
+                        color: const Color(0xFFF59E0B),
                       ),
                       const SizedBox(height: 8),
                       const Text(
@@ -808,10 +809,10 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
                       const SizedBox(height: 22),
                       Row(
                         children: [
-                          const Icon(
-                            Icons.celebration_rounded,
+                          Icon(
+                            UIcons.regularRounded.gift,
                             size: 16,
-                            color: Color(0xFFD97706),
+                            color: const Color(0xFFD97706),
                           ),
                           const SizedBox(width: 6),
                           Expanded(
@@ -909,10 +910,10 @@ class _LeaveCalendarState extends State<LeaveCalendarScreen> {
                                     ],
                                   ),
                                 ),
-                                const Icon(
-                                  Icons.cake_outlined,
+                                Icon(
+                                  UIcons.regularRounded.cake_birthday,
                                   size: 16,
-                                  color: Color(0xFFF59E0B),
+                                  color: const Color(0xFFF59E0B),
                                 ),
                               ],
                             ),

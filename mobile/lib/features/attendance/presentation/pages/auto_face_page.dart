@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
+import 'package:uicons/uicons.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/widgets/core_widgets.dart';
 import '../widgets/camera_input.dart';
@@ -367,7 +368,7 @@ class _AutoFaceScreenState extends State<AutoFaceScreen>
                   _capturing = false;
                   unawaited(_openCamera());
                 },
-                icon: const Icon(Icons.refresh),
+                icon: Icon(UIcons.regularRounded.refresh),
                 label: const Text('Pindai ulang'),
               ),
               TextButton(

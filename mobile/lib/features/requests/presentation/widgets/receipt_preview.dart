@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:uicons/uicons.dart';
 import '../../../../core/api_client.dart';
 
 class ReceiptPreview extends StatefulWidget {
@@ -117,7 +118,7 @@ class _ReceiptPreviewState extends State<ReceiptPreview> {
                             if (mounted) setState(() => sharing = false);
                           }
                         },
-                  icon: const Icon(Icons.ios_share),
+                  icon: Icon(UIcons.regularRounded.share),
                   label: Text(
                     image ? 'Simpan / bagikan foto' : 'Buka / bagikan PDF',
                   ),

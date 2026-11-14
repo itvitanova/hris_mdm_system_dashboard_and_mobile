@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:uicons/uicons.dart';
 import '../../../../root/presentation/widgets/language_swap_button.dart';
 import '../../../domain/entities/submission_status.dart';
 import '../../../domain/entities/universal_request_item.dart';
@@ -149,7 +150,7 @@ class UniversalRequestCard extends StatelessWidget {
                                       Row(
                                         children: [
                                           Icon(
-                                            Icons.person_outline_rounded,
+                                            UIcons.regularRounded.user,
                                             size: 13.w,
                                             color: const Color(0xFF0F766E),
                                           ),
@@ -242,7 +243,7 @@ class UniversalRequestCard extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                Icons.calendar_today_outlined,
+                                UIcons.regularRounded.calendar,
                                 size: 12.w,
                                 color: const Color(0xFF94A3B8),
                               ),
@@ -292,7 +293,7 @@ class UniversalRequestCard extends StatelessWidget {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(
-                                    Icons.refresh_rounded,
+                                    UIcons.regularRounded.refresh,
                                     size: 12.w,
                                     color: Colors.white,
                                   ),
@@ -325,7 +326,7 @@ class UniversalRequestCard extends StatelessWidget {
                             child: Row(
                               children: [
                                 Icon(
-                                  Icons.calendar_today_outlined,
+                                  UIcons.regularRounded.calendar,
                                   size: 12.w,
                                   color: const Color(0xFF94A3B8),
                                 ),
@@ -351,7 +352,7 @@ class UniversalRequestCard extends StatelessWidget {
                             ),
                           ),
                           Icon(
-                            Icons.chevron_right_rounded,
+                            UIcons.regularRounded.angle_small_right,
                             size: 18.w,
                             color: const Color(0xFF94A3B8),
                           ),

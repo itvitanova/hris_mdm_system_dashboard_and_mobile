@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:uicons/uicons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../root/presentation/widgets/language_swap_button.dart';
@@ -32,13 +33,13 @@ enum AttendanceStatType {
   IconData get iconData {
     switch (this) {
       case AttendanceStatType.sudahAbsen:
-        return Icons.check_circle_outline_rounded;
+        return UIcons.regularRounded.check;
       case AttendanceStatType.tepatWaktu:
-        return Icons.access_time_rounded;
+        return UIcons.regularRounded.clock;
       case AttendanceStatType.terlambat:
-        return Icons.warning_amber_rounded;
+        return UIcons.regularRounded.exclamation;
       case AttendanceStatType.belumAbsen:
-        return Icons.highlight_off_rounded;
+        return UIcons.regularRounded.cross_circle;
     }
   }
 

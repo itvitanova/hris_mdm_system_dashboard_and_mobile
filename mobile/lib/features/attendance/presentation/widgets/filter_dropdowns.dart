@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:uicons/uicons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../root/presentation/widgets/language_swap_button.dart';
 import 'attendance_stat_card.dart';
@@ -219,7 +220,7 @@ class _MonthFilterDropdownState extends State<MonthFilterDropdown> {
         child: Row(
           children: [
             Icon(
-              Icons.calendar_today_outlined,
+              UIcons.regularRounded.calendar,
               size: 14.w,
               color: isActive
                   ? AppColors.filterTealAccent
@@ -246,8 +247,8 @@ class _MonthFilterDropdownState extends State<MonthFilterDropdown> {
             ),
             Icon(
               isActive
-                  ? Icons.keyboard_arrow_up_rounded
-                  : Icons.keyboard_arrow_down_rounded,
+                  ? UIcons.regularRounded.angle_small_up
+                  : UIcons.regularRounded.angle_small_down,
               size: 18.w,
               color: isActive
                   ? AppColors.filterTealAccent
@@ -384,7 +385,7 @@ class _MonthPanel extends StatelessWidget {
               ),
             ),
             if (isSelected)
-              Icon(Icons.check, size: 14.w, color: AppColors.filterTealAccent),
+              Icon(UIcons.regularRounded.check, size: 14.w, color: AppColors.filterTealAccent),
           ],
         ),
       ),
@@ -508,8 +509,8 @@ class _YearFilterDropdownState extends State<YearFilterDropdown> {
             ),
             Icon(
               isActive
-                  ? Icons.keyboard_arrow_up_rounded
-                  : Icons.keyboard_arrow_down_rounded,
+                  ? UIcons.regularRounded.angle_small_up
+                  : UIcons.regularRounded.angle_small_down,
               size: 18.w,
               color: isActive
                   ? AppColors.filterTealAccent
@@ -590,7 +591,7 @@ class _YearPanel extends StatelessWidget {
                     ),
                     if (isSelected) ...[
                       SizedBox(width: 8.w),
-                      Icon(Icons.check, size: 12.w, color: AppColors.white),
+                      Icon(UIcons.regularRounded.check, size: 12.w, color: AppColors.white),
                     ],
                   ],
                 ),
@@ -746,8 +747,8 @@ class _StatusFilterDropdownState extends State<StatusFilterDropdown> {
             ),
             Icon(
               isActive
-                  ? Icons.keyboard_arrow_up_rounded
-                  : Icons.keyboard_arrow_down_rounded,
+                  ? UIcons.regularRounded.angle_small_up
+                  : UIcons.regularRounded.angle_small_down,
               size: 18.w,
               color: isActive
                   ? AppColors.filterTealAccent
@@ -927,7 +928,7 @@ class _StatusPanel extends StatelessWidget {
               ),
             ),
             if (isSelected)
-              Icon(Icons.check, size: 14.w, color: AppColors.filterTealAccent),
+              Icon(UIcons.regularRounded.check, size: 14.w, color: AppColors.filterTealAccent),
           ],
         ),
       ),

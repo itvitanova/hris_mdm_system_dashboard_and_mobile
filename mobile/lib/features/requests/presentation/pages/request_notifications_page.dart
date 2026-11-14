@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:uicons/uicons.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/workspace.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -158,8 +159,8 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
         SnackBar(
           content: Row(
             children: [
-              const Icon(
-                Icons.check_circle_rounded,
+              Icon(
+                UIcons.regularRounded.check,
                 color: Colors.white,
                 size: 18,
               ),
@@ -271,11 +272,11 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
           SnackBar(
             content: Row(
               children: [
-                const Icon(
-                  Icons.check_circle_rounded,
-                  color: Colors.white,
-                  size: 18,
-                ),
+              Icon(
+                UIcons.regularRounded.check,
+                color: Colors.white,
+                size: 18,
+              ),
                 SizedBox(width: 8.w),
                 const Expanded(
                   child: Text(
@@ -326,8 +327,8 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
         SnackBar(
           content: Row(
             children: [
-              const Icon(
-                Icons.check_circle_rounded,
+              Icon(
+                UIcons.regularRounded.check,
                 color: Colors.white,
                 size: 18,
               ),
@@ -488,14 +489,18 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
     final isApproved = item.status == SubmissionStatus.disetujui;
 
     final iconData = item.kind == SubmissionKind.cuti
-        ? Icons.calendar_today_rounded
+        ? UIcons.regularRounded.calendar
         : (item.kind == SubmissionKind.reimbursement
-            ? Icons.receipt_long_rounded
+            ? UIcons.regularRounded.receipt
             : (item.kind == SubmissionKind.pettyCash
-                ? Icons.account_balance_wallet_rounded
+                ? UIcons.regularRounded.wallet
                 : (item.kind == SubmissionKind.lembur
-                    ? Icons.schedule_rounded
-                    : Icons.inventory_2_rounded)));
+                    ? UIcons.regularRounded.clock
+                    : (item.kind == SubmissionKind.izin
+                        ? UIcons.regularRounded.treatment
+                        : (item.kind == SubmissionKind.medicalClaim
+                            ? UIcons.regularRounded.stethoscope
+                            : UIcons.regularRounded.boxes)))));
 
     final hasReviewNote =
         item.reviewNote != null && item.reviewNote!.trim().isNotEmpty;
@@ -695,6 +700,7 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
                             if (hasReviewNote) ...[
                               SizedBox(height: 8.h),
                               Container(
+                                width: double.infinity,
                                 padding: EdgeInsets.symmetric(
                                   horizontal: 10.w,
                                   vertical: 7.h,
@@ -708,12 +714,12 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
                                   ),
                                 ),
                                 child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
                                   children: [
                                     Row(
                                       children: [
                                         Icon(
-                                          Icons.rate_review_outlined,
+                                          UIcons.regularRounded.edit,
                                           size: 13.sp,
                                           color: AppColors.deepTeal,
                                         ),
@@ -736,6 +742,7 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
                                     SizedBox(height: 3.h),
                                     Text(
                                       item.reviewNote!,
+                                      textAlign: TextAlign.justify,
                                       style: TextStyle(
                                         fontFamily: 'Inter',
                                         fontSize: 11.sp,
@@ -787,7 +794,7 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           Icon(
-                                            Icons.edit_calendar_rounded,
+                                            UIcons.regularRounded.edit,
                                             size: 12.sp,
                                             color: Colors.white,
                                           ),
@@ -816,7 +823,7 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
                             Row(
                               children: [
                                 Icon(
-                                  Icons.access_time_rounded,
+                                  UIcons.regularRounded.clock,
                                   size: 11.5.sp,
                                   color: const Color(0xFF94A3B8),
                                 ),
@@ -832,7 +839,7 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
                                 ),
                                 const Spacer(),
                                 Icon(
-                                  Icons.chevron_right_rounded,
+                                  UIcons.regularRounded.angle_small_right,
                                   size: 16.sp,
                                   color: const Color(0xFFCBD5E1),
                                 ),
@@ -926,9 +933,10 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
         titleSpacing: 0,
         centerTitle: false,
         leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_rounded,
-            color: Color(0xFF0F172A),
+          icon: Icon(
+            UIcons.regularRounded.angle_small_left,
+            color: const Color(0xFF0F172A),
+            size: 20,
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
@@ -989,7 +997,7 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        Icons.done_all_rounded,
+                        UIcons.regularRounded.check,
                         size: 14.sp,
                         color: unreadCount > 0
                             ? const Color(0xFF0F766E)
@@ -1066,7 +1074,7 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
                           borderRadius: BorderRadius.circular(12.r),
                         ),
                         child: Icon(
-                          Icons.notifications_off_outlined,
+                          UIcons.regularRounded.bell,
                           size: 24.sp,
                           color: const Color(0xFF94A3B8),
                         ),

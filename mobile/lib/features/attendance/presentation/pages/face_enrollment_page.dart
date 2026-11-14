@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uicons/uicons.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/workspace.dart';
 import '../../../../core/widgets/core_widgets.dart';
@@ -50,7 +51,7 @@ class _FaceEnrollmentScreenState extends State<FaceEnrollmentScreen> {
     body: ListView(
       padding: const EdgeInsets.all(24),
       children: [
-        const Icon(Icons.face_retouching_natural, size: 90, color: brand),
+        Icon(UIcons.regularRounded.user, size: 90, color: brand),
         const SizedBox(height: 24),
         Text(
           'Halo, ${text(widget.workspace.actor, 'name')}',
@@ -77,7 +78,7 @@ class _FaceEnrollmentScreenState extends State<FaceEnrollmentScreen> {
         ],
         FilledButton.icon(
           onPressed: busy || !widget.workspace.faceAvailable ? null : register,
-          icon: const Icon(Icons.camera_alt_outlined),
+          icon: Icon(UIcons.regularRounded.camera),
           label: const Text('Daftarkan wajah'),
         ),
         TextButton(

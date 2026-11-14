@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:uicons/uicons.dart';
 
 /// Komponen input kartu putih terstandarisasi untuk modul pengajuan.
 /// 
@@ -238,7 +239,7 @@ class _FormCardTextInputState extends State<FormCardTextInput> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Icon(
-                      Icons.error_outline_rounded,
+                      UIcons.regularRounded.exclamation,
                       size: 13.w,
                       color: const Color(0xFFEF4444),
                     ),
@@ -335,7 +336,7 @@ class FormCardDropdownInput<T> extends FormField<T> {
                               )
                             : null,
                         icon: Icon(
-                          Icons.keyboard_arrow_down_rounded,
+                          UIcons.regularRounded.angle_small_down,
                           size: 20.sp,
                           color: const Color(0xFF64748B),
                         ),
@@ -369,7 +370,7 @@ class FormCardDropdownInput<T> extends FormField<T> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Icon(
-                          Icons.error_outline_rounded,
+                          UIcons.regularRounded.exclamation,
                           size: 13.w,
                           color: const Color(0xFFEF4444),
                         ),
@@ -465,7 +466,7 @@ class FormCardContainer extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Icon(
-                  Icons.error_outline_rounded,
+                  UIcons.regularRounded.exclamation,
                   size: 13.w,
                   color: const Color(0xFFEF4444),
                 ),

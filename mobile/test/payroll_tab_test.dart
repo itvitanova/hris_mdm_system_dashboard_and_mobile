@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:uicons/uicons.dart';
 import 'package:mdm_hris/core/api_client.dart';
 import 'package:mdm_hris/core/workspace.dart';
 import 'package:mdm_hris/features/payroll/presentation/pages/payslip_page.dart';
@@ -161,11 +162,10 @@ void main() {
       expect(find.text('2026-09'), findsWidgets);
       expect(find.text('2 Dokumen'), findsOneWidget);
 
-      // Tap Period Dropdown Trigger -> opens modal
+      // Tap Period Dropdown Trigger -> opens dropdown
       await tester.tap(find.byKey(const Key('payroll_period_dropdown_btn')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Periode payroll'), findsOneWidget);
       expect(find.byKey(const ValueKey('period_option_2026-09')), findsOneWidget);
 
       // Tap '2026-09' option in modal
@@ -183,7 +183,7 @@ void main() {
       expect(find.text('Tidak Ada Slip yang Sesuai'), findsOneWidget);
 
       // Clear search
-      await tester.tap(find.byIcon(Icons.close_rounded));
+      await tester.tap(find.byIcon(UIcons.regularRounded.cross_small));
       await tester.pumpAndSettle();
 
       expect(find.text('1 Dokumen'), findsOneWidget);

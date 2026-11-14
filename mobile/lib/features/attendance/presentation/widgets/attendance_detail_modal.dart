@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:uicons/uicons.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/workspace.dart';
@@ -291,7 +292,7 @@ void showAttendanceDetailModal(
               child: Row(
                 children: [
                   Icon(
-                    Icons.warning_amber_rounded,
+                    UIcons.regularRounded.exclamation,
                     size: 16.sp,
                     color: const Color(0xFFE11D48),
                   ),
@@ -330,7 +331,7 @@ void showAttendanceDetailModal(
                 Row(
                   children: [
                     Icon(
-                      Icons.apartment_rounded,
+                      UIcons.regularRounded.building,
                       size: 15.sp,
                       color: AppColors.deepTeal,
                     ),
@@ -352,7 +353,7 @@ void showAttendanceDetailModal(
                 Row(
                   children: [
                     Icon(
-                      Icons.shield_outlined,
+                      UIcons.regularRounded.shield_check,
                       size: 15.sp,
                       color: faceVerified
                           ? const Color(0xFF15803D)
@@ -401,7 +402,7 @@ void showAttendanceDetailModal(
                       ),
                     ),
                     onPressed: () => openMaps(inLat, inLng),
-                    icon: Icon(Icons.map_outlined, size: 14.sp),
+                    icon: Icon(UIcons.regularRounded.marker, size: 14.sp),
                     label: Text(
                       isEn ? 'Check-in Map' : 'Peta Masuk',
                       style: TextStyle(
@@ -424,7 +425,7 @@ void showAttendanceDetailModal(
                         ),
                       ),
                       onPressed: () => openMaps(outLat, outLng),
-                      icon: Icon(Icons.map_outlined, size: 14.sp),
+                      icon: Icon(UIcons.regularRounded.marker, size: 14.sp),
                       label: Text(
                         isEn ? 'Check-out Map' : 'Peta Keluar',
                         style: TextStyle(
