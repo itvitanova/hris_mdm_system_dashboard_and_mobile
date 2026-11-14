@@ -15,6 +15,7 @@ class RequestRevisionBox extends StatelessWidget {
   Widget build(BuildContext context) {
     final reviewer = reviewerName ?? 'Aries Munandar';
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: const Color(0xFFFFF1F2),
@@ -22,7 +23,7 @@ class RequestRevisionBox extends StatelessWidget {
         border: Border.all(color: const Color(0xFFFECDD3)),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
             'Catatan Peninjau · $reviewer',
@@ -35,6 +36,7 @@ class RequestRevisionBox extends StatelessWidget {
           const SizedBox(height: 3),
           Text(
             '"$note"',
+            textAlign: TextAlign.justify,
             style: const TextStyle(
               fontSize: 11.5,
               color: Color(0xFF881337),
