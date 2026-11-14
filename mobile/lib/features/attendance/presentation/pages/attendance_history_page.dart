@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:uicons/uicons.dart';
 import '../widgets/attendance_detail_modal.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/workspace.dart';
@@ -238,7 +239,7 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                       ),
                     ),
                     child: Icon(
-                      Icons.chevron_left_rounded,
+                      UIcons.regularRounded.angle_small_left,
                       size: 20.sp,
                       color: hasPrev
                           ? const Color(0xFF0F172A)
@@ -325,7 +326,7 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                       ),
                     ),
                     child: Icon(
-                      Icons.chevron_right_rounded,
+                      UIcons.regularRounded.angle_small_right,
                       size: 20.sp,
                       color: hasNext
                           ? const Color(0xFF0F172A)
@@ -460,9 +461,9 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
         elevation: 0.4,
         shadowColor: const Color(0x120F172A),
         leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_rounded,
-            color: Color(0xFF0F172A),
+          icon: Icon(
+            UIcons.regularRounded.angle_small_left,
+            color: const Color(0xFF0F172A),
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
@@ -523,7 +524,7 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                       ),
                       alignment: Alignment.center,
                       child: Icon(
-                        Icons.location_on_rounded,
+                        UIcons.regularRounded.marker,
                         size: 20.sp,
                         color: AppColors.deepTeal,
                       ),
@@ -559,7 +560,7 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(
-                                      Icons.shield_outlined,
+                                      UIcons.regularRounded.shield_check,
                                       size: 10.sp,
                                       color: Colors.white,
                                     ),
@@ -614,7 +615,7 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                   child: Row(
                     children: [
                       Icon(
-                        Icons.info_outline_rounded,
+                        UIcons.regularRounded.info,
                         size: 13.sp,
                         color: const Color(0xFF2563EB),
                       ),
@@ -863,7 +864,7 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(
-                                    Icons.refresh_rounded,
+                                    UIcons.regularRounded.refresh,
                                     size: 16.w,
                                     color: AppColors.white,
                                   ),
@@ -915,7 +916,7 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                           borderRadius: BorderRadius.circular(12.r),
                         ),
                         child: Icon(
-                          Icons.event_busy_rounded,
+                          UIcons.regularRounded.calendar,
                           size: 24.sp,
                           color: const Color(0xFF94A3B8),
                         ),

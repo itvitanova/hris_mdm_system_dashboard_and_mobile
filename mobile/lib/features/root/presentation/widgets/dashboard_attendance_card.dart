@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:uicons/uicons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 import 'language_swap_button.dart';
@@ -544,8 +545,8 @@ class DashboardAttendanceCard extends StatelessWidget {
           ),
         );
       } else if (item.isLate) {
-        iconWidget = const Icon(
-          Icons.access_time_rounded,
+        iconWidget = Icon(
+          UIcons.regularRounded.clock,
           size: 24,
           color: Colors.white,
         );
@@ -602,8 +603,8 @@ class DashboardAttendanceCard extends StatelessWidget {
         ),
       );
     } else if (item.isLate) {
-      iconWidget = const Icon(
-        Icons.access_time_rounded,
+      iconWidget = Icon(
+        UIcons.regularRounded.clock,
         size: 24,
         color: tealIconColor,
       );

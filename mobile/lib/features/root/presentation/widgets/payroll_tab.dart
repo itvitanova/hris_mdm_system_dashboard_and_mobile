@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:uicons/uicons.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/workspace.dart';
 import '../../../payroll/payslip_screen.dart';
@@ -198,14 +199,14 @@ class _PayrollTabState extends State<PayrollTab> {
             fontSize: 12.5,
             color: Color(0xFF94A3B8),
           ),
-          prefixIcon: const Icon(
-            Icons.search_rounded,
-            size: 20,
-            color: Color(0xFF94A3B8),
+          prefixIcon: Icon(
+            UIcons.regularRounded.search,
+            size: 18,
+            color: const Color(0xFF94A3B8),
           ),
           suffixIcon: query.isNotEmpty
               ? IconButton(
-                  icon: const Icon(Icons.close_rounded, size: 18, color: Color(0xFF94A3B8)),
+                  icon: Icon(UIcons.regularRounded.cross_small, size: 18, color: const Color(0xFF94A3B8)),
                   onPressed: () {
                     _searchController.clear();
                     setState(() => query = '');
@@ -243,7 +244,7 @@ class _PayrollTabState extends State<PayrollTab> {
     final bg = isFinal ? const Color(0xFFDCFCE7) : const Color(0xFFFEF3C7);
     final textCol = isFinal ? const Color(0xFF166534) : const Color(0xFF92400E);
     final borderCol = isFinal ? const Color(0xFFBBF7D0) : const Color(0xFFFDE68A);
-    final icon = isFinal ? Icons.check_circle_rounded : Icons.schedule_rounded;
+    final icon = isFinal ? UIcons.regularRounded.check : UIcons.regularRounded.clock;
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 3.h),
@@ -296,10 +297,10 @@ class _PayrollTabState extends State<PayrollTab> {
               shape: BoxShape.circle,
               border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
             ),
-            child: const Icon(
-              Icons.receipt_long_outlined,
+            child: Icon(
+              UIcons.regularRounded.receipt,
               size: 26,
-              color: Color(0xFF64748B),
+              color: const Color(0xFF64748B),
             ),
           ),
           SizedBox(height: 12.h),
@@ -336,7 +337,7 @@ class _PayrollTabState extends State<PayrollTab> {
                   query = '';
                 });
               },
-              icon: const Icon(Icons.clear_all_rounded, size: 16),
+              icon: Icon(UIcons.regularRounded.cross_circle, size: 16),
               label: const Text('Reset Filter & Pencarian'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF0F766E),
@@ -350,7 +351,7 @@ class _PayrollTabState extends State<PayrollTab> {
           else
             OutlinedButton.icon(
               onPressed: widget.onRefresh,
-              icon: const Icon(Icons.refresh_rounded, size: 15),
+              icon: Icon(UIcons.regularRounded.refresh, size: 15),
               label: const Text('Muat Ulang Data'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFF0F766E),
@@ -410,10 +411,10 @@ class _PayrollTabState extends State<PayrollTab> {
                           width: 1,
                         ),
                       ),
-                      child: const Icon(
-                        Icons.receipt_long_rounded,
+                      child: Icon(
+                        UIcons.regularRounded.receipt,
                         size: 20,
-                        color: Color(0xFF0F766E),
+                        color: const Color(0xFF0F766E),
                       ),
                     ),
                     SizedBox(width: 10.w),
@@ -516,7 +517,7 @@ class _PayrollTabState extends State<PayrollTab> {
                           ),
                           SizedBox(width: 3.w),
                           Icon(
-                            Icons.chevron_right_rounded,
+                            UIcons.regularRounded.angle_small_right,
                             size: 15.sp,
                             color: const Color(0xFF0F766E),
                           ),
@@ -617,10 +618,10 @@ class _PayrollTabState extends State<PayrollTab> {
               ),
             ),
             child: IconButton(
-              icon: const Icon(
-                Icons.refresh_rounded,
+              icon: Icon(
+                UIcons.regularRounded.refresh,
                 size: 20,
-                color: Color(0xFF0F766E),
+                color: const Color(0xFF0F766E),
               ),
               padding: EdgeInsets.zero,
               tooltip: 'Segarkan data',
@@ -803,9 +804,7 @@ class _PeriodFilterDropdownState extends State<PeriodFilterDropdown> {
                         child: Row(
                           children: [
                             Icon(
-                              period == 'Semua periode'
-                                  ? Icons.date_range_rounded
-                                  : Icons.calendar_today_outlined,
+                              UIcons.regularRounded.calendar,
                               size: 14.w,
                               color: isSelected ? const Color(0xFF0F766E) : const Color(0xFF64748B),
                             ),
@@ -822,7 +821,7 @@ class _PeriodFilterDropdownState extends State<PeriodFilterDropdown> {
                               ),
                             ),
                             if (isSelected)
-                              Icon(Icons.check, size: 14.w, color: const Color(0xFF0F766E)),
+                              Icon(UIcons.regularRounded.check, size: 14.w, color: const Color(0xFF0F766E)),
                           ],
                         ),
                       ),
@@ -843,12 +842,17 @@ class _PeriodFilterDropdownState extends State<PeriodFilterDropdown> {
   void _close() {
     _overlayEntry?.remove();
     _overlayEntry = null;
-    if (mounted) setState(() => _isOpen = false);
+    if (mounted) {
+      setState(() => _isOpen = false);
+    } else {
+      _isOpen = false;
+    }
   }
 
   @override
   void dispose() {
-    _close();
+    _overlayEntry?.remove();
+    _overlayEntry = null;
     super.dispose();
   }
 
@@ -882,7 +886,7 @@ class _PeriodFilterDropdownState extends State<PeriodFilterDropdown> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Icon(
-              Icons.calendar_today_outlined,
+              UIcons.regularRounded.calendar,
               size: 15.sp,
               color: isActive ? const Color(0xFF0F766E) : const Color(0xFF64748B),
             ),
@@ -903,7 +907,7 @@ class _PeriodFilterDropdownState extends State<PeriodFilterDropdown> {
             ),
             SizedBox(width: 4.w),
             Icon(
-              _isOpen ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+              _isOpen ? UIcons.regularRounded.angle_small_up : UIcons.regularRounded.angle_small_down,
               size: 18.sp,
               color: isActive ? const Color(0xFF0F766E) : const Color(0xFF64748B),
             ),

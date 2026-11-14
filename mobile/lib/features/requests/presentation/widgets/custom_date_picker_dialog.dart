@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uicons/uicons.dart';
 
 /// Membuka dialog pemilih tanggal kustom dengan visual modern & interaktif.
 /// Mengembalikan objek [DateTime] jika pengguna menekan "Terapkan", atau `null` jika dibatalkan.
@@ -197,10 +198,10 @@ class _CustomDatePickerDialogState extends State<CustomDatePickerDialog> {
                             shape: BoxShape.circle,
                             border: Border.all(color: const Color(0xFFE2E8F0)),
                           ),
-                          child: const Icon(
-                            Icons.close_rounded,
+                          child: Icon(
+                            UIcons.regularRounded.cross,
                             size: 15,
-                            color: Color(0xFF64748B),
+                            color: const Color(0xFF64748B),
                           ),
                         ),
                       ),
@@ -270,12 +271,12 @@ class _CustomDatePickerDialogState extends State<CustomDatePickerDialog> {
                       Row(
                         children: [
                           _buildCircleNavButton(
-                            icon: Icons.chevron_left_rounded,
+                            icon: UIcons.regularRounded.angle_small_left,
                             onTap: _onPrevMonth,
                           ),
                           const SizedBox(width: 8),
                           _buildCircleNavButton(
-                            icon: Icons.chevron_right_rounded,
+                            icon: UIcons.regularRounded.angle_small_right,
                             onTap: _onNextMonth,
                           ),
                         ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uicons/uicons.dart';
 import '../theme/app_colors.dart';
 
 const brand = AppColors.deepTeal;
@@ -8,14 +9,14 @@ const canvas = AppColors.bg;
 const line = Color(0xFFE2E8F0);
 
 IconData requestIcon(String kind) => switch (kind) {
-  'Cuti' => Icons.event_available_outlined,
-  'Izin' => Icons.assignment_late_outlined,
-  'Reimbursement' => Icons.receipt_long_outlined,
-  'Medical Claim' => Icons.medical_services_outlined,
-  'Petty Cash' => Icons.account_balance_wallet_outlined,
-  'General Affair' => Icons.business_center_outlined,
-  'Lembur' => Icons.schedule_outlined,
-  _ => Icons.more_time_outlined,
+  'Cuti' => UIcons.regularRounded.calendar_clock,
+  'Izin' => UIcons.regularRounded.treatment,
+  'Reimbursement' => UIcons.regularRounded.receipt,
+  'Medical Claim' => UIcons.regularRounded.stethoscope,
+  'Petty Cash' => UIcons.regularRounded.wallet,
+  'General Affair' => UIcons.regularRounded.boxes,
+  'Lembur' => UIcons.regularRounded.clock,
+  _ => UIcons.regularRounded.clock,
 };
 
 class SectionHeading extends StatelessWidget {
@@ -53,7 +54,7 @@ class ErrorNotice extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.error_outline, color: Color(0xFFB42318)),
+          Icon(UIcons.regularRounded.exclamation, color: const Color(0xFFB42318)),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -128,7 +129,7 @@ class EmptyState extends StatelessWidget {
     padding: const EdgeInsets.symmetric(vertical: 40),
     child: Column(
       children: [
-        const Icon(Icons.inbox_outlined, size: 36, color: muted),
+        Icon(UIcons.regularRounded.inbox, size: 36, color: muted),
         const SizedBox(height: 12),
         Text(message, textAlign: TextAlign.center),
       ],

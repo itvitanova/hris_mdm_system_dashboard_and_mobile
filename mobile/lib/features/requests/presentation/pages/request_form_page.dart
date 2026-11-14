@@ -3,6 +3,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:uicons/uicons.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/workspace.dart';
 import '../../../../core/widgets/core_widgets.dart';
@@ -375,9 +376,9 @@ class _RequestFormState extends State<RequestForm> {
                       ),
                     ),
                     trailing: isSelected
-                        ? const Icon(
-                            Icons.check_rounded,
-                            color: Color(0xFF0D9488),
+                        ? Icon(
+                            UIcons.regularRounded.check,
+                            color: const Color(0xFF0D9488),
                             size: 18,
                           )
                         : null,
@@ -589,9 +590,10 @@ class _RequestFormState extends State<RequestForm> {
           scrolledUnderElevation: 0,
           backgroundColor: Colors.white,
           leading: IconButton(
-            icon: const Icon(
-              Icons.arrow_back_rounded,
-              color: Color(0xFF0F172A),
+            icon: Icon(
+              UIcons.regularRounded.angle_small_left,
+              color: const Color(0xFF0F172A),
+              size: 20,
             ),
             onPressed: () => Navigator.pop(context),
           ),
@@ -792,7 +794,7 @@ class _RequestFormState extends State<RequestForm> {
                           ? null
                           : () => setState(() => expenses.add(ExpenseDraft({}))),
                       icon: Icon(
-                        Icons.add_circle_outline_rounded,
+                        UIcons.regularRounded.plus,
                         size: 16.sp,
                         color: const Color(0xFF0D9488),
                       ),
@@ -997,8 +999,8 @@ class _RequestFormState extends State<RequestForm> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(
-                              Icons.send_rounded,
+                            Icon(
+                              UIcons.regularRounded.paper_plane,
                               size: 15,
                               color: Colors.white,
                             ),
@@ -1212,7 +1214,7 @@ class _RequestFormState extends State<RequestForm> {
                     ),
                   ),
                   Icon(
-                    Icons.keyboard_arrow_down_rounded,
+                    UIcons.regularRounded.angle_small_down,
                     size: 20.sp,
                     color: const Color(0xFF64748B),
                   ),
@@ -1281,7 +1283,7 @@ class _RequestFormState extends State<RequestForm> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(
-              Icons.info_outline_rounded,
+              UIcons.regularRounded.info,
               size: 16.sp,
               color: const Color(0xFF64748B),
             ),
@@ -1384,7 +1386,7 @@ class _RequestFormState extends State<RequestForm> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(
-              Icons.info_outline_rounded,
+              UIcons.regularRounded.info,
               size: 16.sp,
               color: const Color(0xFF64748B),
             ),
@@ -1441,7 +1443,7 @@ class _RequestFormState extends State<RequestForm> {
                 ),
                 child: Center(
                   child: Icon(
-                    Icons.medical_services_outlined,
+                    UIcons.regularRounded.stethoscope,
                     size: 14.sp,
                     color: const Color(0xFF0284C7),
                   ),
@@ -1624,7 +1626,7 @@ class _RequestFormState extends State<RequestForm> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
                 width: 36.w,
@@ -1633,10 +1635,10 @@ class _RequestFormState extends State<RequestForm> {
                   color: const Color(0xFFF0FDFA),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
-                child: const Icon(
-                  Icons.account_balance_rounded,
+                child: Icon(
+                  UIcons.regularRounded.bank,
                   size: 18,
-                  color: Color(0xFF0D9488),
+                  color: const Color(0xFF0D9488),
                 ),
               ),
               SizedBox(width: 10.w),
@@ -1657,7 +1659,7 @@ class _RequestFormState extends State<RequestForm> {
                     Text(
                       widget.workspace == null
                           ? 'Rekening diambil dari data karyawan di sistem HRIS'
-                          : "$bankName Â· $accountNumber ($accountName)",
+                          : '$bankName · $accountNumber ($accountName)',
                       style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 11.5.sp,
@@ -1710,8 +1712,8 @@ class _RequestFormState extends State<RequestForm> {
                   color: const Color(0xFF0D9488),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
-                child: const Icon(
-                  Icons.account_balance_wallet_rounded,
+                child: Icon(
+                  UIcons.regularRounded.wallet,
                   size: 18,
                   color: Colors.white,
                 ),
@@ -1772,7 +1774,6 @@ class _RequestFormState extends State<RequestForm> {
           ),
           SizedBox(height: 10.h),
           const Divider(
-            height: 1,
             thickness: 0.8,
             color: Color(0xFFCCFBF1),
           ),
@@ -1780,10 +1781,10 @@ class _RequestFormState extends State<RequestForm> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(
-                Icons.info_outline_rounded,
+              Icon(
+                UIcons.regularRounded.info,
                 size: 14,
-                color: Color(0xFF0D9488),
+                color: const Color(0xFF0D9488),
               ),
               SizedBox(width: 6.w),
               Expanded(
@@ -1937,8 +1938,8 @@ class _RequestFormState extends State<RequestForm> {
                         setState(() => expenses.remove(item));
                         item.dispose();
                       },
-                icon: const Icon(
-                  Icons.delete_outline_rounded,
+                icon: Icon(
+                  UIcons.regularRounded.trash,
                   size: 15,
                   color: AppColors.red,
                 ),
@@ -1986,10 +1987,10 @@ class _RequestFormState extends State<RequestForm> {
                     SizedBox(height: 4.h),
                     Row(
                       children: [
-                        const Icon(
-                          Icons.calendar_today_rounded,
+                        Icon(
+                          UIcons.regularRounded.calendar,
                           size: 14,
-                          color: Color(0xFF0D9488),
+                          color: const Color(0xFF0D9488),
                         ),
                         SizedBox(width: 6.w),
                         Expanded(
@@ -2003,10 +2004,10 @@ class _RequestFormState extends State<RequestForm> {
                             ),
                           ),
                         ),
-                        const Icon(
-                          Icons.keyboard_arrow_right_rounded,
+                        Icon(
+                          UIcons.regularRounded.angle_small_right,
                           size: 18,
-                          color: Color(0xFF94A3B8),
+                          color: const Color(0xFF94A3B8),
                         ),
                       ],
                     ),
@@ -2026,9 +2027,9 @@ class _RequestFormState extends State<RequestForm> {
                 isExpanded: true,
                 dropdownColor: Colors.white,
                 borderRadius: BorderRadius.circular(10.r),
-                icon: const Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  color: Color(0xFF64748B),
+                icon: Icon(
+                  UIcons.regularRounded.angle_small_down,
+                  color: const Color(0xFF64748B),
                 ),
                 hint: Text(
                   'Pilih kategori',
@@ -2376,8 +2377,8 @@ class _RequestFormState extends State<RequestForm> {
                             ),
                             child: Icon(
                               item.receiptId.isNotEmpty
-                                  ? Icons.file_present_rounded
-                                  : Icons.upload_file_rounded,
+                                  ? UIcons.regularRounded.document
+                                  : UIcons.regularRounded.cloud_upload,
                               size: 20,
                               color: item.receiptId.isNotEmpty
                                   ? Colors.white
@@ -2461,7 +2462,7 @@ class _RequestFormState extends State<RequestForm> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                Icons.delete_outline_rounded,
+                                UIcons.regularRounded.trash,
                                 size: 14.sp,
                                 color: const Color(0xFFDC2626),
                               ),
@@ -2482,9 +2483,9 @@ class _RequestFormState extends State<RequestForm> {
                     ),
                   ),
                 ] else
-                  const Icon(
-                    Icons.add_circle_outline_rounded,
-                    color: Color(0xFF94A3B8),
+                  Icon(
+                    UIcons.regularRounded.plus,
+                    color: const Color(0xFF94A3B8),
                     size: 18,
                   ),
               ],
@@ -2507,10 +2508,10 @@ class _RequestFormState extends State<RequestForm> {
                           ),
                         ),
                       ),
-                icon: const Icon(
-                  Icons.image_search_outlined,
+                icon: Icon(
+                  UIcons.regularRounded.picture,
                   size: 15,
-                  color: Color(0xFF0D9488),
+                  color: const Color(0xFF0D9488),
                 ),
                 label: const Text(
                   'Lihat bukti yang diunggah',
@@ -2618,9 +2619,12 @@ class ExpenseDraft {
     final details = <String>[];
     if (spec.isNotEmpty) details.add(spec);
     if (q > 1) details.add('$q pcs');
-    if (p > 0) details.add('@Rp ${formatThousand(p)}');
     if (details.isNotEmpty) {
-      desc = '$desc (${details.join(' · ')})';
+      if (desc.isEmpty) {
+        desc = details.join(' · ');
+      } else {
+        desc = '$desc (${details.join(' · ')})';
+      }
     }
 
     return {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:uicons/uicons.dart';
 
 /// Card Modul Layanan pada Katalog Hub Layanan Mandiri
 /// Dirancang seragam, simetris, dan tanpa elipsis (overflow visible).
@@ -143,10 +144,10 @@ class ServiceModuleCard extends StatelessWidget {
                     ),
                   ),
                   alignment: Alignment.center,
-                  child: const Icon(
-                    Icons.chevron_right_rounded,
+                  child: Icon(
+                    UIcons.regularRounded.angle_small_right,
                     size: 18,
-                    color: Color(0xFF0F766E),
+                    color: const Color(0xFF0F766E),
                   ),
                 ),
               ],
@@ -279,11 +280,11 @@ class ServiceModuleCard extends StatelessWidget {
                           overflow: TextOverflow.visible,
                         ),
                       ),
-                      Spacer(),
-                      const Icon(
-                        Icons.chevron_right_rounded,
+                      const Spacer(),
+                      Icon(
+                        UIcons.regularRounded.angle_small_right,
                         size: 16,
-                        color: Color(0xFF94A3B8),
+                        color: const Color(0xFF94A3B8),
                       ),
                     ],
                   ),

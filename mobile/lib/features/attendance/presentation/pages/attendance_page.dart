@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:uicons/uicons.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/workspace.dart';
@@ -233,7 +234,7 @@ class _AttendanceScreenState extends State<AttendanceScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.location_on_outlined, color: brand, size: 30),
+                Icon(UIcons.regularRounded.marker, color: brand, size: 30),
                 const SizedBox(height: 12),
                 Text(
                   text(policy, 'name', 'Lokasi belum ditentukan'),
@@ -294,14 +295,14 @@ class _AttendanceScreenState extends State<AttendanceScreen>
                       number(policy, 'latitude'),
                       number(policy, 'longitude'),
                     ),
-                    icon: const Icon(Icons.map_outlined),
+                    icon: Icon(UIcons.regularRounded.marker),
                     label: const Text('Peta lokasi penugasan'),
                   ),
                 if (position != null)
                   TextButton.icon(
                     onPressed: () =>
                         openMap(position!.latitude, position!.longitude),
-                    icon: const Icon(Icons.my_location),
+                    icon: Icon(UIcons.regularRounded.marker),
                     label: const Text('Peta lokasi saya'),
                   ),
                 if (error != null)
@@ -316,8 +317,8 @@ class _AttendanceScreenState extends State<AttendanceScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Icon(
-                  Icons.face_retouching_natural,
+                Icon(
+                  UIcons.regularRounded.user,
                   size: 40,
                   color: brand,
                 ),
@@ -342,10 +343,10 @@ class _AttendanceScreenState extends State<AttendanceScreen>
                       : start,
                   icon: Icon(
                     daily.completed
-                        ? Icons.check_circle_outline
+                        ? UIcons.regularRounded.check
                         : daily.checkedIn
-                        ? Icons.logout
-                        : Icons.login,
+                        ? UIcons.regularRounded.sign_out_alt
+                        : UIcons.regularRounded.sign_in_alt,
                   ),
                   label: Text(daily.label),
                 ),

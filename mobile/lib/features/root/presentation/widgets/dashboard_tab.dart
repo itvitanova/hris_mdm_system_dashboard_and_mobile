@@ -214,8 +214,8 @@ class _DashboardTabState extends State<DashboardTab> {
             alignment: Alignment.center,
             children: [
               Icon(
-                Icons.notifications_none_rounded,
-                size: 20.w,
+                UIcons.regularStraight.bell,
+                size: 16.w,
                 color: const Color(0xFF0F172A),
               ),
               if (hasUnread)

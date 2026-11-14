@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:uicons/uicons.dart';
 import '../../../../core/workspace.dart';
 import '../../../attendance/daily_attendance.dart';
 import 'language_swap_button.dart';
@@ -152,7 +153,7 @@ class CompactAttendanceCard extends StatelessWidget {
                 ),
                 alignment: Alignment.center,
                 child: Icon(
-                  Icons.schedule_rounded,
+                  UIcons.regularRounded.clock,
                   size: 15.sp,
                   color: const Color(0xFFCCFBF1),
                 ),
@@ -210,7 +211,7 @@ class CompactAttendanceCard extends StatelessWidget {
                     sublabel: inSublabel,
                     leadingIcon: hasCheckIn
                         ? Icon(
-                            Icons.check_circle_rounded,
+                            UIcons.regularRounded.check,
                             size: 12.sp,
                             color: const Color(0xFF34D399),
                           )
@@ -229,7 +230,7 @@ class CompactAttendanceCard extends StatelessWidget {
                     sublabel: outSublabel,
                     leadingIcon: hasCheckOut
                         ? Icon(
-                            Icons.check_circle_rounded,
+                            UIcons.regularRounded.check,
                             size: 12.sp,
                             color: const Color(0xFF34D399),
                           )
@@ -261,11 +262,11 @@ class CompactAttendanceCard extends StatelessWidget {
               onPressed: daily.completed ? null : onActionPressed,
               icon: Icon(
                 daily.completed
-                    ? Icons.check_circle_outline_rounded
+                    ? UIcons.regularRounded.check
                     : daily.checkedIn
-                        ? Icons.logout_rounded
-                        : Icons.login_rounded,
-                size: 18.sp,
+                        ? UIcons.regularRounded.sign_out_alt
+                        : UIcons.regularRounded.sign_in_alt,
+                size: 17.sp,
               ),
               label: FittedBox(
                 fit: BoxFit.scaleDown,

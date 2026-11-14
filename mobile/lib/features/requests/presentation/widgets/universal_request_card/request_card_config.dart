@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uicons/uicons.dart';
 import '../../../../root/presentation/widgets/language_swap_button.dart';
 import '../../../domain/entities/submission_kind.dart';
 import '../../../domain/entities/submission_status.dart';
@@ -118,7 +119,7 @@ class RequestCardHelper {
     switch (d.kind) {
       case SubmissionKind.cuti:
         return RequestKindConfig(
-          icon: Icons.calendar_today_rounded,
+          icon: UIcons.regularRounded.calendar_clock,
           typeTitle: isEn ? 'Leave Request' : 'Pengajuan Cuti',
           metricTag: (m) => '${m.days ?? 1} ${isEn ? 'DAYS' : 'HARI'}',
           secondaryMeta: (m) =>
@@ -126,14 +127,14 @@ class RequestCardHelper {
         );
       case SubmissionKind.izin:
         return RequestKindConfig(
-          icon: Icons.assignment_late_outlined,
+          icon: UIcons.regularRounded.treatment,
           typeTitle: isEn ? 'Permission Request' : 'Pengajuan Izin',
           metricTag: (m) => '${m.days ?? 1} ${isEn ? 'DAYS' : 'HARI'}',
           secondaryMeta: (_) => isEn ? '· Work Permission' : '· Izin Kerja',
         );
       case SubmissionKind.reimbursement:
         return RequestKindConfig(
-          icon: Icons.receipt_long_rounded,
+          icon: UIcons.regularRounded.receipt,
           typeTitle: isEn ? 'Reimbursement Claim' : 'Klaim Reimbursement',
           metricTag: (m) => formatIDR(m.amount ?? 0),
           secondaryMeta: (m) => m.transactionCount != null
@@ -142,21 +143,21 @@ class RequestCardHelper {
         );
       case SubmissionKind.medicalClaim:
         return RequestKindConfig(
-          icon: Icons.medical_services_outlined,
+          icon: UIcons.regularRounded.stethoscope,
           typeTitle: 'Medical Claim',
           metricTag: (m) => formatIDR(m.amount ?? 0),
           secondaryMeta: (_) => isEn ? '· Medical Claim' : '· Klaim Medis',
         );
       case SubmissionKind.pettyCash:
         return RequestKindConfig(
-          icon: Icons.account_balance_wallet_rounded,
+          icon: UIcons.regularRounded.wallet,
           typeTitle: isEn ? 'Petty Cash Request' : 'Pengajuan Petty Cash',
           metricTag: (m) => formatIDR(m.amount ?? 0),
           secondaryMeta: (_) => isEn ? '· Operational Cash' : '· Kas Operasional',
         );
       case SubmissionKind.generalAffair:
         return RequestKindConfig(
-          icon: Icons.inventory_2_rounded,
+          icon: UIcons.regularRounded.boxes,
           typeTitle: isEn ? 'General Affair Request' : 'Pengajuan General Affair',
           metricTag: (m) => m.amount != null && m.amount! > 0
               ? formatIDR(m.amount!)
@@ -165,7 +166,7 @@ class RequestCardHelper {
         );
       case SubmissionKind.lembur:
         return RequestKindConfig(
-          icon: Icons.schedule_rounded,
+          icon: UIcons.regularRounded.clock,
           typeTitle: isEn ? 'Overtime Request' : 'Pengajuan Lembur',
           metricTag: (m) => '${m.hours ?? 1} ${isEn ? 'HOURS' : 'JAM'}',
           secondaryMeta: (_) => isEn ? '· Overtime' : '· Jam Lembur',

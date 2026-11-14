@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uicons/uicons.dart';
 import 'package:mdm_hris/core/theme/app_colors.dart';
 import 'package:mdm_hris/features/requests/domain/entities/submission_status.dart';
 import 'package:mdm_hris/features/root/presentation/widgets/language_swap_button.dart';
@@ -168,8 +169,8 @@ class _SubmissionStatusFilterDropdownState
             ),
             Icon(
               isActive
-                  ? Icons.keyboard_arrow_up_rounded
-                  : Icons.keyboard_arrow_down_rounded,
+                  ? UIcons.regularRounded.angle_small_up
+                  : UIcons.regularRounded.angle_small_down,
               size: 20,
               color: isActive
                   ? AppColors.filterTealAccent
@@ -377,8 +378,8 @@ class _SubmissionStatusPanel extends StatelessWidget {
               ),
             ),
             if (isSelected)
-              const Icon(
-                Icons.check,
+              Icon(
+                UIcons.regularRounded.check,
                 size: 14,
                 color: Colors.white,
               ),

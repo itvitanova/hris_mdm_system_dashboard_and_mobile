@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:uicons/uicons.dart';
 
 /// Membuka floating dialog pemilih durasi lembur dengan visual premium,
 /// animasi scale & fade, hero counter terpusat, dan grid jam populer 4 kolom.
@@ -183,7 +184,7 @@ class _CustomDurationPickerDialogState extends State<CustomDurationPickerDialog>
                             border: Border.all(color: const Color(0xFFE2E8F0)),
                           ),
                           child: Icon(
-                            Icons.close_rounded,
+                            UIcons.regularRounded.cross,
                             size: 15.sp,
                             color: const Color(0xFF64748B),
                           ),
@@ -264,7 +265,7 @@ class _CustomDurationPickerDialogState extends State<CustomDurationPickerDialog>
                                     : null,
                               ),
                               child: Icon(
-                                Icons.remove_rounded,
+                                UIcons.regularRounded.minus,
                                 size: 20.sp,
                                 color: _selectedHours > 1
                                     ? const Color(0xFF0F766E)
@@ -362,7 +363,7 @@ class _CustomDurationPickerDialogState extends State<CustomDurationPickerDialog>
                                     : null,
                               ),
                               child: Icon(
-                                Icons.add_rounded,
+                                UIcons.regularRounded.plus,
                                 size: 20.sp,
                                 color: _selectedHours < 24 ? Colors.white : const Color(0xFF94A3B8),
                               ),

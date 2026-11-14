@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:uicons/uicons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 
@@ -177,8 +178,8 @@ class _InputAuthState extends State<InputAuth> {
                                   : null,
                               icon: Icon(
                                 _obsecureText
-                                    ? Icons.visibility_outlined
-                                    : Icons.visibility_off_outlined,
+                                    ? UIcons.regularRounded.eye
+                                    : UIcons.regularRounded.eye_crossed,
                                 size: 20.w,
                                 color: isFocused
                                     ? (hasError
@@ -204,7 +205,7 @@ class _InputAuthState extends State<InputAuth> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Icon(
-                      Icons.error_outline_rounded,
+                      UIcons.regularRounded.exclamation,
                       size: 13.w,
                       color: AppColors.red,
                     ),

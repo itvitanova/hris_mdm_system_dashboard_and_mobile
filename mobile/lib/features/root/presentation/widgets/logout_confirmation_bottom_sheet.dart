@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:uicons/uicons.dart';
 import '../../../../core/theme/app_colors.dart';
 
 /// Modal bottom sheet untuk konfirmasi keluar akun (logout)
@@ -100,7 +101,7 @@ class _LogoutConfirmationBottomSheetState
                   ),
                   alignment: Alignment.center,
                   child: Icon(
-                    Icons.logout_rounded,
+                    UIcons.regularRounded.sign_out_alt,
                     color: AppColors.red,
                     size: 24.sp,
                   ),
@@ -145,7 +146,7 @@ class _LogoutConfirmationBottomSheetState
                         ),
                         alignment: Alignment.center,
                         child: Icon(
-                          Icons.priority_high_rounded,
+                          UIcons.regularRounded.exclamation,
                           color: AppColors.red,
                           size: 13.sp,
                         ),

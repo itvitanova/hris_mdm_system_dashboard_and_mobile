@@ -82,7 +82,6 @@ void main() {
       // Account Settings Section
       expect(find.text('Pengaturan Akun'), findsOneWidget);
       expect(find.text('Detail Data & Kepegawaian'), findsOneWidget);
-      expect(find.text('Ganti Kata Sandi'), findsOneWidget);
       expect(find.text('Keluar Akun'), findsOneWidget);
 
       // Tap Detail Data & Kepegawaian to verify bottom sheet

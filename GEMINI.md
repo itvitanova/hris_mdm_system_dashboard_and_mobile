@@ -15,3 +15,7 @@
 - **Zero Mention of External References**:
   - Dilarang keras menyebutkan nama project referensi, nama klien eksternal, atau path direktori referensi di dalam pesan commit git, branch name, komentar kode, penamaan file, maupun respons.
   - Semua pesan commit dan dokumentasi harus murni merefleksikan domain dan fitur internal repository ini.
+
+## 4. UI Component Protection & Invariants
+- **Strict Navbar Icon Preservation**:
+  - Dilarang keras mengubah, mengganti, atau merefaktor icon-icon pada Bottom Navigation Bar (`RootPage` navbar: Beranda, Pengajuan, Persetujuan, Slip Gaji, Profil), baik aset SVG maupun pengaturannya, kecuali diminta secara khusus dan eksplisit oleh pengguna.

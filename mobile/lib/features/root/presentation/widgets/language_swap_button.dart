@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:uicons/uicons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 
@@ -244,7 +245,7 @@ class _LanguageSwapButtonState extends State<LanguageSwapButton> {
               ),
               SizedBox(width: 2.w),
               Icon(
-                Icons.arrow_drop_down_rounded,
+                UIcons.regularRounded.angle_small_down,
                 size: 18.w,
                 color: const Color(0xFF64748B),
               ),

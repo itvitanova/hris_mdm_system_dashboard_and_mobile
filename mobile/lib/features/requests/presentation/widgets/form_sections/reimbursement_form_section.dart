@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:uicons/uicons.dart';
 import '../../../../../core/workspace.dart';
 import '../../../../../core/theme/app_colors.dart';
 
@@ -92,10 +93,10 @@ class ReimbursementAccountInfoCard extends StatelessWidget {
                   color: const Color(0xFFF0FDFA),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
-                child: const Icon(
-                  Icons.account_balance_rounded,
+                child: Icon(
+                  UIcons.regularRounded.bank,
                   size: 18,
-                  color: Color(0xFF0D9488),
+                  color: const Color(0xFF0D9488),
                 ),
               ),
               SizedBox(width: 10.w),
@@ -182,8 +183,8 @@ class ReimbursementSummaryCard extends StatelessWidget {
                   color: const Color(0xFF0D9488),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
-                child: const Icon(
-                  Icons.account_balance_wallet_rounded,
+                child: Icon(
+                  UIcons.regularRounded.wallet,
                   size: 18,
                   color: Colors.white,
                 ),
@@ -252,10 +253,10 @@ class ReimbursementSummaryCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(
-                Icons.info_outline_rounded,
+              Icon(
+                UIcons.regularRounded.info,
                 size: 14,
-                color: Color(0xFF0D9488),
+                color: const Color(0xFF0D9488),
               ),
               SizedBox(width: 6.w),
               Expanded(
@@ -380,8 +381,8 @@ class ReimbursementExpenseCard extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
                 onPressed: disabled ? null : onRemove,
-                icon: const Icon(
-                  Icons.delete_outline_rounded,
+                icon: Icon(
+                  UIcons.regularRounded.trash,
                   size: 15,
                   color: AppColors.red,
                 ),
@@ -429,10 +430,10 @@ class ReimbursementExpenseCard extends StatelessWidget {
                     SizedBox(height: 4.h),
                     Row(
                       children: [
-                        const Icon(
-                          Icons.calendar_today_rounded,
+                        Icon(
+                          UIcons.regularRounded.calendar,
                           size: 14,
-                          color: Color(0xFF0D9488),
+                          color: const Color(0xFF0D9488),
                         ),
                         SizedBox(width: 6.w),
                         Expanded(
@@ -448,10 +449,10 @@ class ReimbursementExpenseCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const Icon(
-                          Icons.keyboard_arrow_right_rounded,
+                        Icon(
+                          UIcons.regularRounded.angle_small_right,
                           size: 18,
-                          color: Color(0xFF94A3B8),
+                          color: const Color(0xFF94A3B8),
                         ),
                       ],
                     ),
@@ -505,9 +506,9 @@ class ReimbursementExpenseCard extends StatelessWidget {
                 isExpanded: true,
                 dropdownColor: Colors.white,
                 borderRadius: BorderRadius.circular(10.r),
-                icon: const Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  color: Color(0xFF64748B),
+                icon: Icon(
+                  UIcons.regularRounded.angle_small_down,
+                  color: const Color(0xFF64748B),
                 ),
                 hint: Text(
                   'Pilih kategori',
@@ -661,8 +662,8 @@ class ReimbursementExpenseCard extends StatelessWidget {
                             ),
                             child: Icon(
                               item.receiptId.isNotEmpty
-                                  ? Icons.file_present_rounded
-                                  : Icons.upload_file_rounded,
+                                  ? UIcons.regularRounded.document
+                                  : UIcons.regularRounded.cloud_upload,
                               size: 20,
                               color: item.receiptId.isNotEmpty
                                   ? Colors.white
@@ -740,7 +741,7 @@ class ReimbursementExpenseCard extends StatelessWidget {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(
-                                  Icons.delete_outline_rounded,
+                                  UIcons.regularRounded.trash,
                                   size: 14.sp,
                                   color: const Color(0xFFDC2626),
                                 ),
@@ -761,15 +762,15 @@ class ReimbursementExpenseCard extends StatelessWidget {
                       ),
                     )
                   else
-                    const Icon(
-                      Icons.check_circle_rounded,
-                      color: Color(0xFF0D9488),
+                    Icon(
+                      UIcons.regularRounded.check,
+                      color: const Color(0xFF0D9488),
                       size: 18,
                     ),
                 ] else
-                  const Icon(
-                    Icons.add_circle_outline_rounded,
-                    color: Color(0xFF94A3B8),
+                  Icon(
+                    UIcons.regularRounded.plus,
+                    color: const Color(0xFF94A3B8),
                     size: 18,
                   ),
               ],
@@ -781,10 +782,10 @@ class ReimbursementExpenseCard extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
                 onPressed: disabled ? null : onPreviewReceipt,
-                icon: const Icon(
-                  Icons.image_search_outlined,
+                icon: Icon(
+                  UIcons.regularRounded.picture,
                   size: 15,
-                  color: Color(0xFF0D9488),
+                  color: const Color(0xFF0D9488),
                 ),
                 label: const Text(
                   'Lihat bukti yang diunggah',

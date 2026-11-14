@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
+import 'package:uicons/uicons.dart';
 import '../../../../../core/workspace.dart';
 import 'form_ui_components.dart';
 
@@ -114,11 +115,11 @@ String formatThousand(int value) {
 
 IconData getPettyCashCategoryIcon(String category) {
   return switch (category) {
-    'Operasional Kantor' => Icons.business_center_outlined,
-    'Konsumsi Rapat' => Icons.restaurant_outlined,
-    'ATK Darurat' => Icons.edit_note_rounded,
-    'Transportasi Lokal' => Icons.directions_car_outlined,
-    _ => Icons.category_outlined,
+    'Operasional Kantor' => UIcons.regularRounded.briefcase,
+    'Konsumsi Rapat' => UIcons.regularRounded.restaurant,
+    'ATK Darurat' => UIcons.regularRounded.edit,
+    'Transportasi Lokal' => UIcons.regularRounded.car,
+    _ => UIcons.regularRounded.boxes,
   };
 }
 
@@ -188,7 +189,7 @@ class PettyCashCategoryTile extends StatelessWidget {
                 ),
                 if (isSelected)
                   Icon(
-                    Icons.check_circle_rounded,
+                    UIcons.regularRounded.check,
                     size: 14.sp,
                     color: const Color(0xFF0D9488),
                   ),
@@ -233,14 +234,14 @@ class PettyCashCategorySelector extends StatelessWidget {
             children: [
               PettyCashCategoryTile(
                 category: 'Operasional Kantor',
-                icon: Icons.business_center_outlined,
+                icon: UIcons.regularRounded.briefcase,
                 isSelected: selectedCategory == 'Operasional Kantor',
                 onTap: disabled ? null : () => onCategorySelected('Operasional Kantor'),
               ),
               SizedBox(width: 8.w),
               PettyCashCategoryTile(
                 category: 'Konsumsi Rapat',
-                icon: Icons.restaurant_outlined,
+                icon: UIcons.regularRounded.restaurant,
                 isSelected: selectedCategory == 'Konsumsi Rapat',
                 onTap: disabled ? null : () => onCategorySelected('Konsumsi Rapat'),
               ),
@@ -251,14 +252,14 @@ class PettyCashCategorySelector extends StatelessWidget {
             children: [
               PettyCashCategoryTile(
                 category: 'ATK Darurat',
-                icon: Icons.edit_note_rounded,
+                icon: UIcons.regularRounded.edit,
                 isSelected: selectedCategory == 'ATK Darurat',
                 onTap: disabled ? null : () => onCategorySelected('ATK Darurat'),
               ),
               SizedBox(width: 8.w),
               PettyCashCategoryTile(
                 category: 'Transportasi Lokal',
-                icon: Icons.directions_car_outlined,
+                icon: UIcons.regularRounded.car,
                 isSelected: selectedCategory == 'Transportasi Lokal',
                 onTap: disabled ? null : () => onCategorySelected('Transportasi Lokal'),
               ),
@@ -435,7 +436,7 @@ class _PettyCashAmountCardState extends State<PettyCashAmountCard> {
                             child: Padding(
                               padding: EdgeInsets.all(4.w),
                               child: Icon(
-                                Icons.close_rounded,
+                                UIcons.regularRounded.cross,
                                 size: 16.sp,
                                 color: const Color(0xFF94A3B8),
                               ),
@@ -528,7 +529,7 @@ class _PettyCashAmountCardState extends State<PettyCashAmountCard> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Icon(
-                      Icons.error_outline_rounded,
+                      UIcons.regularRounded.exclamation,
                       size: 13.w,
                       color: const Color(0xFFEF4444),
                     ),
@@ -603,8 +604,8 @@ class PettyCashSummaryCard extends StatelessWidget {
                   color: const Color(0xFF0D9488),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
-                child: const Icon(
-                  Icons.payments_rounded,
+                child: Icon(
+                  UIcons.regularRounded.wallet,
                   size: 18,
                   color: Colors.white,
                 ),
@@ -786,7 +787,7 @@ class PettyCashSummaryCard extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(6.r),
                               ),
                               child: Icon(
-                                Icons.calendar_today_rounded,
+                                UIcons.regularRounded.calendar,
                                 size: 14.sp,
                                 color: const Color(0xFF0D9488),
                               ),
@@ -843,7 +844,7 @@ class PettyCashSummaryCard extends StatelessWidget {
                 Padding(
                   padding: EdgeInsets.only(top: 1.h),
                   child: Icon(
-                    Icons.info_outline_rounded,
+                    UIcons.regularRounded.info,
                     size: 14.sp,
                     color: const Color(0xFF0D9488),
                   ),

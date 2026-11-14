@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:uicons/uicons.dart';
 import 'form_ui_components.dart';
 
 const gaCategories = [
@@ -14,12 +15,12 @@ const gaPriorities = ['Normal', 'Mendesak'];
 
 IconData getGaCategoryIcon(String cat) {
   return switch (cat) {
-    'Pengadaan Barang' => Icons.shopping_bag_outlined,
-    'Perbaikan & Servis' => Icons.build_outlined,
-    'Kebutuhan ATK' => Icons.edit_note_rounded,
-    'Pemeliharaan Fasilitas' => Icons.home_repair_service_outlined,
-    'Sarana Ruang Rapat' => Icons.meeting_room_outlined,
-    _ => Icons.inventory_2_outlined,
+    'Pengadaan Barang' => UIcons.regularRounded.shopping_bag,
+    'Perbaikan & Servis' => UIcons.regularRounded.settings,
+    'Kebutuhan ATK' => UIcons.regularRounded.edit,
+    'Pemeliharaan Fasilitas' => UIcons.regularRounded.tool_box,
+    'Sarana Ruang Rapat' => UIcons.regularRounded.building,
+    _ => UIcons.regularRounded.boxes,
   };
 }
 
@@ -177,8 +178,8 @@ class GaPrioritySelector extends StatelessWidget {
                         children: [
                           Icon(
                             isUrgent
-                                ? Icons.bolt_rounded
-                                : Icons.check_circle_outline_rounded,
+                                ? UIcons.regularRounded.bolt
+                                : UIcons.regularRounded.check,
                             size: 16.sp,
                             color: isSelected
                                 ? (isUrgent
@@ -245,7 +246,7 @@ class GaLocationCard extends StatelessWidget {
           labelText: 'Lokasi Penempatan / Ruangan (Opsional)',
           hintText: 'Contoh: Gedung A, Lt. 3 - Ruang Operasional / Meja 12',
           prefixIcon: Icon(
-            Icons.location_on_outlined,
+            UIcons.regularRounded.marker,
             size: 18.sp,
             color: const Color(0xFF0D9488),
           ),
@@ -317,8 +318,8 @@ class GeneralAffairSummaryBox extends StatelessWidget {
                   color: const Color(0xFF0D9488),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
-                child: const Icon(
-                  Icons.inventory_2_rounded,
+                child: Icon(
+                  UIcons.regularRounded.boxes,
                   size: 18,
                   color: Colors.white,
                 ),
@@ -362,7 +363,7 @@ class GeneralAffairSummaryBox extends StatelessWidget {
                   children: [
                     if (isUrgent) ...[
                       Icon(
-                        Icons.bolt_rounded,
+                        UIcons.regularRounded.bolt,
                         size: 11.sp,
                         color: const Color(0xFFDC2626),
                       ),
@@ -472,7 +473,7 @@ class GeneralAffairSummaryBox extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(6.r),
                               ),
                               child: Icon(
-                                Icons.calendar_today_rounded,
+                                UIcons.regularRounded.calendar,
                                 size: 14.sp,
                                 color: const Color(0xFF0D9488),
                               ),
@@ -536,7 +537,7 @@ class GeneralAffairSummaryBox extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Icon(
-                      Icons.location_on_outlined,
+                      UIcons.regularRounded.marker,
                       size: 15.sp,
                       color: const Color(0xFF0D9488),
                     ),
@@ -583,7 +584,7 @@ class GeneralAffairSummaryBox extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Icon(
-                        Icons.attach_file_rounded,
+                        UIcons.regularRounded.clip,
                         size: 15.sp,
                         color: const Color(0xFF0D9488),
                       ),
@@ -638,7 +639,7 @@ class GeneralAffairSummaryBox extends StatelessWidget {
                 Padding(
                   padding: EdgeInsets.only(top: 1.h),
                   child: Icon(
-                    Icons.info_outline_rounded,
+                    UIcons.regularRounded.info,
                     size: 14.sp,
                     color: const Color(0xFF0D9488),
                   ),
