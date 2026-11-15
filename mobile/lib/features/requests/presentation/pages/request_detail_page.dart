@@ -15,6 +15,7 @@ import '../../../../core/widgets/core_widgets.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../home/presentation/bloc/workspace_bloc.dart';
 import '../../../home/presentation/bloc/workspace_event.dart';
+import '../../../home/presentation/bloc/workspace_state.dart';
 import 'request_form_page.dart';
 import '../widgets/approval_step_summary.dart';
 import '../widgets/receipt_preview.dart';
@@ -99,6 +100,7 @@ class _RequestDetailState extends State<RequestDetailScreen> {
   bool busy = false;
   String? error;
   bool _changed = false;
+  Workspace? _workspace;
 
   @override
   void initState() {
@@ -115,6 +117,7 @@ class _RequestDetailState extends State<RequestDetailScreen> {
       final matches = w.rows('requests').where((r) => r['id'] == request['id']);
       if (matches.isNotEmpty && mounted) {
         setState(() {
+          _workspace = w;
           request = matches.first;
           error = null;
         });
@@ -122,6 +125,10 @@ class _RequestDetailState extends State<RequestDetailScreen> {
         throw ApiException(
           'Pengajuan tidak ditemukan atau akses sudah berubah.',
         );
+      } else if (mounted) {
+        setState(() {
+          _workspace = w;
+        });
       }
     } catch (e) {
       if (force && mounted) setState(() => error = e.toString());
@@ -684,6 +691,8 @@ class _RequestDetailState extends State<RequestDetailScreen> {
                   child: Text(
                     value.isNotEmpty ? value : '—',
                     textAlign: showColon ? TextAlign.start : TextAlign.end,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 12.sp,
@@ -699,7 +708,7 @@ class _RequestDetailState extends State<RequestDetailScreen> {
                     label: label,
                   ),
                 ] else if (action != null) ...[
-                  SizedBox(width: 4.w),
+                  SizedBox(width: 5.w),
                   action,
                 ],
               ],
@@ -710,20 +719,156 @@ class _RequestDetailState extends State<RequestDetailScreen> {
     );
   }
 
-  Widget _buildDescriptionBlock(String label, String value) {
+  Widget _buildBankModalRow({
+    required String label,
+    required String value,
+    String? copyValue,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          flex: 4,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 12.sp,
+              color: const Color(0xFF64748B),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        SizedBox(width: 8.w),
+        Expanded(
+          flex: 6,
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  value.isNotEmpty ? value : '—',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 12.5.sp,
+                    color: const Color(0xFF0F172A),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              if (copyValue != null && copyValue.isNotEmpty) ...[
+                SizedBox(width: 4.w),
+                _CopyIconButton(
+                  textToCopy: copyValue,
+                  label: label,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildViewAttachmentAction(
+    String attachmentId, {
+    String title = 'Berkas Lampiran',
+  }) {
+    final reqId = text(request, 'id', '');
+    final receiptPath = reqId.isNotEmpty
+        ? '/requests/${Uri.encodeComponent(reqId)}/receipts/${Uri.encodeComponent(attachmentId)}'
+        : '/request-receipts/${Uri.encodeComponent(attachmentId)}';
+    final fallbackPath = reqId.isNotEmpty
+        ? '/request-receipts/${Uri.encodeComponent(attachmentId)}'
+        : null;
+
+    return Material(
+      color: const Color(0xFFF0FDFA),
+      borderRadius: BorderRadius.circular(6.r),
+      child: InkWell(
+        onTap: busy
+            ? null
+            : () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ReceiptPreview(
+                    api: widget.api,
+                    path: receiptPath,
+                    fallbackPath: fallbackPath,
+                    title: title,
+                  ),
+                ),
+              ),
+        borderRadius: BorderRadius.circular(6.r),
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 3.h),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(6.r),
+            border: Border.all(
+              color: const Color(0xFF99F6E4),
+              width: 0.8,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                UIcons.regularRounded.eye,
+                size: 11.5.w,
+                color: const Color(0xFF0F766E),
+              ),
+              SizedBox(width: 3.5.w),
+              Text(
+                'Lihat lampiran',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 10.5.sp,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF0F766E),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _getInitials(String name) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return 'HR';
+    final parts =
+        trimmed.split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+    if (parts.length >= 2) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    }
+    if (trimmed.length >= 2) {
+      return trimmed.substring(0, 2).toUpperCase();
+    }
+    return trimmed.toUpperCase();
+  }
+
+  Widget _buildDescriptionBlock(String label, String value, {IconData? icon}) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 4.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 11.5.sp,
-              fontWeight: FontWeight.w500,
-              color: const Color(0xFF64748B),
-            ),
+          Row(
+            children: [
+              if (icon != null) ...[
+                Icon(icon, size: 13.5.w, color: const Color(0xFF94A3B8)),
+                SizedBox(width: 6.w),
+              ],
+              Text(
+                label,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 11.5.sp,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF64748B),
+                ),
+              ),
+            ],
           ),
           SizedBox(height: 4.h),
           Text(
@@ -882,25 +1027,63 @@ class _RequestDetailState extends State<RequestDetailScreen> {
                 ),
                 SizedBox(height: 8.h),
                 // Baris 2: Tindakan Utama Penuh (Setujui / Verifikasi finance)
-                FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF0F766E),
-                    foregroundColor: Colors.white,
-                    minimumSize: Size.fromHeight(44.h),
-                    padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
-                    elevation: 1,
-                    shadowColor: const Color(0x330F766E),
+                Container(
+                  height: 44.h,
+                  decoration: BoxDecoration(
+                    gradient: busy
+                        ? const LinearGradient(
+                            colors: [Color(0xFF94A3B8), Color(0xFF64748B)],
+                          )
+                        : const LinearGradient(
+                            colors: [Color(0xFF0F766E), Color(0xFF14B8A6)],
+                          ),
+                    borderRadius: BorderRadius.circular(10.r),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x200F766E),
+                        blurRadius: 8,
+                        offset: Offset(0, 3),
+                      ),
+                    ],
                   ),
-                  onPressed: busy ? null : () => decide('Disetujui'),
-                  icon: Icon(UIcons.regularRounded.check, size: 18),
-                  label: Text(
-                    isFinanceStep ? 'Verifikasi finance' : 'Setujui',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 13.5.sp,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.2,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: busy ? null : () => decide('Disetujui'),
+                      borderRadius: BorderRadius.circular(10.r),
+                      child: Center(
+                        child: busy
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    UIcons.regularRounded.paper_plane,
+                                    size: 16.w,
+                                    color: Colors.white,
+                                  ),
+                                  SizedBox(width: 8.w),
+                                  Text(
+                                    isFinanceStep ? 'Verifikasi finance' : 'Setujui',
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 13.5.sp,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                      letterSpacing: 0.2,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                      ),
                     ),
                   ),
                 ),
@@ -1063,9 +1246,6 @@ class _RequestDetailState extends State<RequestDetailScreen> {
     final hours = (r['hours'] as num?)?.toInt();
     final days = (r['days'] as num?)?.toInt();
 
-    final isRevision = _isStatusRevision(r['status']) || text(r, 'reviewNote', '').isNotEmpty;
-    final pendingWithText = text(r, 'pendingWith', '');
-
     return ScreenUtilInit(
       designSize: const Size(375, 812),
       minTextAdapt: true,
@@ -1153,12 +1333,12 @@ class _RequestDetailState extends State<RequestDetailScreen> {
               physics: const AlwaysScrollableScrollPhysics(),
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
               children: [
-                // ==================== 1. HERO HEADER SUMMARY CARD ====================
+                // ==================== 1. UNIFIED REQUEST OVERVIEW CARD ====================
                 Container(
                   margin: EdgeInsets.only(bottom: 14.h),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16.r),
+                    borderRadius: BorderRadius.circular(14.r),
                     border: Border.all(color: const Color(0xFFF1F5F9), width: 1),
                     boxShadow: const [
                       BoxShadow(
@@ -1172,63 +1352,64 @@ class _RequestDetailState extends State<RequestDetailScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Header Row: Type Icon & Name (Left) + Status Badge (Right)
-                      Wrap(
-                        alignment: WrapAlignment.spaceBetween,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: 8.w,
-                        runSpacing: 8.h,
+                      // Header Row: Type & Tanggal Diajukan (Left) + Status Badge (Right)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 36.w,
-                                height: 36.w,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF0FDFA),
-                                  borderRadius: BorderRadius.circular(10.r),
-                                  border: Border.all(
-                                    color: const Color(0xFFCCFBF1),
-                                    width: 0.8,
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 34.w,
+                                  height: 34.w,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF0FDFA),
+                                    borderRadius: BorderRadius.circular(8.r),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Icon(
+                                    kindConfig.icon,
+                                    size: 17.w,
+                                    color: const Color(0xFF0F766E),
                                   ),
                                 ),
-                                alignment: Alignment.center,
-                                child: Icon(
-                                  kindConfig.icon,
-                                  size: 18.w,
-                                  color: const Color(0xFF0F766E),
+                                SizedBox(width: 10.w),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        kindConfig.typeTitle.toUpperCase(),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontFamily: 'Inter',
+                                          fontSize: 10.sp,
+                                          fontWeight: FontWeight.w700,
+                                          color: const Color(0xFF0F766E),
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                      SizedBox(height: 2.h),
+                                      Text(
+                                        'Diajukan pada ${requestDateLabel(text(r, 'createdAt'))}',
+                                        softWrap: true,
+                                        style: TextStyle(
+                                          fontFamily: 'Inter',
+                                          fontSize: 11.sp,
+                                          fontWeight: FontWeight.w500,
+                                          color: const Color(0xFF64748B),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              SizedBox(width: 10.w),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    kindConfig.typeTitle.toUpperCase(),
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontSize: 10.sp,
-                                      fontWeight: FontWeight.w700,
-                                      color: const Color(0xFF0F766E),
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                                  SizedBox(height: 2.h),
-                                  Text(
-                                    text(r, 'id'),
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontSize: 11.5.sp,
-                                      fontWeight: FontWeight.w500,
-                                      color: const Color(0xFF64748B),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
+                          SizedBox(width: 8.w),
                           Container(
                             padding: EdgeInsets.symmetric(
                               horizontal: 10.w,
@@ -1270,25 +1451,395 @@ class _RequestDetailState extends State<RequestDetailScreen> {
                         ),
                       ),
 
-                      // Box Highlight Metrik (Nominal atau Durasi jika ada)
-                      if (hasAmount || (hours != null && hours > 0) || (days != null && days > 0)) ...[
-                        SizedBox(height: 12.h),
-                        Container(
-                          width: double.infinity,
-                          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF0FDFA),
-                            borderRadius: BorderRadius.circular(10.r),
-                            border: Border.all(color: const Color(0xFFCCFBF1), width: 0.8),
-                          ),
-                          child: Row(
+                      // Baris Metrik Utama (Highlight Box Khusus per jenis pengajuan)
+                      Builder(
+                        builder: (context) {
+                          String? metricLabel;
+                          String? metricValue;
+                          IconData metricIcon = UIcons.regularRounded.calendar;
+
+                          switch (model.kind) {
+                            case SubmissionKind.cuti:
+                              final totalDays = days ?? model.days ?? 1;
+                              metricLabel = 'Total Hari Cuti';
+                              metricValue = '$totalDays Hari';
+                              metricIcon = UIcons.regularRounded.calendar_clock;
+                              break;
+                            case SubmissionKind.izin:
+                              if (days != null && days > 0) {
+                                metricLabel = 'Durasi Izin';
+                                metricValue = '$days Hari';
+                              }
+                              metricIcon = UIcons.regularRounded.treatment;
+                              break;
+                            case SubmissionKind.lembur:
+                              final totalHours = hours ?? model.hours ?? 1;
+                              metricLabel = 'Total Durasi Lembur';
+                              metricValue = '$totalHours Jam';
+                              metricIcon = UIcons.regularRounded.clock;
+                              break;
+                            case SubmissionKind.reimbursement:
+                              if (hasAmount) {
+                                metricLabel = 'Total Klaim Biaya';
+                                metricValue = rupiah(amount);
+                              }
+                              metricIcon = UIcons.regularRounded.receipt;
+                              break;
+                            case SubmissionKind.medicalClaim:
+                              if (hasAmount) {
+                                metricLabel = 'Biaya Perawatan Medis';
+                                metricValue = rupiah(amount);
+                              }
+                              metricIcon = UIcons.regularRounded.stethoscope;
+                              break;
+                            case SubmissionKind.pettyCash:
+                              if (hasAmount) {
+                                metricLabel = 'Nominal Kas Kecil';
+                                metricValue = rupiah(amount);
+                              }
+                              metricIcon = UIcons.regularRounded.wallet;
+                              break;
+                            case SubmissionKind.generalAffair:
+                              if (hasAmount) {
+                                metricLabel = 'Estimasi Biaya';
+                                metricValue = rupiah(amount);
+                              }
+                              metricIcon = UIcons.regularRounded.boxes;
+                              break;
+                          }
+
+                          if (metricLabel == null || metricValue == null) {
+                            return const SizedBox.shrink();
+                          }
+
+                          return Container(
+                            margin: EdgeInsets.only(top: 14.h),
+                            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Color(0xFF0F766E),
+                                  Color(0xFF14B8A6),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(10.r),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.15),
+                                width: 1,
+                              ),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x200F766E),
+                                  blurRadius: 10,
+                                  offset: Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 40.w,
+                                  height: 40.w,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.18),
+                                    borderRadius: BorderRadius.circular(10.r),
+                                    border: Border.all(
+                                      color: Colors.white.withValues(alpha: 0.25),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Icon(
+                                    metricIcon,
+                                    size: 20.w,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                SizedBox(width: 12.w),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        metricLabel,
+                                        style: TextStyle(
+                                          fontFamily: 'Inter',
+                                          fontSize: 11.5.sp,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.white.withValues(alpha: 0.85),
+                                          letterSpacing: 0.2,
+                                        ),
+                                      ),
+                                      SizedBox(height: 2.h),
+                                      Text(
+                                        metricValue,
+                                        style: TextStyle(
+                                          fontFamily: 'Inter',
+                                          fontSize: 18.sp,
+                                          fontWeight: FontWeight.w800,
+                                          color: Colors.white,
+                                          letterSpacing: -0.3,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+
+                      // Divider pemisah ke rincian keperluan & parameter
+                      SizedBox(height: 14.h),
+                      const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                      SizedBox(height: 10.h),
+
+                      // Keperluan / Deskripsi dengan Label Kontekstual
+                      if (text(r, 'description').isNotEmpty) ...[
+                        Builder(
+                          builder: (context) {
+                            String descLabel;
+                            switch (model.kind) {
+                              case SubmissionKind.cuti:
+                                descLabel = 'Alasan Cuti';
+                                break;
+                              case SubmissionKind.izin:
+                                descLabel = 'Alasan Izin';
+                                break;
+                              case SubmissionKind.lembur:
+                                descLabel = 'Uraian Tugas Lembur';
+                                break;
+                              case SubmissionKind.reimbursement:
+                                descLabel = 'Keterangan Klaim';
+                                break;
+                              case SubmissionKind.medicalClaim:
+                                descLabel = 'Catatan / Diagnosa Medis';
+                                break;
+                              case SubmissionKind.pettyCash:
+                                descLabel = 'Peruntukan Dana';
+                                break;
+                              case SubmissionKind.generalAffair:
+                                descLabel = 'Deskripsi Kebutuhan GA';
+                                break;
+                            }
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildDescriptionBlock(descLabel, text(r, 'description'), icon: UIcons.regularRounded.document),
+                                const Divider(height: 12, color: Color(0xFFF8FAFC)),
+                              ],
+                            );
+                          },
+                        ),
+                      ],
+
+                      // Parameter Spesifik per Jenis Pengajuan
+                      Builder(
+                        builder: (context) {
+                          final start = text(r, 'startDate');
+                          final end = text(r, 'endDate');
+                          final dateLabel = start == end || end.isEmpty
+                              ? requestDateLabel(start)
+                              : '${requestDateLabel(start)} – ${requestDateLabel(end)}';
+
+                          switch (model.kind) {
+                            case SubmissionKind.cuti:
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (start.isNotEmpty || end.isNotEmpty)
+                                    _buildInfoRow('Periode Cuti', dateLabel, icon: UIcons.regularRounded.calendar),
+                                  if (model.leaveBalance != null)
+                                    _buildInfoRow('Sisa Cuti', '${model.leaveBalance} Hari', icon: UIcons.regularRounded.calendar_clock),
+                                ],
+                              );
+
+                            case SubmissionKind.izin:
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (r['permissionType'] != null && text(r, 'permissionType').isNotEmpty)
+                                    _buildInfoRow('Jenis Izin', text(r, 'permissionType'), icon: UIcons.regularRounded.document),
+                                  if (start.isNotEmpty || end.isNotEmpty)
+                                    _buildInfoRow('Periode Izin', dateLabel, icon: UIcons.regularRounded.calendar),
+                                ],
+                              );
+
+                            case SubmissionKind.lembur:
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (start.isNotEmpty)
+                                    _buildInfoRow('Tanggal Lembur', requestDateLabel(start), icon: UIcons.regularRounded.calendar),
+                                ],
+                              );
+
+                            case SubmissionKind.reimbursement:
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (start.isNotEmpty || end.isNotEmpty)
+                                    _buildInfoRow('Periode Biaya', dateLabel, icon: UIcons.regularRounded.calendar),
+                                  _buildInfoRow(
+                                    'Jumlah Transaksi',
+                                    '${items.isNotEmpty ? items.length : (model.transactionCount ?? 1)} item pengeluaran',
+                                    icon: UIcons.regularRounded.receipt,
+                                  ),
+                                ],
+                              );
+
+                            case SubmissionKind.medicalClaim:
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (start.isNotEmpty)
+                                    _buildInfoRow('Tanggal Perawatan', requestDateLabel(start), icon: UIcons.regularRounded.calendar),
+                                  if (r['category'] != null && text(r, 'category').isNotEmpty)
+                                    _buildInfoRow('Kategori Medis', text(r, 'category'), icon: UIcons.regularRounded.stethoscope),
+                                ],
+                              );
+
+                            case SubmissionKind.pettyCash:
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (start.isNotEmpty)
+                                    _buildInfoRow('Tanggal Kebutuhan', requestDateLabel(start), icon: UIcons.regularRounded.calendar),
+                                  if (r['category'] != null && text(r, 'category').isNotEmpty)
+                                    _buildInfoRow('Kategori Kas', text(r, 'category'), icon: UIcons.regularRounded.wallet),
+                                ],
+                              );
+
+                            case SubmissionKind.generalAffair:
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (r['category'] != null && text(r, 'category').isNotEmpty)
+                                    _buildInfoRow('Kategori GA', text(r, 'category'), icon: UIcons.regularRounded.apps),
+                                  if (r['priority'] != null && text(r, 'priority').isNotEmpty)
+                                    _buildInfoRow('Prioritas GA', text(r, 'priority'), icon: UIcons.regularRounded.flag),
+                                  if (r['location'] != null && text(r, 'location').isNotEmpty)
+                                    _buildInfoRow('Lokasi', text(r, 'location'), icon: UIcons.regularRounded.marker),
+                                  if (start.isNotEmpty)
+                                    _buildInfoRow('Tanggal Permintaan', requestDateLabel(start), icon: UIcons.regularRounded.calendar),
+                                ],
+                              );
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+
+                // ==================== 4. PROFIL PEMOHON & REKENING ====================
+                Builder(
+                  builder: (context) {
+                    Workspace? currentWs = _workspace;
+                    if (currentWs == null && sl.isRegistered<WorkspaceBloc>()) {
+                      final wsState = sl<WorkspaceBloc>().state;
+                      if (wsState is WorkspaceLoaded) {
+                        currentWs = wsState.workspace;
+                      }
+                    }
+
+                    final applicantEmpId = text(snapshot, 'employeeId', text(r, 'employeeId'));
+                    Json empFromWs = {};
+                    if (currentWs != null && applicantEmpId.isNotEmpty) {
+                      empFromWs = currentWs.rows('employees').firstWhere(
+                        (e) => e['id'] == applicantEmpId,
+                        orElse: () => {},
+                      );
+                    }
+
+                    final applicantName = text(
+                      snapshot,
+                      'name',
+                      text(empFromWs, 'name', text(r, 'employeeName', 'Karyawan')),
+                    );
+
+                    final rawNik = text(snapshot, 'employeeNumber', text(empFromWs, 'employeeNumber'));
+                    final applicantId = (rawNik.isNotEmpty && rawNik != '—')
+                        ? rawNik
+                        : (applicantEmpId != '—' ? applicantEmpId : '');
+
+                    final rawDept = text(snapshot, 'department');
+                    final dept = (rawDept.isNotEmpty && rawDept != '—')
+                        ? rawDept
+                        : text(empFromWs, 'department', 'Divisi');
+
+                    final rawPos = text(snapshot, 'position');
+                    final pos = (rawPos.isNotEmpty && rawPos != '—')
+                        ? rawPos
+                        : text(empFromWs, 'position', 'Karyawan');
+
+                    final rawPhone = text(snapshot, 'phone');
+                    final phone = (rawPhone.isNotEmpty && rawPhone != '—')
+                        ? rawPhone
+                        : text(empFromWs, 'phone', '');
+
+                    final rawBankName = text(snapshot, 'bankName');
+                    final bankName = (rawBankName.isNotEmpty && rawBankName != '—')
+                        ? rawBankName
+                        : text(empFromWs, 'bankName', '');
+
+                    final rawBankAccountName = text(snapshot, 'bankAccountName');
+                    final bankAccountName = (rawBankAccountName.isNotEmpty && rawBankAccountName != '—')
+                        ? rawBankAccountName
+                        : text(empFromWs, 'bankAccountName', '');
+
+                    final rawBankAccountNumber = text(snapshot, 'bankAccountNumber');
+                    final bankAccountNumber = (rawBankAccountNumber.isNotEmpty && rawBankAccountNumber != '—')
+                        ? rawBankAccountNumber
+                        : text(empFromWs, 'bankAccountNumber', '');
+
+                    final isTransferRelevant = model.kind == SubmissionKind.reimbursement ||
+                        model.kind == SubmissionKind.medicalClaim;
+                    final shouldShowBank = isTransferRelevant && bankAccountNumber.isNotEmpty;
+
+                    return _buildSectionCard(
+                      icon: UIcons.regularRounded.id_badge,
+                      title: 'Informasi Pemohon',
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
                             children: [
-                              Icon(
-                                hasAmount
-                                    ? UIcons.regularRounded.wallet
-                                    : (hours != null ? UIcons.regularRounded.clock : UIcons.regularRounded.calendar),
-                                size: 20.w,
-                                color: const Color(0xFF0F766E),
+                              Container(
+                                width: 40.w,
+                                height: 40.w,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(11.r),
+                                  gradient: const LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Color(0xFF0F766E),
+                                      Color(0xFF14B8A6),
+                                    ],
+                                  ),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Color(0x180F766E),
+                                      blurRadius: 6,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  _getInitials(applicantName),
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white,
+                                    letterSpacing: -0.5,
+                                  ),
+                                ),
                               ),
                               SizedBox(width: 10.w),
                               Expanded(
@@ -1296,28 +1847,22 @@ class _RequestDetailState extends State<RequestDetailScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      hasAmount
-                                          ? 'TOTAL PENGAJUAN BIAYA'
-                                          : (hours != null ? 'TOTAL DURASI LEMBUR' : 'TOTAL HARI CUTI'),
+                                      applicantName,
                                       style: TextStyle(
                                         fontFamily: 'Inter',
-                                        fontSize: 9.sp,
+                                        fontSize: 13.5.sp,
                                         fontWeight: FontWeight.w700,
-                                        color: const Color(0xFF0F766E),
-                                        letterSpacing: 0.4,
+                                        color: const Color(0xFF0F172A),
                                       ),
                                     ),
-                                    SizedBox(height: 1.h),
+                                    SizedBox(height: 2.h),
                                     Text(
-                                      hasAmount
-                                          ? rupiah(amount)
-                                          : (hours != null ? '$hours Jam' : '$days Hari'),
+                                      '$dept · $pos',
                                       style: TextStyle(
                                         fontFamily: 'Inter',
-                                        fontSize: 17.sp,
-                                        fontWeight: FontWeight.w800,
-                                        color: const Color(0xFF0F766E),
-                                        letterSpacing: -0.3,
+                                        fontSize: 11.5.sp,
+                                        fontWeight: FontWeight.w400,
+                                        color: const Color(0xFF64748B),
                                       ),
                                     ),
                                   ],
@@ -1325,270 +1870,88 @@ class _RequestDetailState extends State<RequestDetailScreen> {
                               ),
                             ],
                           ),
-                        ),
-                      ],
-
-                      SizedBox(height: 12.h),
-                      const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                      SizedBox(height: 8.h),
-
-                      // Tanggal diajukan
-                      Row(
-                        children: [
-                          Icon(
-                            UIcons.regularRounded.clock,
-                            size: 13.w,
-                            color: const Color(0xFF94A3B8),
-                          ),
-                          SizedBox(width: 5.w),
-                          Expanded(
-                            child: Text(
-                              'Diajukan pada ${requestDateLabel(text(r, 'createdAt'))}',
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 11.sp,
-                                fontWeight: FontWeight.w500,
-                                color: const Color(0xFF64748B),
+                          if (applicantId.isNotEmpty || phone.isNotEmpty) ...[
+                            SizedBox(height: 10.h),
+                            const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                            SizedBox(height: 4.h),
+                          ],
+                          if (applicantId.isNotEmpty)
+                            _buildInfoRow(
+                              'ID Karyawan',
+                              applicantId,
+                              icon: UIcons.regularRounded.badge_check,
+                              copyValue: applicantId,
+                              showColon: true,
+                            ),
+                          if (phone.isNotEmpty)
+                            _buildInfoRow(
+                              'Nomor Telepon',
+                              phone,
+                              icon: UIcons.regularRounded.phone_call,
+                              copyValue: phone,
+                              showColon: true,
+                            ),
+                          if (shouldShowBank) ...[
+                            SizedBox(height: 12.h),
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 14.w,
+                                vertical: 12.h,
                               ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                // ==================== 2. KOTAK REVISI & STATUS TERTUNDA ====================
-                if (isRevision) ...[
-                  Container(
-                    width: double.infinity,
-                    margin: EdgeInsets.only(bottom: 14.h),
-                    padding: EdgeInsets.all(14.w),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFF1F2),
-                      borderRadius: BorderRadius.circular(12.r),
-                      border: Border.all(color: const Color(0xFFFECDD3), width: 1),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              UIcons.regularRounded.exclamation,
-                              size: 16.w,
-                              color: const Color(0xFFBE123C),
-                            ),
-                            SizedBox(width: 6.w),
-                            Expanded(
-                              child: Text(
-                                _isStatusRevision(r['status'])
-                                    ? 'Perlu diperbaiki'
-                                    : 'Catatan Peninjau',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 13.sp,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFFBE123C),
-                                ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF8FAFC),
+                                borderRadius: BorderRadius.circular(14.r),
+                                border: Border.all(color: const Color(0xFFE2E8F0)),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        UIcons.regularRounded.bank,
+                                        size: 15.w,
+                                        color: const Color(0xFF0F766E),
+                                      ),
+                                      SizedBox(width: 8.w),
+                                      Expanded(
+                                        child: Text(
+                                          'Rekening Penerima Transfer',
+                                          style: TextStyle(
+                                            fontFamily: 'Inter',
+                                            fontSize: 12.sp,
+                                            fontWeight: FontWeight.w700,
+                                            color: const Color(0xFF0F766E),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 10.h),
+                                  if (bankName.isNotEmpty) ...[
+                                    _buildBankModalRow(label: 'Nama Bank', value: bankName),
+                                    Divider(height: 16.h, color: const Color(0xFFE2E8F0)),
+                                  ],
+                                  _buildBankModalRow(
+                                    label: 'Nomor Rekening',
+                                    value: bankAccountNumber,
+                                    copyValue: bankAccountNumber,
+                                  ),
+                                  if (bankAccountName.isNotEmpty) ...[
+                                    Divider(height: 16.h, color: const Color(0xFFE2E8F0)),
+                                    _buildBankModalRow(
+                                      label: 'Nama Pemilik',
+                                      value: bankAccountName,
+                                    ),
+                                  ],
+                                ],
                               ),
                             ),
                           ],
-                        ),
-                        SizedBox(height: 6.h),
-                        Text(
-                          text(r, 'reviewNote'),
-                          textAlign: TextAlign.justify,
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF9F1239),
-                            height: 1.4,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-
-                if (pendingWithText.isNotEmpty) ...[
-                  Container(
-                    width: double.infinity,
-                    margin: EdgeInsets.only(bottom: 14.h),
-                    padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF0FDF4),
-                      borderRadius: BorderRadius.circular(10.r),
-                      border: Border.all(color: const Color(0xFFBBF7D0), width: 0.8),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          UIcons.regularRounded.clock,
-                          size: 15.w,
-                          color: const Color(0xFF16A34A),
-                        ),
-                        SizedBox(width: 8.w),
-                        Expanded(
-                          child: Text(
-                            pendingWithText,
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF166534),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-
-                // ==================== 3. RINGKASAN KEPERLUAN & WAKTU ====================
-                _buildSectionCard(
-                  icon: UIcons.regularRounded.document,
-                  title: 'Ringkasan Pengajuan',
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (text(r, 'description').isNotEmpty) ...[
-                        _buildDescriptionBlock('Keperluan', text(r, 'description')),
-                        const Divider(height: 12, color: Color(0xFFF8FAFC)),
-                      ],
-                      _buildInfoRow(
-                        'Periode',
-                        '${requestDateLabel(text(r, 'startDate'))} – ${requestDateLabel(text(r, 'endDate'))}',
-                        icon: UIcons.regularRounded.calendar,
-                      ),
-                      if (r['permissionType'] != null && text(r, 'permissionType').isNotEmpty)
-                        _buildInfoRow('Jenis Izin', text(r, 'permissionType')),
-                      if (hours != null && hours > 0)
-                        _buildInfoRow('Durasi Lembur', '$hours Jam'),
-                      if (days != null && days > 0)
-                        _buildInfoRow('Total Cuti', '$days Hari'),
-                      if (r['category'] != null && text(r, 'category').isNotEmpty)
-                        _buildInfoRow('Kategori', text(r, 'category')),
-                      if (r['priority'] != null && text(r, 'priority').isNotEmpty)
-                        _buildInfoRow('Prioritas GA', text(r, 'priority')),
-                      if (r['location'] != null && text(r, 'location').isNotEmpty)
-                        _buildInfoRow('Lokasi', text(r, 'location')),
-                    ],
-                  ),
-                ),
-
-                // ==================== 4. PROFIL PEMOHON & REKENING ====================
-                _buildSectionCard(
-                  icon: UIcons.regularRounded.user,
-                  title: 'Informasi Pemohon',
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 38.w,
-                            height: 38.w,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF0FDFA),
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: const Color(0xFFCCFBF1),
-                                width: 1.2,
-                              ),
-                            ),
-                            alignment: Alignment.center,
-                            child: Icon(
-                              UIcons.regularRounded.user,
-                              size: 20.w,
-                              color: const Color(0xFF0F766E),
-                            ),
-                          ),
-                          SizedBox(width: 10.w),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  text(snapshot, 'name', text(r, 'employeeName')),
-                                  style: TextStyle(
-                                    fontFamily: 'Inter',
-                                    fontSize: 13.5.sp,
-                                    fontWeight: FontWeight.w700,
-                                    color: const Color(0xFF0F172A),
-                                  ),
-                                ),
-                                SizedBox(height: 2.h),
-                                Text(
-                                  '${text(snapshot, 'department', 'Divisi')} · ${text(snapshot, 'position', 'Karyawan')}',
-                                  style: TextStyle(
-                                    fontFamily: 'Inter',
-                                    fontSize: 11.5.sp,
-                                    fontWeight: FontWeight.w400,
-                                    color: const Color(0xFF64748B),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
                         ],
                       ),
-                      if (text(snapshot, 'phone').isNotEmpty) ...[
-                        SizedBox(height: 10.h),
-                        const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                        SizedBox(height: 4.h),
-                        _buildInfoRow(
-                          'Nomor Telepon',
-                          text(snapshot, 'phone'),
-                          icon: UIcons.regularRounded.phone_call,
-                          showColon: true,
-                        ),
-                      ],
-                      if (items.isNotEmpty || text(snapshot, 'bankAccountNumber').isNotEmpty) ...[
-                        SizedBox(height: 10.h),
-                        Container(
-                          padding: EdgeInsets.all(12.w),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF8FAFC),
-                            borderRadius: BorderRadius.circular(10.r),
-                            border: Border.all(color: const Color(0xFFE2E8F0)),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(UIcons.regularRounded.bank, size: 14.w, color: const Color(0xFF0F766E)),
-                                  SizedBox(width: 6.w),
-                                  Expanded(
-                                    child: Text(
-                                      'Rekening Penerima Transfer',
-                                      style: TextStyle(
-                                        fontFamily: 'Inter',
-                                        fontSize: 11.sp,
-                                        fontWeight: FontWeight.w700,
-                                        color: const Color(0xFF0F766E),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 8.h),
-                              _buildInfoRow('Nama Bank', text(snapshot, 'bankName'), showColon: true),
-                              _buildInfoRow('Atas Nama', text(snapshot, 'bankAccountName'), showColon: true),
-                              _buildInfoRow(
-                                'Nomor Rekening',
-                                text(snapshot, 'bankAccountNumber'),
-                                copyValue: text(snapshot, 'bankAccountNumber'),
-                                showColon: true,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
+                    );
+                  },
                 ),
 
                 // ==================== 5. RINCIAN PENGELUARAN ====================
@@ -1683,74 +2046,16 @@ class _RequestDetailState extends State<RequestDetailScreen> {
                                 ),
                                 SizedBox(width: 8.w),
 
-                                // 3. Nominal & Tombol Bukti
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      rupiah(number(items[i], 'amount')),
-                                      style: TextStyle(
-                                        fontFamily: 'Inter',
-                                        fontSize: 13.5.sp,
-                                        fontWeight: FontWeight.w700,
-                                        color: const Color(0xFF0F172A),
-                                        letterSpacing: -0.2,
-                                      ),
-                                    ),
-                                    if (text(items[i], 'receiptId').isNotEmpty) ...[
-                                      SizedBox(height: 6.h),
-                                      Material(
-                                        color: const Color(0xFFF0FDFA),
-                                        borderRadius: BorderRadius.circular(6.r),
-                                        child: InkWell(
-                                          borderRadius: BorderRadius.circular(6.r),
-                                          onTap: busy
-                                              ? null
-                                              : () => Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (_) => ReceiptPreview(
-                                                      api: widget.api,
-                                                      path:
-                                                          '/requests/$id/receipts/${Uri.encodeComponent(text(items[i], 'receiptId'))}',
-                                                      title: 'Bukti pengeluaran ${i + 1}',
-                                                    ),
-                                                  ),
-                                                ),
-                                          child: Container(
-                                            padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 3.h),
-                                            decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.circular(6.r),
-                                              border: Border.all(
-                                                color: const Color(0xFFCCFBF1),
-                                                width: 0.8,
-                                              ),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(
-                                                  UIcons.regularRounded.receipt,
-                                                  size: 11.5.w,
-                                                  color: const Color(0xFF0F766E),
-                                                ),
-                                                SizedBox(width: 3.w),
-                                                Text(
-                                                  'Lihat bukti',
-                                                  style: TextStyle(
-                                                    fontFamily: 'Inter',
-                                                    fontSize: 10.5.sp,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: const Color(0xFF0F766E),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ],
+                                // 3. Nominal
+                                Text(
+                                  rupiah(number(items[i], 'amount')),
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 13.5.sp,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF0F172A),
+                                    letterSpacing: -0.2,
+                                  ),
                                 ),
                               ],
                             ),
@@ -1808,67 +2113,146 @@ class _RequestDetailState extends State<RequestDetailScreen> {
                       ],
                     ),
                   ),
-                ] else if (text(r, 'attachmentId', '').isNotEmpty) ...[
-                  // Lampiran Bukti Tunggal untuk Izin / Medical Claim
+                ],
+
+                // ==================== 5B. BERKAS LAMPIRAN / BUKTI TRANSAKSI (DIPISAH SENDIRI) ====================
+                if (items.any((item) => text(item, 'receiptId').isNotEmpty) || text(r, 'attachmentId', '').isNotEmpty) ...[
                   _buildSectionCard(
                     icon: UIcons.regularRounded.clip,
                     title: 'Berkas Lampiran Pengajuan',
-                    child: Container(
-                      padding: EdgeInsets.all(12.w),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(10.r),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 36.w,
-                            height: 36.w,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF0FDFA),
-                              borderRadius: BorderRadius.circular(8.r),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Bukti Transaksi per Item Pengeluaran (Reimbursement)
+                        for (var i = 0; i < items.length; i++) ...[
+                          if (text(items[i], 'receiptId').isNotEmpty) ...[
+                            if (i > 0 && items.take(i).any((prev) => text(prev, 'receiptId').isNotEmpty))
+                              SizedBox(height: 8.h),
+                            Container(
+                              padding: EdgeInsets.all(12.w),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF8FAFC),
+                                borderRadius: BorderRadius.circular(10.r),
+                                border: Border.all(color: const Color(0xFFE2E8F0)),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 36.w,
+                                    height: 36.w,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFF0FDFA),
+                                      borderRadius: BorderRadius.circular(8.r),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Icon(
+                                      UIcons.regularRounded.document,
+                                      size: 20.w,
+                                      color: const Color(0xFF0F766E),
+                                    ),
+                                  ),
+                                  SizedBox(width: 10.w),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Bukti Transaksi ${i + 1}',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontFamily: 'Inter',
+                                            fontSize: 12.sp,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        Text(
+                                          _cleanItemDescription(text(items[i], 'description')),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontFamily: 'Inter',
+                                            fontSize: 10.5.sp,
+                                            color: const Color(0xFF64748B),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(width: 8.w),
+                                  _buildViewAttachmentAction(
+                                    text(items[i], 'receiptId'),
+                                    title: 'Bukti Transaksi ${i + 1}',
+                                  ),
+                                ],
+                              ),
                             ),
-                            alignment: Alignment.center,
-                            child: Icon(UIcons.regularRounded.document, size: 20.w, color: const Color(0xFF0F766E)),
-                          ),
-                          SizedBox(width: 10.w),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                          ],
+                        ],
+
+                        // Lampiran Berkas Tunggal (Medical Claim, Izin, Cuti, dll)
+                        if (text(r, 'attachmentId', '').isNotEmpty) ...[
+                          if (items.any((item) => text(item, 'receiptId').isNotEmpty))
+                            SizedBox(height: 8.h),
+                          Container(
+                            padding: EdgeInsets.all(12.w),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(10.r),
+                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                            ),
+                            child: Row(
                               children: [
-                                Text(
-                                  text(r, 'attachmentName', 'Bukti Lampiran Resmi'),
-                                  style: TextStyle(fontFamily: 'Inter', fontSize: 12.sp, fontWeight: FontWeight.w600),
+                                Container(
+                                  width: 36.w,
+                                  height: 36.w,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF0FDFA),
+                                    borderRadius: BorderRadius.circular(8.r),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Icon(
+                                    UIcons.regularRounded.document,
+                                    size: 20.w,
+                                    color: const Color(0xFF0F766E),
+                                  ),
                                 ),
-                                Text(
-                                  'Lampiran bukti pendukung pengajuan',
-                                  style: TextStyle(fontFamily: 'Inter', fontSize: 10.5.sp, color: const Color(0xFF64748B)),
+                                SizedBox(width: 10.w),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        text(r, 'attachmentName', 'Bukti Lampiran Resmi'),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontFamily: 'Inter',
+                                          fontSize: 12.sp,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Lampiran bukti pendukung pengajuan',
+                                        style: TextStyle(
+                                          fontFamily: 'Inter',
+                                          fontSize: 10.5.sp,
+                                          color: const Color(0xFF64748B),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(width: 8.w),
+                                _buildViewAttachmentAction(
+                                  text(r, 'attachmentId'),
+                                  title: 'Berkas Lampiran',
                                 ),
                               ],
                             ),
                           ),
-                          FilledButton.tonal(
-                            style: FilledButton.styleFrom(
-                              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6.r)),
-                            ),
-                            onPressed: busy
-                                ? null
-                                : () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => ReceiptPreview(
-                                        api: widget.api,
-                                        path: '/request-receipts/${Uri.encodeComponent(text(r, 'attachmentId'))}',
-                                        title: 'Berkas Lampiran',
-                                      ),
-                                    ),
-                                  ),
-                            child: const Text('Lihat Bukti', style: TextStyle(fontFamily: 'Inter', fontSize: 11)),
-                          ),
                         ],
-                      ),
+                      ],
                     ),
                   ),
                 ],

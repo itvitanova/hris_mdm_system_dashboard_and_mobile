@@ -9,13 +9,16 @@ import (
 	"strings"
 )
 
-// Unsubmitted attachments can be previewed only by their owner.
+// Unsubmitted attachments can be previewed by their owner or admin.
 func (a *App) OwnReceipt(ctx context.Context, actor domain.Actor, id string) (domain.RequestReceipt, error) {
 	var receipt domain.RequestReceipt
-	if a.Store.Get(ctx, "request_receipts", id, &receipt) != nil || receipt.EmployeeID != actor.EmployeeID {
+	if a.Store.Get(ctx, "request_receipts", id, &receipt) != nil {
 		return receipt, ErrForbidden
 	}
-	return receipt, nil
+	if receipt.EmployeeID == actor.EmployeeID || actor.Role == "admin" {
+		return receipt, nil
+	}
+	return receipt, ErrForbidden
 }
 
 func (a *App) UploadReceipt(ctx context.Context, actor domain.Actor, name string, data []byte) (domain.RequestReceipt, error) {
@@ -49,6 +52,9 @@ func (a *App) RequestReceipt(ctx context.Context, actor domain.Actor, id, receip
 		return f, ErrForbidden
 	}
 	linked := false
+	if r.AttachmentID != "" && r.AttachmentID == receiptID {
+		linked = true
+	}
 	for _, i := range r.Items {
 		if i.ReceiptID == receiptID {
 			linked = true
