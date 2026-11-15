@@ -180,8 +180,8 @@ void main() {
         expect(find.text('Rawat Jalan'), findsOneWidget);
         expect(find.textContaining('Pemohon :'), findsOneWidget);
         expect(find.text('Ahmad Fauzi'), findsOneWidget);
-        expect(find.text('Catatan / Diagnosa Medis'), findsOneWidget);
-        expect(find.byIcon(UIcons.regularRounded.document), findsOneWidget);
+        expect(find.text('Deskripsi :'), findsOneWidget);
+        expect(find.text('Pemeriksaan dokter spesialis dan obat resep'), findsOneWidget);
       },
     );
 
@@ -201,9 +201,9 @@ void main() {
 
         // Subtitle header strictly shows submission kind
         expect(find.text('Pengajuan Cuti'), findsOneWidget);
-        // Contextual description label
-        expect(find.text('Alasan Cuti'), findsOneWidget);
-        expect(find.byIcon(UIcons.regularRounded.document), findsOneWidget);
+        // Symmetrical Deskripsi : label and reason text
+        expect(find.text('Deskripsi :'), findsOneWidget);
+        expect(find.text(cutiItem.description!), findsOneWidget);
         // Duration placed on bottom right footer
         expect(find.textContaining('${cutiItem.days} Hari'), findsOneWidget);
         expect(find.byIcon(UIcons.regularRounded.angle_small_right), findsOneWidget);

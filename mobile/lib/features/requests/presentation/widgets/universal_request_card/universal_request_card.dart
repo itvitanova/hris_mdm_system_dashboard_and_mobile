@@ -83,26 +83,6 @@ class UniversalRequestCard extends StatelessWidget {
     return null;
   }
 
-  static String _getDescriptionLabel(SubmissionKind kind, AppLanguage language) {
-    final isEn = language == AppLanguage.en;
-    switch (kind) {
-      case SubmissionKind.cuti:
-        return isEn ? 'Leave Reason' : 'Alasan Cuti';
-      case SubmissionKind.izin:
-        return isEn ? 'Permission Reason' : 'Alasan Izin';
-      case SubmissionKind.lembur:
-        return isEn ? 'Overtime Tasks' : 'Uraian Tugas Lembur';
-      case SubmissionKind.reimbursement:
-        return isEn ? 'Claim Description' : 'Keterangan Klaim';
-      case SubmissionKind.medicalClaim:
-        return isEn ? 'Medical Notes / Diagnosis' : 'Catatan / Diagnosa Medis';
-      case SubmissionKind.pettyCash:
-        return isEn ? 'Fund Purpose' : 'Peruntukan Dana';
-      case SubmissionKind.generalAffair:
-        return isEn ? 'GA Requirements' : 'Deskripsi Kebutuhan GA';
-    }
-  }
-
   static Widget _buildCardInfoRow({
     required IconData icon,
     required String label,
@@ -363,7 +343,7 @@ class UniversalRequestCard extends StatelessWidget {
                       ],
                     ),
 
-                    // BARIS 2: Deskripsi Keperluan dengan Label Kontekstual (seperti di Detail Pengajuan)
+                    // BARIS 2: Deskripsi Keperluan (Label 'Deskripsi :' dengan Teks Alasan Simetris)
                     Builder(
                       builder: (context) {
                         final raw = data.description;
@@ -373,31 +353,19 @@ class UniversalRequestCard extends StatelessWidget {
                         final cleanedDesc = _cleanCardDescription(raw);
                         if (cleanedDesc.isEmpty) return const SizedBox.shrink();
 
-                        final descLabel = _getDescriptionLabel(data.kind, language);
-
                         return Padding(
                           padding: EdgeInsets.only(top: 8.h),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                children: [
-                                  Icon(
-                                    UIcons.regularRounded.document,
-                                    size: 13.w,
-                                    color: const Color(0xFF94A3B8),
-                                  ),
-                                  SizedBox(width: 5.w),
-                                  Text(
-                                    descLabel,
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontSize: 11.5.sp,
-                                      fontWeight: FontWeight.w500,
-                                      color: const Color(0xFF64748B),
-                                    ),
-                                  ),
-                                ],
+                              Text(
+                                language == AppLanguage.en ? 'Description :' : 'Deskripsi :',
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 12.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF64748B),
+                                ),
                               ),
                               SizedBox(height: 3.5.h),
                               Text(
