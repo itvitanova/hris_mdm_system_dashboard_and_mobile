@@ -10,17 +10,32 @@ class ReceiptPreview extends StatefulWidget {
     super.key,
     required this.api,
     required this.path,
+    this.fallbackPath,
     this.title = 'Bukti transaksi',
   });
   final ApiClient api;
   final String path, title;
+  final String? fallbackPath;
   @override
   State<ReceiptPreview> createState() => _ReceiptPreviewState();
 }
 
 class _ReceiptPreviewState extends State<ReceiptPreview> {
-  late final file = widget.api.requestFile(widget.path);
+  late final file = _loadFile();
   bool sharing = false;
+
+  Future<({dynamic bytes, String contentType})> _loadFile() async {
+    try {
+      final res = await widget.api.requestFile(widget.path);
+      return (bytes: res.bytes, contentType: res.contentType);
+    } catch (e) {
+      if (widget.fallbackPath != null && widget.fallbackPath!.isNotEmpty) {
+        final res = await widget.api.requestFile(widget.fallbackPath!);
+        return (bytes: res.bytes, contentType: res.contentType);
+      }
+      rethrow;
+    }
+  }
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: Text(widget.title)),

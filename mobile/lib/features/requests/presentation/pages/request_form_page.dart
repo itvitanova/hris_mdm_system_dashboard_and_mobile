@@ -22,6 +22,7 @@ import '../../../home/presentation/bloc/workspace_bloc.dart';
 import '../../../home/presentation/bloc/workspace_event.dart';
 import '../bloc/request_bloc.dart';
 import '../bloc/request_event.dart';
+import 'request_detail_page.dart';
 
 const requestKinds = [
   'Cuti',
@@ -565,7 +566,35 @@ class _RequestFormState extends State<RequestForm> {
               ? 'Pengajuan yang direvisi telah berhasil dikirim.'
               : 'Pengajuan berhasil dikirim.',
         );
-        Navigator.pop(context, true);
+        if (isRevision) {
+          Navigator.pop(context, true);
+        } else {
+          Json? createdRequest;
+          try {
+            final ws = Workspace(await widget.api.workspace());
+            final myRequests = ws.mine('requests');
+            if (myRequests.isNotEmpty) {
+              createdRequest = myRequests.first;
+            }
+          } catch (_) {}
+
+          if (mounted) {
+            if (createdRequest != null) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => RequestDetailScreen(
+                    api: widget.api,
+                    request: createdRequest!,
+                    own: true,
+                  ),
+                ),
+              );
+            } else {
+              Navigator.pop(context, true);
+            }
+          }
+        }
       }
     } catch (e) {
       if (mounted) {
