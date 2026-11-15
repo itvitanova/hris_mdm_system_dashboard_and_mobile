@@ -362,12 +362,12 @@ class UniversalRequestCard extends StatelessWidget {
                                 language == AppLanguage.en ? 'Description :' : 'Deskripsi :',
                                 style: TextStyle(
                                   fontFamily: 'Inter',
-                                  fontSize: 12.sp,
+                                  fontSize: 12.5.sp,
                                   fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF64748B),
+                                  color: const Color(0xFF475569),
                                 ),
                               ),
-                              SizedBox(height: 3.5.h),
+                              SizedBox(height: 3.h),
                               Text(
                                 cleanedDesc,
                                 maxLines: 2,
@@ -375,9 +375,9 @@ class UniversalRequestCard extends StatelessWidget {
                                 softWrap: true,
                                 style: TextStyle(
                                   fontFamily: 'Inter',
-                                  fontSize: 12.5.sp,
-                                  fontWeight: FontWeight.w400,
-                                  color: const Color(0xFF334155),
+                                  fontSize: 13.sp,
+                                  fontWeight: FontWeight.w500,
+                                  color: const Color(0xFF0F172A),
                                   height: 1.45,
                                 ),
                               ),
