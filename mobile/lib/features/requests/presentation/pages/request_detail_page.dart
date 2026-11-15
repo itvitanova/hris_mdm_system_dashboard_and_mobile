@@ -933,7 +933,40 @@ class _RequestDetailState extends State<RequestDetailScreen> {
       cleaned = singleParenMatch.group(1)!.trim();
     }
 
+    // Deduplikasi jika teks di dalam kurung sama persis dengan teks utama di luar kurung
+    // Contoh: "kertas AVS part 2 (kertas AVS part 2)" -> "kertas AVS part 2"
+    final duplicateMatch = RegExp(r'^(.*?)\s*\(\s*(.*?)\s*\)$', caseSensitive: false).firstMatch(cleaned);
+    if (duplicateMatch != null) {
+      final mainText = duplicateMatch.group(1)!.trim();
+      final insideParen = duplicateMatch.group(2)!.trim();
+      if (mainText.toLowerCase() == insideParen.toLowerCase()) {
+        cleaned = mainText;
+      }
+    }
+
     return cleaned.isNotEmpty ? cleaned : '—';
+  }
+
+  String _cleanDescriptionText(String rawDesc) {
+    if (rawDesc.isEmpty) return '';
+    var desc = rawDesc;
+    final metadataMatch = RegExp(r'\n\n\[(.*?)\]$').firstMatch(desc);
+    if (metadataMatch != null) {
+      final metaContent = metadataMatch.group(1)!;
+      final parts = metaContent
+          .split(' · ')
+          .where((part) => !part.trim().toLowerCase().startsWith('lampiran:'))
+          .toList();
+      final baseDesc = desc.substring(0, metadataMatch.start).trim();
+      if (parts.isNotEmpty) {
+        desc = baseDesc.isNotEmpty ? '$baseDesc\n\n[${parts.join(' · ')}]' : '[${parts.join(' · ')}]';
+      } else {
+        desc = baseDesc;
+      }
+    } else {
+      desc = desc.replaceAll(RegExp(r'\[?Lampiran:\s*[^\]\n]+\]?', caseSensitive: false), '').trim();
+    }
+    return desc.trim();
   }
 
   bool _isStatusRevision(dynamic status) {
@@ -1287,7 +1320,7 @@ class _RequestDetailState extends State<RequestDetailScreen> {
               ),
               const SizedBox(height: 1.5),
               Text(
-                '${kindConfig.typeTitle} · ${text(r, 'id')}',
+                kindConfig.typeTitle,
                 style: const TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 11,
@@ -1361,20 +1394,34 @@ class _RequestDetailState extends State<RequestDetailScreen> {
                             child: Row(
                               children: [
                                 Container(
-                                  width: 34.w,
-                                  height: 34.w,
+                                  width: 38.w,
+                                  height: 38.w,
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFF0FDFA),
-                                    borderRadius: BorderRadius.circular(8.r),
+                                    gradient: const LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        Color(0xFF0F766E),
+                                        Color(0xFF14B8A6),
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(10.r),
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        color: Color(0x220F766E),
+                                        blurRadius: 6,
+                                        offset: Offset(0, 2),
+                                      ),
+                                    ],
                                   ),
                                   alignment: Alignment.center,
                                   child: Icon(
                                     kindConfig.icon,
-                                    size: 17.w,
-                                    color: const Color(0xFF0F766E),
+                                    size: 19.w,
+                                    color: Colors.white,
                                   ),
                                 ),
-                                SizedBox(width: 10.w),
+                                SizedBox(width: 12.w),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1436,19 +1483,37 @@ class _RequestDetailState extends State<RequestDetailScreen> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 12.h),
+                      Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12.h),
+                        child: const Divider(height: 1, thickness: 0.8, color: Color(0xFFF1F5F9)),
+                      ),
 
-                      // Title
-                      Text(
-                        text(r, 'title'),
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF0F172A),
-                          height: 1.3,
-                          letterSpacing: -0.2,
-                        ),
+                      // Judul Pengajuan
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Judul Pengajuan',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 11.sp,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF64748B),
+                            ),
+                          ),
+                          SizedBox(height: 4.h),
+                          Text(
+                            text(r, 'title').isNotEmpty ? text(r, 'title') : '—',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 15.5.sp,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF0F172A),
+                              height: 1.35,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                        ],
                       ),
 
                       // Baris Metrik Utama (Highlight Box Khusus per jenis pengajuan)
@@ -1598,44 +1663,45 @@ class _RequestDetailState extends State<RequestDetailScreen> {
                       const Divider(height: 1, color: Color(0xFFF1F5F9)),
                       SizedBox(height: 10.h),
 
-                      // Keperluan / Deskripsi dengan Label Kontekstual
-                      if (text(r, 'description').isNotEmpty) ...[
-                        Builder(
-                          builder: (context) {
-                            String descLabel;
-                            switch (model.kind) {
-                              case SubmissionKind.cuti:
-                                descLabel = 'Alasan Cuti';
-                                break;
-                              case SubmissionKind.izin:
-                                descLabel = 'Alasan Izin';
-                                break;
-                              case SubmissionKind.lembur:
-                                descLabel = 'Uraian Tugas Lembur';
-                                break;
-                              case SubmissionKind.reimbursement:
-                                descLabel = 'Keterangan Klaim';
-                                break;
-                              case SubmissionKind.medicalClaim:
-                                descLabel = 'Catatan / Diagnosa Medis';
-                                break;
-                              case SubmissionKind.pettyCash:
-                                descLabel = 'Peruntukan Dana';
-                                break;
-                              case SubmissionKind.generalAffair:
-                                descLabel = 'Deskripsi Kebutuhan GA';
-                                break;
-                            }
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _buildDescriptionBlock(descLabel, text(r, 'description'), icon: UIcons.regularRounded.document),
-                                const Divider(height: 12, color: Color(0xFFF8FAFC)),
-                              ],
-                            );
-                          },
-                        ),
-                      ],
+                      // Keperluan / Deskripsi dengan Label Kontekstual (Bersih tanpa lampiran duplikat)
+                      Builder(
+                        builder: (context) {
+                          final cleanedDesc = _cleanDescriptionText(text(r, 'description'));
+                          if (cleanedDesc.isEmpty) return const SizedBox.shrink();
+
+                          String descLabel;
+                          switch (model.kind) {
+                            case SubmissionKind.cuti:
+                              descLabel = 'Alasan Cuti';
+                              break;
+                            case SubmissionKind.izin:
+                              descLabel = 'Alasan Izin';
+                              break;
+                            case SubmissionKind.lembur:
+                              descLabel = 'Uraian Tugas Lembur';
+                              break;
+                            case SubmissionKind.reimbursement:
+                              descLabel = 'Keterangan Klaim';
+                              break;
+                            case SubmissionKind.medicalClaim:
+                              descLabel = 'Catatan / Diagnosa Medis';
+                              break;
+                            case SubmissionKind.pettyCash:
+                              descLabel = 'Peruntukan Dana';
+                              break;
+                            case SubmissionKind.generalAffair:
+                              descLabel = 'Deskripsi Kebutuhan GA';
+                              break;
+                          }
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildDescriptionBlock(descLabel, cleanedDesc, icon: UIcons.regularRounded.document),
+                              const Divider(height: 12, color: Color(0xFFF8FAFC)),
+                            ],
+                          );
+                        },
+                      ),
 
                       // Parameter Spesifik per Jenis Pengajuan
                       Builder(
@@ -1954,53 +2020,68 @@ class _RequestDetailState extends State<RequestDetailScreen> {
                   },
                 ),
 
-                // ==================== 5. RINCIAN PENGELUARAN ====================
                 if (items.isNotEmpty) ...[
                   _buildSectionCard(
                     icon: UIcons.regularRounded.receipt,
-                    title: 'Rincian Pengeluaran (${items.length})',
+                    title: 'Rincian Pengeluaran',
+                    trailing: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(10.r),
+                      ),
+                      child: Text(
+                        '${items.length} item',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 10.5.sp,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF475569),
+                        ),
+                      ),
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        SizedBox(height: 4.h),
                         for (var i = 0; i < items.length; i++) ...[
                           if (i > 0)
                             Padding(
-                              padding: EdgeInsets.symmetric(vertical: 4.h),
+                              padding: EdgeInsets.symmetric(vertical: 8.h),
                               child: const Divider(height: 1, thickness: 0.8, color: Color(0xFFF1F5F9)),
                             ),
                           Padding(
-                            padding: EdgeInsets.symmetric(vertical: 6.h),
+                            padding: EdgeInsets.symmetric(vertical: 5.h),
                             child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                // 1. Squircle Kategori Dinamis
                                 Container(
                                   width: 38.w,
                                   height: 38.w,
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFF0FDFA),
+                                    color: const Color(0xFFF8FAFC),
                                     borderRadius: BorderRadius.circular(10.r),
                                     border: Border.all(
-                                      color: const Color(0xFFCCFBF1),
+                                      color: const Color(0xFFE2E8F0),
                                       width: 0.8,
                                     ),
                                   ),
                                   alignment: Alignment.center,
                                   child: Icon(
                                     _getExpenseCategoryIcon(text(items[i], 'category')),
-                                    size: 18.w,
-                                    color: const Color(0xFF0F766E),
+                                    size: 17.w,
+                                    color: const Color(0xFF475569),
                                   ),
                                 ),
                                 SizedBox(width: 12.w),
-
-                                // 2. Deskripsi & Meta (Kategori, Tanggal)
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         _cleanItemDescription(text(items[i], 'description')),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
                                         style: TextStyle(
                                           fontFamily: 'Inter',
                                           fontSize: 13.sp,
@@ -2012,7 +2093,7 @@ class _RequestDetailState extends State<RequestDetailScreen> {
                                       SizedBox(height: 3.h),
                                       Wrap(
                                         crossAxisAlignment: WrapCrossAlignment.center,
-                                        spacing: 6.w,
+                                        spacing: 5.w,
                                         runSpacing: 2.h,
                                         children: [
                                           Text(
@@ -2027,8 +2108,8 @@ class _RequestDetailState extends State<RequestDetailScreen> {
                                           Text(
                                             '•',
                                             style: TextStyle(
-                                              fontSize: 11.sp,
-                                              color: const Color(0xFF94A3B8),
+                                              fontSize: 10.sp,
+                                              color: const Color(0xFFCBD5E1),
                                             ),
                                           ),
                                           Text(
@@ -2044,9 +2125,7 @@ class _RequestDetailState extends State<RequestDetailScreen> {
                                     ],
                                   ),
                                 ),
-                                SizedBox(width: 8.w),
-
-                                // 3. Nominal
+                                SizedBox(width: 10.w),
                                 Text(
                                   rupiah(number(items[i], 'amount')),
                                   style: TextStyle(
@@ -2061,54 +2140,51 @@ class _RequestDetailState extends State<RequestDetailScreen> {
                             ),
                           ),
                         ],
-
-                        // 4. Footer Rekapitulasi Total
-                        SizedBox(height: 12.h),
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF0FDFA),
-                            borderRadius: BorderRadius.circular(8.r),
-                            border: Border.all(color: const Color(0xFFCCFBF1), width: 0.8),
-                          ),
-                          child: Wrap(
-                            alignment: WrapAlignment.spaceBetween,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            spacing: 8.w,
-                            runSpacing: 4.h,
-                            children: [
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    UIcons.regularRounded.calculator,
-                                    size: 15.w,
-                                    color: const Color(0xFF0F766E),
+                        Padding(
+                          padding: EdgeInsets.only(top: 14.h, bottom: 12.h),
+                          child: const Divider(height: 1, thickness: 0.8, color: Color(0xFFE2E8F0)),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Total Pengeluaran',
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 12.5.sp,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF475569),
                                   ),
-                                  SizedBox(width: 6.w),
-                                  Text(
-                                    'Total (${items.length} Pengeluaran)',
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontSize: 12.sp,
-                                      fontWeight: FontWeight.w600,
-                                      color: const Color(0xFF0F766E),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Text(
-                                rupiah(amount),
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 13.5.sp,
-                                  fontWeight: FontWeight.w800,
-                                  color: const Color(0xFF0F766E),
-                                  letterSpacing: -0.2,
                                 ),
+                                SizedBox(height: 1.5.h),
+                                Text(
+                                  '${items.length} transaksi tercatat',
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 11.sp,
+                                    fontWeight: FontWeight.w400,
+                                    color: const Color(0xFF94A3B8),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Text(
+                              rupiah(amount),
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 16.5.sp,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFF0F172A),
+                                letterSpacing: -0.3,
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ],
                     ),

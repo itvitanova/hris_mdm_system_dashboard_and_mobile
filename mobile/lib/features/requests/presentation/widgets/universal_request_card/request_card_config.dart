@@ -121,16 +121,16 @@ class RequestCardHelper {
         return RequestKindConfig(
           icon: UIcons.regularRounded.calendar_clock,
           typeTitle: isEn ? 'Leave Request' : 'Pengajuan Cuti',
-          metricTag: (m) => '${m.days ?? 1} ${isEn ? 'DAYS' : 'HARI'}',
+          metricTag: (m) => '${m.days ?? 1} ${isEn ? 'Hari' : 'Hari'}',
           secondaryMeta: (m) =>
-              m.leaveBalance != null ? (isEn ? '· Remaining ${m.leaveBalance} days' : '· Sisa ${m.leaveBalance} hari') : null,
+              m.leaveBalance != null ? (isEn ? 'Sisa ${m.leaveBalance} hari' : 'Sisa ${m.leaveBalance} hari') : null,
         );
       case SubmissionKind.izin:
         return RequestKindConfig(
           icon: UIcons.regularRounded.treatment,
           typeTitle: isEn ? 'Permission Request' : 'Pengajuan Izin',
-          metricTag: (m) => '${m.days ?? 1} ${isEn ? 'DAYS' : 'HARI'}',
-          secondaryMeta: (_) => isEn ? '· Work Permission' : '· Izin Kerja',
+          metricTag: (m) => '${m.days ?? 1} ${isEn ? 'Hari' : 'Hari'}',
+          secondaryMeta: (_) => null,
         );
       case SubmissionKind.reimbursement:
         return RequestKindConfig(
@@ -144,16 +144,18 @@ class RequestCardHelper {
       case SubmissionKind.medicalClaim:
         return RequestKindConfig(
           icon: UIcons.regularRounded.stethoscope,
-          typeTitle: 'Medical Claim',
+          typeTitle: isEn ? 'Medical Claim' : 'Klaim Medis',
           metricTag: (m) => formatIDR(m.amount ?? 0),
-          secondaryMeta: (_) => isEn ? '· Medical Claim' : '· Klaim Medis',
+          secondaryMeta: (_) => null,
         );
       case SubmissionKind.pettyCash:
         return RequestKindConfig(
           icon: UIcons.regularRounded.wallet,
           typeTitle: isEn ? 'Petty Cash Request' : 'Pengajuan Petty Cash',
           metricTag: (m) => formatIDR(m.amount ?? 0),
-          secondaryMeta: (_) => isEn ? '· Operational Cash' : '· Kas Operasional',
+          secondaryMeta: (m) => m.transactionCount != null && m.transactionCount! > 0
+              ? (isEn ? '· ${m.transactionCount} transactions' : '· ${m.transactionCount} transaksi')
+              : null,
         );
       case SubmissionKind.generalAffair:
         return RequestKindConfig(
@@ -161,15 +163,15 @@ class RequestCardHelper {
           typeTitle: isEn ? 'General Affair Request' : 'Pengajuan General Affair',
           metricTag: (m) => m.amount != null && m.amount! > 0
               ? formatIDR(m.amount!)
-              : (isEn ? 'GA Facilities' : 'Fasilitas GA'),
-          secondaryMeta: (_) => isEn ? '· Office Facilities' : '· Sarana Kantor',
+              : (isEn ? 'GA Request' : 'Pengajuan GA'),
+          secondaryMeta: (_) => null,
         );
       case SubmissionKind.lembur:
         return RequestKindConfig(
           icon: UIcons.regularRounded.clock,
           typeTitle: isEn ? 'Overtime Request' : 'Pengajuan Lembur',
-          metricTag: (m) => '${m.hours ?? 1} ${isEn ? 'HOURS' : 'JAM'}',
-          secondaryMeta: (_) => isEn ? '· Overtime' : '· Jam Lembur',
+          metricTag: (m) => '${m.hours ?? 1} ${isEn ? 'Jam' : 'Jam'}',
+          secondaryMeta: (_) => null,
         );
     }
   }

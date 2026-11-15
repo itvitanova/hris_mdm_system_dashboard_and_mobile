@@ -117,6 +117,100 @@ void main() {
     );
 
     testWidgets(
+      'renders top icon with teal gradient and applicant name with natural user row',
+      (tester) async {
+        final reimbursementItem = mockUniversalRequests.firstWhere(
+          (m) => m.kind == SubmissionKind.reimbursement,
+        );
+
+        await tester.pumpWidget(
+          wrapWithScreenUtil(
+            UniversalRequestCard(data: reimbursementItem),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Nadia Putri'), findsOneWidget);
+        expect(find.textContaining('Pemohon :'), findsOneWidget);
+        expect(find.byIcon(UIcons.regularRounded.user), findsOneWidget);
+
+        final iconFinder = find.byWidgetPredicate(
+          (widget) => widget is Icon && widget.color == Colors.white,
+        );
+        expect(iconFinder, findsOneWidget);
+
+        final containerFinder = find.ancestor(
+          of: iconFinder,
+          matching: find.byType(Container),
+        );
+        final containerWidget = tester.widget<Container>(containerFinder.first);
+        final decoration = containerWidget.decoration as BoxDecoration?;
+        expect(decoration?.gradient, isA<LinearGradient>());
+        final gradient = decoration!.gradient as LinearGradient;
+        expect(gradient.colors, [
+          const Color(0xFF0F766E),
+          const Color(0xFF14B8A6),
+        ]);
+      },
+    );
+
+    testWidgets(
+      'renders category info row below description when category exists',
+      (tester) async {
+        final medicalWithCategory = UniversalRequestModel(
+          id: 'med-cat-1',
+          kind: SubmissionKind.medicalClaim,
+          title: 'Klaim Pengobatan Rawat Jalan',
+          description: 'Pemeriksaan dokter spesialis dan obat resep',
+          status: SubmissionStatus.menunggu,
+          startDate: DateTime(2026, 11, 10),
+          amount: 450000,
+          employeeName: 'Ahmad Fauzi',
+          rawMap: const {'category': 'Rawat Jalan'},
+        );
+
+        await tester.pumpWidget(
+          wrapWithScreenUtil(
+            UniversalRequestCard(data: medicalWithCategory),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('Kategori :'), findsOneWidget);
+        expect(find.text('Rawat Jalan'), findsOneWidget);
+        expect(find.textContaining('Pemohon :'), findsOneWidget);
+        expect(find.text('Ahmad Fauzi'), findsOneWidget);
+        expect(find.text('Catatan / Diagnosa Medis'), findsOneWidget);
+        expect(find.byIcon(UIcons.regularRounded.document), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'renders cuti duration in bottom footer row next to chevron and clean header subtitle',
+      (tester) async {
+        final cutiItem = mockUniversalRequests.firstWhere(
+          (m) => m.kind == SubmissionKind.cuti,
+        );
+
+        await tester.pumpWidget(
+          wrapWithScreenUtil(
+            UniversalRequestCard(data: cutiItem),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Subtitle header strictly shows submission kind
+        expect(find.text('Pengajuan Cuti'), findsOneWidget);
+        // Contextual description label
+        expect(find.text('Alasan Cuti'), findsOneWidget);
+        expect(find.byIcon(UIcons.regularRounded.document), findsOneWidget);
+        // Duration placed on bottom right footer
+        expect(find.textContaining('${cutiItem.days} Hari'), findsOneWidget);
+        expect(find.byIcon(UIcons.regularRounded.angle_small_right), findsOneWidget);
+      },
+    );
+
+    testWidgets(
       'tapping card triggers onCardTap or onDetailPressed and displays chevron',
       (tester) async {
         final standardItem = mockUniversalRequests.firstWhere(

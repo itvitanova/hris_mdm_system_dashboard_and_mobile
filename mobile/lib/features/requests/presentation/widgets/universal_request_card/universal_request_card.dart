@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:uicons/uicons.dart';
 import '../../../../root/presentation/widgets/language_swap_button.dart';
+import '../../../domain/entities/submission_kind.dart';
 import '../../../domain/entities/submission_status.dart';
 import '../../../domain/entities/universal_request_item.dart';
 import 'request_card_config.dart';
@@ -35,6 +36,116 @@ class UniversalRequestCard extends StatelessWidget {
     this.language = AppLanguage.id,
   });
 
+  static String _cleanCardDescription(String raw) {
+    var desc = raw;
+    final metadataMatch = RegExp(r'\n\n\[(.*?)\]$').firstMatch(desc);
+    if (metadataMatch != null) {
+      final metaContent = metadataMatch.group(1)!;
+      final parts = metaContent
+          .split(' · ')
+          .where((part) => !part.trim().toLowerCase().startsWith('lampiran:'))
+          .toList();
+      final baseDesc = desc.substring(0, metadataMatch.start).trim();
+      if (parts.isNotEmpty) {
+        desc = baseDesc.isNotEmpty ? '$baseDesc\n\n[${parts.join(' · ')}]' : '[${parts.join(' · ')}]';
+      } else {
+        desc = baseDesc;
+      }
+    } else {
+      desc = desc.replaceAll(RegExp(r'\[?Lampiran:\s*[^\]\n]+\]?', caseSensitive: false), '').trim();
+    }
+    return desc.trim();
+  }
+
+  static String? _resolveExplicitCategory(UniversalRequestModel data) {
+    final raw = data.rawMap;
+    if (raw == null) return null;
+    final cat = raw['category']?.toString().trim();
+    if (cat != null &&
+        cat.isNotEmpty &&
+        cat != '—' &&
+        cat != '-' &&
+        !cat.toLowerCase().contains('general affair') &&
+        !cat.toLowerCase().contains('kas operasional') &&
+        !cat.toLowerCase().contains('manfaat medis') &&
+        !cat.toLowerCase().contains('klaim medis')) {
+      return cat;
+    }
+    final leaveType = (raw['leaveType'] ?? raw['permissionType'])?.toString().trim();
+    if (leaveType != null &&
+        leaveType.isNotEmpty &&
+        leaveType != '—' &&
+        leaveType != '-' &&
+        leaveType.toLowerCase() != 'cuti' &&
+        leaveType.toLowerCase() != 'izin') {
+      return leaveType;
+    }
+    return null;
+  }
+
+  static String _getDescriptionLabel(SubmissionKind kind, AppLanguage language) {
+    final isEn = language == AppLanguage.en;
+    switch (kind) {
+      case SubmissionKind.cuti:
+        return isEn ? 'Leave Reason' : 'Alasan Cuti';
+      case SubmissionKind.izin:
+        return isEn ? 'Permission Reason' : 'Alasan Izin';
+      case SubmissionKind.lembur:
+        return isEn ? 'Overtime Tasks' : 'Uraian Tugas Lembur';
+      case SubmissionKind.reimbursement:
+        return isEn ? 'Claim Description' : 'Keterangan Klaim';
+      case SubmissionKind.medicalClaim:
+        return isEn ? 'Medical Notes / Diagnosis' : 'Catatan / Diagnosa Medis';
+      case SubmissionKind.pettyCash:
+        return isEn ? 'Fund Purpose' : 'Peruntukan Dana';
+      case SubmissionKind.generalAffair:
+        return isEn ? 'GA Requirements' : 'Deskripsi Kebutuhan GA';
+    }
+  }
+
+  static Widget _buildCardInfoRow({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Padding(
+      padding: EdgeInsets.only(top: 4.5.h),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            size: 14.w,
+            color: const Color(0xFF94A3B8),
+          ),
+          SizedBox(width: 6.w),
+          Text(
+            '$label : ',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 12.5.sp,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF64748B),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 12.5.sp,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF0F172A),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final kindConfig = RequestCardHelper.getKindConfig(data, language);
@@ -44,6 +155,27 @@ class UniversalRequestCard extends StatelessWidget {
       language,
     );
     final isRevision = data.status == SubmissionStatus.perluRevisi;
+    final hasMonetaryAmount = (data.amount != null && data.amount! > 0) ||
+        data.kind == SubmissionKind.reimbursement ||
+        data.kind == SubmissionKind.pettyCash ||
+        data.kind == SubmissionKind.medicalClaim;
+
+    String? resolveBottomMetric() {
+      if (hasMonetaryAmount) {
+        return RequestCardHelper.formatIDR(data.amount ?? 0);
+      }
+      if (data.kind == SubmissionKind.cuti || data.kind == SubmissionKind.izin) {
+        final days = data.days ?? 1;
+        return '$days ${language == AppLanguage.en ? 'Hari' : 'Hari'}';
+      }
+      if (data.kind == SubmissionKind.lembur) {
+        final hours = data.hours ?? 1;
+        return '$hours ${language == AppLanguage.en ? 'Jam' : 'Jam'}';
+      }
+      return null;
+    }
+
+    final bottomMetric = resolveBottomMetric();
 
     return Material(
       color: Colors.transparent,
@@ -95,18 +227,28 @@ class UniversalRequestCard extends StatelessWidget {
                                 width: 38.w,
                                 height: 38.w,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFF0FDFA),
-                                  borderRadius: BorderRadius.circular(10.r),
-                                  border: Border.all(
-                                    color: const Color(0xFFCCFBF1),
-                                    width: 0.8,
+                                  gradient: const LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Color(0xFF0F766E),
+                                      Color(0xFF14B8A6),
+                                    ],
                                   ),
+                                  borderRadius: BorderRadius.circular(10.r),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Color(0x220F766E),
+                                      blurRadius: 6,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
                                 ),
                                 alignment: Alignment.center,
                                 child: Icon(
                                   kindConfig.icon,
-                                  size: 18.w,
-                                  color: const Color(0xFF0F766E),
+                                  size: 19.w,
+                                  color: Colors.white,
                                 ),
                               ),
                               SizedBox(width: 12.w),
@@ -114,10 +256,12 @@ class UniversalRequestCard extends StatelessWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
+                                    // 1. Judul Pengajuan
                                     Text(
                                       data.title,
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
+                                      softWrap: true,
                                       style: const TextStyle(
                                         fontFamily: 'Inter',
                                         fontSize: 14.5,
@@ -128,49 +272,59 @@ class UniversalRequestCard extends StatelessWidget {
                                       ),
                                     ),
                                     SizedBox(height: 3.h),
-                                    // Baris Metadata Ringkas & Tenang
-                                    Text(
-                                      [
-                                        '${kindConfig.typeTitle} · ${kindConfig.metricTag(data)}',
-                                        if (kindConfig.secondaryMeta(data) != null)
-                                          kindConfig.secondaryMeta(data)!,
-                                      ].join(' '),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        fontFamily: 'Inter',
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w500,
-                                        color: Color(0xFF64748B),
-                                        letterSpacing: 0.1,
-                                      ),
-                                    ),
-                                    if (showApplicant && data.employeeName.isNotEmpty) ...[
-                                      SizedBox(height: 5.h),
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            UIcons.regularRounded.user,
-                                            size: 13.w,
-                                            color: const Color(0xFF0F766E),
-                                          ),
-                                          SizedBox(width: 4.w),
-                                          Expanded(
-                                            child: Text(
-                                              data.employeeName,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
+
+                                    // 2. Tipe Pengajuan & Metadata Pendukung (Bersih tanpa jumlah hari / metrik duplikat)
+                                    Builder(
+                                      builder: (context) {
+                                        final secondaryMetaRaw = kindConfig
+                                            .secondaryMeta(data)
+                                            ?.replaceAll(RegExp(r'^[·\-\s]+'), '')
+                                            .trim();
+                                        final transactionText = data.transactionCount != null &&
+                                                data.transactionCount! > 0
+                                            ? (language == AppLanguage.en
+                                                ? '${data.transactionCount} transactions'
+                                                : '${data.transactionCount} transaksi')
+                                            : null;
+                                        final metaDetail = transactionText ?? secondaryMetaRaw;
+
+                                        return Wrap(
+                                          crossAxisAlignment: WrapCrossAlignment.center,
+                                          spacing: 5.w,
+                                          children: [
+                                            Text(
+                                              kindConfig.typeTitle,
                                               style: const TextStyle(
                                                 fontFamily: 'Inter',
                                                 fontSize: 11,
                                                 fontWeight: FontWeight.w600,
                                                 color: Color(0xFF0F766E),
+                                                letterSpacing: 0.1,
                                               ),
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
+                                            if (metaDetail != null && metaDetail.isNotEmpty) ...[
+                                              const Text(
+                                                '•',
+                                                style: TextStyle(
+                                                  fontFamily: 'Inter',
+                                                  fontSize: 11,
+                                                  color: Color(0xFF94A3B8),
+                                                ),
+                                              ),
+                                              Text(
+                                                metaDetail,
+                                                style: const TextStyle(
+                                                  fontFamily: 'Inter',
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: Color(0xFF64748B),
+                                                ),
+                                              ),
+                                            ],
+                                          ],
+                                        );
+                                      },
+                                    ),
                                   ],
                                 ),
                               ),
@@ -209,24 +363,94 @@ class UniversalRequestCard extends StatelessWidget {
                       ],
                     ),
 
-                    // BARIS 2: Deskripsi Keperluan (Maksimal 2 baris elipsis agar rapi)
-                    if (data.description != null &&
-                        data.description!.trim().isNotEmpty &&
-                        data.description != '-') ...[
-                      SizedBox(height: 8.h),
-                      Text(
-                        data.description!,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                          color: Color(0xFF475569),
-                          height: 1.35,
-                        ),
-                      ),
-                    ],
+                    // BARIS 2: Deskripsi Keperluan dengan Label Kontekstual (seperti di Detail Pengajuan)
+                    Builder(
+                      builder: (context) {
+                        final raw = data.description;
+                        if (raw == null || raw.trim().isEmpty || raw == '-') {
+                          return const SizedBox.shrink();
+                        }
+                        final cleanedDesc = _cleanCardDescription(raw);
+                        if (cleanedDesc.isEmpty) return const SizedBox.shrink();
+
+                        final descLabel = _getDescriptionLabel(data.kind, language);
+
+                        return Padding(
+                          padding: EdgeInsets.only(top: 8.h),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    UIcons.regularRounded.document,
+                                    size: 13.w,
+                                    color: const Color(0xFF94A3B8),
+                                  ),
+                                  SizedBox(width: 5.w),
+                                  Text(
+                                    descLabel,
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 11.5.sp,
+                                      fontWeight: FontWeight.w500,
+                                      color: const Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 3.5.h),
+                              Text(
+                                cleanedDesc,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                softWrap: true,
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 12.5.sp,
+                                  fontWeight: FontWeight.w400,
+                                  color: const Color(0xFF334155),
+                                  height: 1.45,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+
+                    // BARIS 2B: Metadata Kategori & Nama Pemohon (Gaya Info Row Lengkap tanpa tombol copy)
+                    Builder(
+                      builder: (context) {
+                        final cat = _resolveExplicitCategory(data);
+                        final hasCategory = cat != null && cat.isNotEmpty;
+                        final hasApplicant =
+                            data.employeeName.isNotEmpty && data.employeeName != '—';
+
+                        if (!hasCategory && !hasApplicant) return const SizedBox.shrink();
+
+                        return Padding(
+                          padding: EdgeInsets.only(top: 4.h),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (hasCategory)
+                                _buildCardInfoRow(
+                                  icon: kindConfig.icon,
+                                  label: language == AppLanguage.en ? 'Category' : 'Kategori',
+                                  value: cat,
+                                ),
+                              if (hasApplicant)
+                                _buildCardInfoRow(
+                                  icon: UIcons.regularRounded.user,
+                                  label: language == AppLanguage.en ? 'Applicant' : 'Pemohon',
+                                  value: data.employeeName,
+                                ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
 
                     // BARIS 3: JIKA PERLU REVISI (Tampilkan Box Revisi + Tombol Aksi Kritis)
                     if (isRevision && data.reviewNote != null) ...[
@@ -239,27 +463,46 @@ class UniversalRequestCard extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(
-                                UIcons.regularRounded.calendar,
-                                size: 12.w,
-                                color: const Color(0xFF94A3B8),
-                              ),
-                              SizedBox(width: 5.w),
-                              Text(
-                                RequestCardHelper.formatDateRange(
-                                  data.startDate,
-                                  data.endDate,
-                                  language,
+                              if (bottomMetric != null) ...[
+                                Text(
+                                  bottomMetric,
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 14.5.sp,
+                                    fontWeight: FontWeight.w800,
+                                    color: const Color(0xFF0F172A),
+                                    letterSpacing: -0.3,
+                                  ),
                                 ),
-                                style: const TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color(0xFF64748B),
-                                ),
+                                SizedBox(height: 2.h),
+                              ],
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    UIcons.regularRounded.calendar,
+                                    size: 12.w,
+                                    color: const Color(0xFF94A3B8),
+                                  ),
+                                  SizedBox(width: 5.w),
+                                  Text(
+                                    RequestCardHelper.formatDateRange(
+                                      data.startDate,
+                                      data.endDate,
+                                      language,
+                                    ),
+                                    style: const TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
+                                      color: Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -316,45 +559,62 @@ class UniversalRequestCard extends StatelessWidget {
                         ],
                       ),
                     ] else ...[
-                      // BARIS 3 NORMAL: Tanggal di Kiri & Chevron Subtle '>' di Kanan
-                      SizedBox(height: 10.h),
+                      // BARIS 3 NORMAL: Divider + Tanggal di Kiri & Chevron + Metrik (Nominal/Durasi) di Kanan
+                      Padding(
+                        padding: EdgeInsets.only(top: 10.h, bottom: 8.h),
+                        child: const Divider(height: 1, thickness: 0.8, color: Color(0xFFF1F5F9)),
+                      ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Expanded(
-                            child: Row(
-                              children: [
-                                Icon(
-                                  UIcons.regularRounded.calendar,
-                                  size: 12.w,
-                                  color: const Color(0xFF94A3B8),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                UIcons.regularRounded.calendar,
+                                size: 12.w,
+                                color: const Color(0xFF94A3B8),
+                              ),
+                              SizedBox(width: 5.w),
+                              Text(
+                                RequestCardHelper.formatDateRange(
+                                  data.startDate,
+                                  data.endDate,
+                                  language,
                                 ),
-                                SizedBox(width: 5.w),
-                                Expanded(
-                                  child: Text(
-                                    RequestCardHelper.formatDateRange(
-                                      data.startDate,
-                                      data.endDate,
-                                      language,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w500,
-                                      color: Color(0xFF64748B),
-                                    ),
+                                style: const TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF64748B),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              if (bottomMetric != null) ...[
+                                Text(
+                                  bottomMetric,
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 14.5.sp,
+                                    fontWeight: FontWeight.w800,
+                                    color: const Color(0xFF0F172A),
+                                    letterSpacing: -0.3,
                                   ),
                                 ),
+                                SizedBox(width: 4.w),
                               ],
-                            ),
-                          ),
-                          Icon(
-                            UIcons.regularRounded.angle_small_right,
-                            size: 18.w,
-                            color: const Color(0xFF94A3B8),
+                              Icon(
+                                UIcons.regularRounded.angle_small_right,
+                                size: 18.w,
+                                color: const Color(0xFF94A3B8),
+                              ),
+                            ],
                           ),
                         ],
                       ),
