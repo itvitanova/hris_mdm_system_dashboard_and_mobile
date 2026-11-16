@@ -481,7 +481,9 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
         .where((r) => r.status == SubmissionStatus.disetujui)
         .length;
     final pendingCount = allRequests
-        .where((r) => r.status == SubmissionStatus.menunggu)
+        .where((r) =>
+            r.status == SubmissionStatus.menunggu ||
+            r.status == SubmissionStatus.menungguSinkronisasi)
         .length;
     final onlyRejectedCount = allRequests
         .where((r) => r.status == SubmissionStatus.ditolak)
@@ -496,7 +498,13 @@ class _DedicatedModuleScreenState extends State<DedicatedModuleScreen> {
     // Filter daftar sesuai status terpilih
     final filteredRequests = _selectedStatusFilter != null
         ? allRequests
-            .where((it) => it.status == _selectedStatusFilter)
+            .where((it) {
+              if (_selectedStatusFilter == SubmissionStatus.menunggu) {
+                return it.status == SubmissionStatus.menunggu ||
+                    it.status == SubmissionStatus.menungguSinkronisasi;
+              }
+              return it.status == _selectedStatusFilter;
+            })
             .toList()
         : allRequests;
 

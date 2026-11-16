@@ -7,6 +7,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:uicons/uicons.dart';
 import '../../../../core/api_client.dart';
+import '../../../../core/di/injection_container.dart';
+import '../../../../core/services/offline_storage_service.dart';
 
 class ReceiptPreview extends StatefulWidget {
   const ReceiptPreview({
@@ -72,8 +74,42 @@ class _ReceiptPreviewState extends State<ReceiptPreview> {
   }
 
   Future<({dynamic bytes, String contentType})> _loadFile() async {
+    // 1. Local-first preview: lookup in private offline storage
+    if (sl.isRegistered<OfflineStorageService>()) {
+      final storage = sl<OfflineStorageService>();
+      final pathSegments = widget.path.split('/');
+      final identifier =
+          pathSegments.isNotEmpty ? pathSegments.last : widget.path;
+      final localFile = await storage.getSavedAttachment(identifier);
+      if (localFile != null && await localFile.exists()) {
+        final localBytes = await localFile.readAsBytes();
+        final lowerPath = localFile.path.toLowerCase();
+        final ct = lowerPath.endsWith('.pdf')
+            ? 'application/pdf'
+            : lowerPath.endsWith('.png')
+                ? 'image/png'
+                : 'image/jpeg';
+        return (bytes: localBytes, contentType: ct);
+      }
+    }
+
+    // 2. Fallback to network request
     try {
       final res = await widget.api.requestFile(widget.path);
+      // Auto-cache copy to saved_attachments for future offline access
+      if (sl.isRegistered<OfflineStorageService>()) {
+        final pathSegments = widget.path.split('/');
+        final identifier =
+            pathSegments.isNotEmpty ? pathSegments.last : widget.path;
+        final ext = res.contentType.contains('pdf')
+            ? 'pdf'
+            : (res.contentType.contains('png') ? 'png' : 'jpg');
+        sl<OfflineStorageService>().saveAttachmentCopy(
+          identifier: identifier,
+          bytes: res.bytes,
+          fileName: 'cached_doc.$ext',
+        );
+      }
       return (bytes: res.bytes, contentType: res.contentType);
     } catch (e) {
       if (widget.fallbackPath != null && widget.fallbackPath!.isNotEmpty) {

@@ -1510,6 +1510,42 @@ class _RequestDetailState extends State<RequestDetailScreen> {
                         child: const Divider(height: 1, thickness: 0.8, color: Color(0xFFF1F5F9)),
                       ),
 
+                      if (model.status == SubmissionStatus.menungguSinkronisasi) ...[
+                        Container(
+                          margin: EdgeInsets.only(bottom: 12.h),
+                          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 9.h),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFFBEB),
+                            borderRadius: BorderRadius.circular(8.r),
+                            border: Border.all(
+                              color: const Color(0xFFFDE68A),
+                              width: 0.8,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                UIcons.regularRounded.cloud_upload,
+                                size: 16.w,
+                                color: const Color(0xFFB45309),
+                              ),
+                              SizedBox(width: 8.w),
+                              Expanded(
+                                child: Text(
+                                  'Pengajuan ini tersimpan di perangkat dan akan dikirim otomatis saat online.',
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 11.sp,
+                                    fontWeight: FontWeight.w500,
+                                    color: const Color(0xFF92400E),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+
                       // Judul Pengajuan
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
