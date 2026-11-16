@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:uicons/uicons.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/workspace.dart';
@@ -607,7 +608,7 @@ class _ProfileTabState extends State<ProfileTab> {
 
                 // 2. Keluar Akun (Danger Red Card)
                 _SettingItem(
-                  icon: UIcons.regularRounded.sign_out_alt,
+                  svgPath: 'assets/icon/logout.svg',
                   label: 'Keluar Akun',
                   isLogout: true,
                   loading: loggingOut,
@@ -935,14 +936,16 @@ class _InfoCard extends StatelessWidget {
 
 /// Setting Item Button (Tinggi dan Spacing Simetris)
 class _SettingItem extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final String? svgPath;
   final String label;
   final VoidCallback onTap;
   final bool isLogout;
   final bool loading;
 
   const _SettingItem({
-    required this.icon,
+    this.icon,
+    this.svgPath,
     required this.label,
     required this.onTap,
     this.isLogout = false,
@@ -1006,11 +1009,21 @@ class _SettingItem extends StatelessWidget {
                               color: Color(0xFFED2736),
                             ),
                           )
-                        : Icon(
-                            icon,
-                            size: 20.sp,
-                            color: const Color(0xFFED2736),
-                          ),
+                        : (svgPath != null
+                            ? SvgPicture.asset(
+                                svgPath!,
+                                width: 20.sp,
+                                height: 20.sp,
+                                colorFilter: const ColorFilter.mode(
+                                  Color(0xFFED2736),
+                                  BlendMode.srcIn,
+                                ),
+                              )
+                            : Icon(
+                                icon,
+                                size: 20.sp,
+                                color: const Color(0xFFED2736),
+                              )),
                   ),
                   SizedBox(width: 12.w),
                   Expanded(
@@ -1091,11 +1104,21 @@ class _SettingItem extends StatelessWidget {
                     ),
                   ),
                   alignment: Alignment.center,
-                  child: Icon(
-                    icon,
-                    size: 20.sp,
-                    color: Colors.white,
-                  ),
+                  child: svgPath != null
+                      ? SvgPicture.asset(
+                          svgPath!,
+                          width: 20.sp,
+                          height: 20.sp,
+                          colorFilter: const ColorFilter.mode(
+                            Colors.white,
+                            BlendMode.srcIn,
+                          ),
+                        )
+                      : Icon(
+                          icon,
+                          size: 20.sp,
+                          color: Colors.white,
+                        ),
                 ),
                 SizedBox(width: 12.w),
                 Expanded(

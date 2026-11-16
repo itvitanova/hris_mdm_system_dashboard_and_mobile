@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:uicons/uicons.dart';
 import '../../../../core/theme/app_colors.dart';
 
@@ -100,10 +101,14 @@ class _LogoutConfirmationBottomSheetState
                     ),
                   ),
                   alignment: Alignment.center,
-                  child: Icon(
-                    UIcons.regularRounded.sign_out_alt,
-                    color: AppColors.red,
-                    size: 24.sp,
+                  child: SvgPicture.asset(
+                    'assets/icon/logout.svg',
+                    width: 24.sp,
+                    height: 24.sp,
+                    colorFilter: const ColorFilter.mode(
+                      AppColors.red,
+                      BlendMode.srcIn,
+                    ),
                   ),
                 ),
                 SizedBox(height: 14.h),

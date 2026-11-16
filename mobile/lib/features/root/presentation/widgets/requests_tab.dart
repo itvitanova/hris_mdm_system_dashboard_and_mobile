@@ -712,14 +712,14 @@ class _RequestsTabState extends State<RequestsTab> {
                           title: isEn ? 'Permission' : 'Izin',
                           metricTag: isEn ? 'Official Letter' : 'Surat Izin',
                           description: isEn ? 'Sick leave & work dispensation' : 'Sakit & dispensasi kerja',
-                          icon: UIcons.regularRounded.treatment,
+                          icon: UIcons.regularRounded.calendar_check,
                           onTap: () => _navigateAndRefresh(
                             DedicatedModuleScreen(
                               kind: SubmissionKind.izin,
                               moduleTitle: isEn ? 'Permission Request' : 'Pengajuan Izin',
                               keyMetricLabel: isEn ? 'TOTAL PERMISSIONS' : 'TOTAL IZIN',
                               keyMetricValue: '${izinRequests.length} ${isEn ? 'Submissions' : 'Pengajuan'}',
-                              keyMetricIcon: UIcons.regularRounded.treatment,
+                              keyMetricIcon: UIcons.regularRounded.calendar_check,
                               api: api,
                               workspace: w,
                               open: open,

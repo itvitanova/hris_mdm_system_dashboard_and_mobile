@@ -10,7 +10,7 @@ const line = Color(0xFFE2E8F0);
 
 IconData requestIcon(String kind) => switch (kind) {
   'Cuti' => UIcons.regularRounded.calendar_clock,
-  'Izin' => UIcons.regularRounded.treatment,
+  'Izin' => UIcons.regularRounded.calendar_check,
   'Reimbursement' => UIcons.regularRounded.receipt,
   'Medical Claim' => UIcons.regularRounded.stethoscope,
   'Petty Cash' => UIcons.regularRounded.wallet,

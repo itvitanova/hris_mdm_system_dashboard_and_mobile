@@ -497,7 +497,7 @@ class _NotificationsState extends State<RequestNotificationsScreen> {
                 : (item.kind == SubmissionKind.lembur
                     ? UIcons.regularRounded.clock
                     : (item.kind == SubmissionKind.izin
-                        ? UIcons.regularRounded.treatment
+                        ? UIcons.regularRounded.calendar_check
                         : (item.kind == SubmissionKind.medicalClaim
                             ? UIcons.regularRounded.stethoscope
                             : UIcons.regularRounded.boxes)))));

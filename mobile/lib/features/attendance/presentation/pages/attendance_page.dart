@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:uicons/uicons.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -341,13 +342,19 @@ class _AttendanceScreenState extends State<AttendanceScreen>
                       busy || locating || !available || !safe || daily.completed
                       ? null
                       : start,
-                  icon: Icon(
-                    daily.completed
-                        ? UIcons.regularRounded.check
-                        : daily.checkedIn
-                        ? UIcons.regularRounded.sign_out_alt
-                        : UIcons.regularRounded.sign_in_alt,
-                  ),
+                  icon: daily.completed
+                      ? Icon(UIcons.regularRounded.check)
+                      : SvgPicture.asset(
+                          daily.checkedIn
+                              ? 'assets/icon/logout.svg'
+                              : 'assets/icon/login.svg',
+                          width: 18,
+                          height: 18,
+                          colorFilter: const ColorFilter.mode(
+                            Colors.white,
+                            BlendMode.srcIn,
+                          ),
+                        ),
                   label: Text(daily.label),
                 ),
                 if (!available)
