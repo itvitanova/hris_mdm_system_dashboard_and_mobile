@@ -127,7 +127,7 @@ class RequestCardHelper {
         );
       case SubmissionKind.izin:
         return RequestKindConfig(
-          icon: UIcons.regularRounded.treatment,
+          icon: UIcons.regularRounded.calendar_check,
           typeTitle: isEn ? 'Permission Request' : 'Pengajuan Izin',
           metricTag: (m) => '${m.days ?? 1} ${isEn ? 'Hari' : 'Hari'}',
           secondaryMeta: (_) => null,
@@ -137,9 +137,7 @@ class RequestCardHelper {
           icon: UIcons.regularRounded.receipt,
           typeTitle: isEn ? 'Reimbursement Claim' : 'Klaim Reimbursement',
           metricTag: (m) => formatIDR(m.amount ?? 0),
-          secondaryMeta: (m) => m.transactionCount != null
-              ? (isEn ? '· ${m.transactionCount} transactions' : '· ${m.transactionCount} transaksi')
-              : null,
+          secondaryMeta: (_) => null,
         );
       case SubmissionKind.medicalClaim:
         return RequestKindConfig(
@@ -153,9 +151,7 @@ class RequestCardHelper {
           icon: UIcons.regularRounded.wallet,
           typeTitle: isEn ? 'Petty Cash Request' : 'Pengajuan Petty Cash',
           metricTag: (m) => formatIDR(m.amount ?? 0),
-          secondaryMeta: (m) => m.transactionCount != null && m.transactionCount! > 0
-              ? (isEn ? '· ${m.transactionCount} transactions' : '· ${m.transactionCount} transaksi')
-              : null,
+          secondaryMeta: (_) => null,
         );
       case SubmissionKind.generalAffair:
         return RequestKindConfig(

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:uicons/uicons.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/workspace.dart';
@@ -288,13 +289,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               onPressed: daily.completed
                   ? null
                   : () => open(AttendanceScreen(api: widget.api, workspace: w)),
-              icon: Icon(
-                daily.completed
-                    ? UIcons.regularRounded.check
-                    : daily.checkedIn
-                    ? UIcons.regularRounded.sign_out_alt
-                    : UIcons.regularRounded.sign_in_alt,
-              ),
+              icon: daily.completed
+                  ? Icon(UIcons.regularRounded.check)
+                  : SvgPicture.asset(
+                      daily.checkedIn
+                          ? 'assets/icon/logout.svg'
+                          : 'assets/icon/login.svg',
+                      width: 18,
+                      height: 18,
+                      colorFilter: ColorFilter.mode(
+                        brand,
+                        BlendMode.srcIn,
+                      ),
+                    ),
               label: Text(daily.label, textAlign: TextAlign.center),
             ),
           ],
@@ -669,7 +676,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     ),
     OutlinedButton.icon(
       onPressed: loggingOut ? null : logout,
-      icon: Icon(UIcons.regularRounded.sign_out_alt),
+      icon: SvgPicture.asset(
+        'assets/icon/logout.svg',
+        width: 18,
+        height: 18,
+        colorFilter: ColorFilter.mode(
+          Theme.of(context).colorScheme.primary,
+          BlendMode.srcIn,
+        ),
+      ),
       label: Text(loggingOut ? 'Keluar…' : 'Keluar akun'),
     ),
   ];

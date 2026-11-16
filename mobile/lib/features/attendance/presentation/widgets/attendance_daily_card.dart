@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:uicons/uicons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/workspace.dart';
@@ -258,12 +257,16 @@ class AttendanceDailyCard extends StatelessWidget {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Icon(
-                              UIcons.regularRounded.sign_in_alt,
-                              size: 15.sp,
-                              color: isHighlighted
-                                  ? Colors.white
-                                  : const Color(0xFF0F766E),
+                            SvgPicture.asset(
+                              'assets/icon/login.svg',
+                              width: 15.sp,
+                              height: 15.sp,
+                              colorFilter: ColorFilter.mode(
+                                isHighlighted
+                                    ? Colors.white
+                                    : const Color(0xFF0F766E),
+                                BlendMode.srcIn,
+                              ),
                             ),
                             SizedBox(width: 10.w),
                             Expanded(
@@ -323,12 +326,16 @@ class AttendanceDailyCard extends StatelessWidget {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Icon(
-                              UIcons.regularRounded.sign_out_alt,
-                              size: 15.sp,
-                              color: isHighlighted
-                                  ? Colors.white
-                                  : const Color(0xFF0F766E),
+                            SvgPicture.asset(
+                              'assets/icon/logout.svg',
+                              width: 15.sp,
+                              height: 15.sp,
+                              colorFilter: ColorFilter.mode(
+                                isHighlighted
+                                    ? Colors.white
+                                    : const Color(0xFF0F766E),
+                                BlendMode.srcIn,
+                              ),
                             ),
                             SizedBox(width: 10.w),
                             Expanded(

@@ -18,6 +18,7 @@ class UniversalRequestModel {
 
   // Karyawan & Approval Data
   final String employeeName;
+  final String? department;
   final String? pendingWith; // Misal: "Menunggu persetujuan · Aries Munandar"
   final String? reviewedBy; // Misal: "Alicia"
   final String? reviewNote; // Catatan jika "Perlu revisi"
@@ -41,6 +42,7 @@ class UniversalRequestModel {
     this.hours,
     this.amount,
     required this.employeeName,
+    this.department,
     this.pendingWith,
     this.reviewedBy,
     this.reviewNote,
@@ -90,6 +92,29 @@ class UniversalRequestModel {
       return direct;
     }
 
+    String? resolveDepartment() {
+      final direct = map['department']?.toString().trim();
+      if (direct != null && direct.isNotEmpty && direct != '—' && direct != '-') {
+        return direct;
+      }
+      if (map['snapshot'] is Map) {
+        final s = map['snapshot'] as Map;
+        final d = s['department']?.toString().trim();
+        if (d != null && d.isNotEmpty && d != '—' && d != '-') return d;
+      }
+      if (map['employeeSnapshot'] is Map) {
+        final s = map['employeeSnapshot'] as Map;
+        final d = s['department']?.toString().trim();
+        if (d != null && d.isNotEmpty && d != '—' && d != '-') return d;
+      }
+      if (map['employee'] is Map) {
+        final s = map['employee'] as Map;
+        final d = s['department']?.toString().trim();
+        if (d != null && d.isNotEmpty && d != '—' && d != '-') return d;
+      }
+      return null;
+    }
+
     return UniversalRequestModel(
       id: map['id']?.toString() ?? 'REQ-${DateTime.now().millisecondsSinceEpoch}',
       kind: SubmissionKind.fromString(kindStr),
@@ -105,6 +130,7 @@ class UniversalRequestModel {
           (double.tryParse(map['hours']?.toString() ?? '')?.toInt()),
       amount: resolvedAmount(),
       employeeName: map['employeeName']?.toString() ?? 'Karyawan',
+      department: resolveDepartment(),
       pendingWith: map['pendingWith']?.toString(),
       reviewedBy: map['reviewedBy']?.toString(),
       reviewNote: map['reviewNote']?.toString(),
@@ -133,6 +159,7 @@ class UniversalRequestModel {
       if (hours != null) 'hours': hours,
       if (amount != null) 'amount': amount,
       'employeeName': employeeName,
+      if (department != null) 'department': department,
       if (pendingWith != null) 'pendingWith': pendingWith,
       if (reviewedBy != null) 'reviewedBy': reviewedBy,
       if (reviewNote != null) 'reviewNote': reviewNote,

@@ -169,11 +169,6 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
         .where((r) => r['unread'] == true)
         .length;
 
-    final pendingApprovals = widget.workspace
-        .rows('requests')
-        .where((r) => r['canReview'] == true)
-        .length;
-
     return [
       PersistentBottomNavBarItem(
         icon: _tabIcon(
@@ -227,7 +222,6 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
             height: 24,
           ),
           label: isEn ? 'Approvals' : 'Persetujuan',
-          badgeCount: pendingApprovals,
         ),
         inactiveIcon: _tabIcon(
           svg: SvgPicture.asset(
@@ -237,7 +231,6 @@ class _RootPageState extends State<RootPage> with WidgetsBindingObserver {
             colorFilter: const ColorFilter.mode(Colors.grey, BlendMode.srcIn),
           ),
           label: isEn ? 'Approvals' : 'Persetujuan',
-          badgeCount: pendingApprovals,
         ),
         title: isEn ? 'Approvals' : 'Persetujuan',
         textStyle: AppTextStyles.inter12MediumDeepTeal,

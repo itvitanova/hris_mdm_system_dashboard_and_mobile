@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:uicons/uicons.dart';
 import '../bloc/request_bloc.dart';
 import '../bloc/request_event.dart';
@@ -572,7 +573,8 @@ class _RequestDetailState extends State<RequestDetailScreen> {
   }
 
   Widget _buildSectionCard({
-    required IconData icon,
+    IconData? icon,
+    String? svgPath,
     required String title,
     required Widget child,
     Widget? trailing,
@@ -605,7 +607,17 @@ class _RequestDetailState extends State<RequestDetailScreen> {
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 alignment: Alignment.center,
-                child: Icon(icon, size: 15.w, color: const Color(0xFF0F766E)),
+                child: svgPath != null
+                    ? SvgPicture.asset(
+                        svgPath,
+                        width: 15.w,
+                        height: 15.w,
+                        colorFilter: const ColorFilter.mode(
+                          Color(0xFF0F766E),
+                          BlendMode.srcIn,
+                        ),
+                      )
+                    : Icon(icon, size: 15.w, color: const Color(0xFF0F766E)),
               ),
               SizedBox(width: 8.w),
               Expanded(
@@ -847,37 +859,43 @@ class _RequestDetailState extends State<RequestDetailScreen> {
     return trimmed.toUpperCase();
   }
 
-  Widget _buildDescriptionBlock(String label, String value, {IconData? icon}) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 4.h),
+  Widget _buildDescriptionBlock(String label, String value) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.only(
+        left: 9.w,
+        top: 2.h,
+        bottom: 2.h,
+      ),
+      decoration: BoxDecoration(
+        border: Border(
+          left: BorderSide(
+            color: const Color(0xFFCBD5E1),
+            width: 2.5.w,
+          ),
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              if (icon != null) ...[
-                Icon(icon, size: 13.5.w, color: const Color(0xFF94A3B8)),
-                SizedBox(width: 6.w),
-              ],
-              Text(
-                label,
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 11.5.sp,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF64748B),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 4.h),
           Text(
-            value.isNotEmpty ? value : '—',
+            label,
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 10.5.sp,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF64748B),
+              letterSpacing: 0.1,
+            ),
+          ),
+          SizedBox(height: 3.h),
+          Text(
+            value.startsWith('"') && value.endsWith('"') ? value : '"$value"',
             style: TextStyle(
               fontFamily: 'Inter',
               fontSize: 12.5.sp,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF0F172A),
+              color: const Color(0xFF334155),
               height: 1.45,
             ),
           ),
@@ -955,7 +973,10 @@ class _RequestDetailState extends State<RequestDetailScreen> {
       final metaContent = metadataMatch.group(1)!;
       final parts = metaContent
           .split(' · ')
-          .where((part) => !part.trim().toLowerCase().startsWith('lampiran:'))
+          .where((part) {
+            final p = part.trim().toLowerCase();
+            return !p.startsWith('lampiran:') && !p.startsWith('jenis izin:');
+          })
           .toList();
       final baseDesc = desc.substring(0, metadataMatch.start).trim();
       if (parts.isNotEmpty) {
@@ -964,7 +985,8 @@ class _RequestDetailState extends State<RequestDetailScreen> {
         desc = baseDesc;
       }
     } else {
-      desc = desc.replaceAll(RegExp(r'\[?Lampiran:\s*[^\]\n]+\]?', caseSensitive: false), '').trim();
+      desc = desc.replaceAll(RegExp(r'\[?Lampiran:\s*[^\]\n]+\]?', caseSensitive: false), '');
+      desc = desc.replaceAll(RegExp(r'\[?Jenis Izin:\s*[^\]\n]+\]?', caseSensitive: false), '');
     }
     return desc.trim();
   }
@@ -1535,7 +1557,7 @@ class _RequestDetailState extends State<RequestDetailScreen> {
                                 metricLabel = 'Durasi Izin';
                                 metricValue = '$days Hari';
                               }
-                              metricIcon = UIcons.regularRounded.treatment;
+                              metricIcon = UIcons.regularRounded.calendar_check;
                               break;
                             case SubmissionKind.lembur:
                               final totalHours = hours ?? model.hours ?? 1;
@@ -1663,41 +1685,42 @@ class _RequestDetailState extends State<RequestDetailScreen> {
                       const Divider(height: 1, color: Color(0xFFF1F5F9)),
                       SizedBox(height: 10.h),
 
-                      // Keperluan / Deskripsi dengan Label Kontekstual (Bersih tanpa lampiran duplikat)
+                      // Keperluan / Deskripsi dengan Label Kontekstual & Format Quote Strip
                       Builder(
                         builder: (context) {
                           final cleanedDesc = _cleanDescriptionText(text(r, 'description'));
                           if (cleanedDesc.isEmpty) return const SizedBox.shrink();
 
+                          final isEn = AppLanguageController.currentLanguage == AppLanguage.en;
                           String descLabel;
                           switch (model.kind) {
                             case SubmissionKind.cuti:
-                              descLabel = 'Alasan Cuti';
+                              descLabel = isEn ? 'Leave Reason' : 'Alasan Cuti';
                               break;
                             case SubmissionKind.izin:
-                              descLabel = 'Alasan Izin';
+                              descLabel = isEn ? 'Permission Reason' : 'Alasan Izin';
                               break;
                             case SubmissionKind.lembur:
-                              descLabel = 'Uraian Tugas Lembur';
+                              descLabel = isEn ? 'Overtime Tasks' : 'Uraian Tugas Lembur';
                               break;
                             case SubmissionKind.reimbursement:
-                              descLabel = 'Keterangan Klaim';
+                              descLabel = isEn ? 'Claim Description' : 'Keterangan Klaim';
                               break;
                             case SubmissionKind.medicalClaim:
-                              descLabel = 'Catatan / Diagnosa Medis';
+                              descLabel = isEn ? 'Medical Notes / Diagnosis' : 'Catatan / Diagnosa Medis';
                               break;
                             case SubmissionKind.pettyCash:
-                              descLabel = 'Peruntukan Dana';
+                              descLabel = isEn ? 'Fund Purpose' : 'Peruntukan Dana';
                               break;
                             case SubmissionKind.generalAffair:
-                              descLabel = 'Deskripsi Kebutuhan GA';
+                              descLabel = isEn ? 'GA Requirements' : 'Deskripsi Kebutuhan GA';
                               break;
                           }
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _buildDescriptionBlock(descLabel, cleanedDesc, icon: UIcons.regularRounded.document),
-                              const Divider(height: 12, color: Color(0xFFF8FAFC)),
+                              _buildDescriptionBlock(descLabel, cleanedDesc),
+                              SizedBox(height: 12.h),
                             ],
                           );
                         },
@@ -1867,7 +1890,7 @@ class _RequestDetailState extends State<RequestDetailScreen> {
                     final shouldShowBank = isTransferRelevant && bankAccountNumber.isNotEmpty;
 
                     return _buildSectionCard(
-                      icon: UIcons.regularRounded.id_badge,
+                      svgPath: 'assets/icon/profile-not-active.svg',
                       title: 'Informasi Pemohon',
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2799,17 +2822,16 @@ class _ApprovalsState extends State<ApprovalsScreen> {
   }
 
   Widget _buildSegmentedFilterBar(int pendingCount) {
+    final isEn = AppLanguageController.currentLanguage == AppLanguage.en;
     final filters = [
       {
         'key': 'pending',
-        'label': pendingCount > 0
-            ? 'Menunggu tindakan ($pendingCount)'
-            : 'Menunggu tindakan',
+        'label': isEn ? 'Pending Action' : 'Menunggu tindakan',
         'isSelected': !history,
       },
       {
         'key': 'history',
-        'label': 'Riwayat keputusan',
+        'label': isEn ? 'Decision History' : 'Riwayat keputusan',
         'isSelected': history,
       },
     ];
@@ -2874,18 +2896,58 @@ class _ApprovalsState extends State<ApprovalsScreen> {
                         : null,
                   ),
                   alignment: Alignment.center,
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 11.5.sp,
-                      fontWeight:
-                          isSelected ? FontWeight.w700 : FontWeight.w500,
-                      color:
-                          isSelected ? Colors.white : const Color(0xFF64748B),
-                    ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 11.5.sp,
+                            fontWeight:
+                                isSelected ? FontWeight.w700 : FontWeight.w500,
+                            color: isSelected
+                                ? Colors.white
+                                : const Color(0xFF64748B),
+                          ),
+                        ),
+                      ),
+                      if (isPending && pendingCount > 0) ...[
+                        SizedBox(width: 5.w),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 5.5.w,
+                            vertical: 1.5.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? Colors.white.withValues(alpha: 0.24)
+                                : const Color(0xFFED2736),
+                            borderRadius: BorderRadius.circular(10.r),
+                            border: isSelected
+                                ? Border.all(
+                                    color: Colors.white.withValues(alpha: 0.35),
+                                    width: 0.8,
+                                  )
+                                : null,
+                          ),
+                          child: Text(
+                            pendingCount > 99 ? '99+' : '$pendingCount',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 10.sp,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              height: 1.1,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               ),
@@ -3006,10 +3068,7 @@ class _ApprovalsState extends State<ApprovalsScreen> {
         ? <Json>[]
         : rows.sublist(startIndex, endIndex);
 
-    return ScreenUtilInit(
-      designSize: const Size(375, 812),
-      minTextAdapt: true,
-      builder: (context, _) => Scaffold(
+    return Scaffold(
         backgroundColor: const Color(0xFFF8FAFC),
         appBar: AppBar(
           backgroundColor: Colors.white,
@@ -3094,13 +3153,15 @@ class _ApprovalsState extends State<ApprovalsScreen> {
           ],
         ),
         body: SafeArea(
+          top: false,
+          bottom: false,
           child: RefreshIndicator(
             color: const Color(0xFF0F766E),
             onRefresh: load,
             child: ListView(
               controller: _scrollController,
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+              padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 4.h),
               children: [
                 _buildHeroSummaryBanner(pendingCount),
                 SizedBox(height: 16.h),
@@ -3134,26 +3195,48 @@ class _ApprovalsState extends State<ApprovalsScreen> {
                   for (final r in pagedRows)
                     Padding(
                       padding: EdgeInsets.only(bottom: 12.h),
-                      child: UniversalRequestCard(
-                        data: UniversalRequestModel.fromMap(r),
-                        showApplicant: true,
-                        onCardTap: () async {
-                          final result = await Navigator.of(
-                            context,
-                            rootNavigator: true,
-                          ).push<bool>(
-                            MaterialPageRoute(
-                              builder: (_) => RequestDetailScreen(
-                                api: widget.api,
-                                request: r,
-                                own: false,
-                              ),
-                            ),
-                          );
-                          if (result == true) {
-                            changed = true;
-                            await load();
+                      child: Builder(
+                        builder: (context) {
+                          Map<String, dynamic> enriched = r;
+                          final hasDept = r['department'] != null ||
+                              (r['snapshot'] is Map && r['snapshot']['department'] != null);
+                          if (!hasDept && w != null) {
+                            final empId = r['employeeId'] ??
+                                (r['snapshot'] is Map ? r['snapshot']['employeeId'] : null);
+                            if (empId != null) {
+                              final emp = w.rows('employees').firstWhere(
+                                (e) => e['id'] == empId,
+                                orElse: () => {},
+                              );
+                              final d = emp['department']?.toString().trim();
+                              if (d != null && d.isNotEmpty && d != '—') {
+                                enriched = Map<String, dynamic>.from(r);
+                                enriched['department'] = d;
+                              }
+                            }
                           }
+                          return UniversalRequestCard(
+                            data: UniversalRequestModel.fromMap(enriched),
+                            showApplicant: true,
+                            onCardTap: () async {
+                              final result = await Navigator.of(
+                                context,
+                                rootNavigator: true,
+                              ).push<bool>(
+                                MaterialPageRoute(
+                                  builder: (_) => RequestDetailScreen(
+                                    api: widget.api,
+                                    request: r,
+                                    own: false,
+                                  ),
+                                ),
+                              );
+                              if (result == true) {
+                                changed = true;
+                                await load();
+                              }
+                            },
+                          );
                         },
                       ),
                     ),
@@ -3169,9 +3252,8 @@ class _ApprovalsState extends State<ApprovalsScreen> {
             ),
           ),
         ),
-      ),
-    );
-  }
+      );
+    }
 
   List<int> _calculateVisiblePages(int current, int total) {
     if (total <= 5) {
@@ -3204,7 +3286,7 @@ class _ApprovalsState extends State<ApprovalsScreen> {
 
     return Container(
       key: const ValueKey('pagination_bar'),
-      margin: EdgeInsets.only(top: 8.h, bottom: 12.h),
+      margin: EdgeInsets.only(top: 8.h, bottom: 2.h),
       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
       decoration: BoxDecoration(
         color: Colors.white,
