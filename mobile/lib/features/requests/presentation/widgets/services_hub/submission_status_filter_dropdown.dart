@@ -14,6 +14,8 @@ Color _statusDotColor(SubmissionStatus status) {
       return AppColors.filterStatusOrange;
     case SubmissionStatus.ditolak:
       return AppColors.filterStatusRed;
+    case SubmissionStatus.menungguSinkronisasi:
+      return AppColors.filterStatusAmber;
   }
 }
 

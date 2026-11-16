@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'services/network_connectivity_service.dart';
+import 'services/offline_storage_service.dart';
 
 class ApiException implements Exception {
   final String message;
@@ -18,6 +20,8 @@ class ApiClient {
   ApiClient({
     http.Client? client,
     FlutterSecureStorage? storage,
+    this.offlineStorage,
+    this.connectivityService,
     String? baseUrl,
   }) : _client = client ?? http.Client(),
        _storage = storage ?? const FlutterSecureStorage(),
@@ -29,6 +33,8 @@ class ApiClient {
            );
   final http.Client _client;
   final FlutterSecureStorage _storage;
+  OfflineStorageService? offlineStorage;
+  NetworkConnectivityService? connectivityService;
   final String baseUrl;
   String? _cookie;
   String get _storageKey => 'mdm_session_${Uri.parse(baseUrl).authority}';
@@ -74,14 +80,18 @@ class ApiClient {
         }
         throw ApiException(message, response.statusCode);
       }
+      connectivityService?.setOnline(true);
       return response;
     } on SocketException {
+      connectivityService?.setOnline(false);
       throw ApiException(
         'Tidak dapat terhubung. Periksa jaringan dan alamat server.',
       );
     } on http.ClientException {
+      connectivityService?.setOnline(false);
       throw ApiException('Koneksi ke server gagal. Periksa jaringan Anda.');
     } on TimeoutException {
+      connectivityService?.setOnline(false);
       throw ApiException(
         'Server belum merespons. Periksa riwayat sebelum mencoba ulang.',
       );
@@ -107,9 +117,75 @@ class ApiClient {
     }
   }
 
-  Future<Map<String, dynamic>> workspace() async =>
-      jsonDecode((await _send('GET', '/workspace')).body)
-          as Map<String, dynamic>;
+  Future<Map<String, dynamic>> workspace() async {
+    Map<String, dynamic> data;
+    try {
+      final response = await _send('GET', '/workspace');
+      data = jsonDecode(response.body) as Map<String, dynamic>;
+      offlineStorage?.saveWorkspaceCache(data);
+    } catch (e) {
+      if (offlineStorage != null) {
+        final cached = await offlineStorage!.loadWorkspaceCache();
+        if (cached != null) {
+          data = cached;
+        } else {
+          rethrow;
+        }
+      } else {
+        rethrow;
+      }
+    }
+
+    // Merge offline pending requests into data['requests'] so the entire app sees them
+    if (offlineStorage != null) {
+      final queue = await offlineStorage!.loadQueue();
+      if (queue.isNotEmpty) {
+        final existingRequests = List<Map<String, dynamic>>.from(
+          (data['requests'] as List?)
+                  ?.whereType<Map>()
+                  .map((m) => Map<String, dynamic>.from(m)) ??
+              [],
+        );
+        final actor = (data['actor'] as Map?) ?? {};
+        final employeeId = actor['employeeId']?.toString() ?? '';
+        final employee = ((data['employees'] as List?) ?? [])
+            .firstWhere((e) => e['id'] == employeeId, orElse: () => {});
+        final employeeName = actor['name']?.toString() ??
+            (employee is Map ? employee['name']?.toString() : null) ??
+            'Karyawan';
+        final department =
+            employee is Map ? employee['department']?.toString() : null;
+
+        final pendingItems = queue.map((q) {
+          final payload = Map<String, dynamic>.from(q['payload'] as Map? ?? {});
+          return <String, dynamic>{
+            'id': q['id'],
+            'kind': q['kind'] ?? payload['kind'] ?? 'Pengajuan',
+            'type': q['kind'] ?? payload['kind'] ?? 'Pengajuan',
+            'title': q['title'] ?? payload['title'] ?? 'Pengajuan',
+            'description':
+                q['notes'] ?? payload['notes'] ?? payload['reason'] ?? '',
+            'status': 'Menunggu Sinkronisasi',
+            'startDate': payload['startDate'],
+            'endDate': payload['endDate'],
+            'days': payload['days'],
+            'hours': payload['hours'],
+            'amount': payload['amount'],
+            'employeeId': employeeId,
+            'employeeName': employeeName,
+            'department': department,
+            'items': payload['items'],
+            'isOffline': true,
+            'createdAt': q['createdAt'],
+          };
+        }).toList();
+
+        data['requests'] = [...pendingItems, ...existingRequests];
+      }
+    }
+
+    return data;
+  }
 
   Future<List<Map<String, dynamic>>> getList(String path) async {
     final decoded = jsonDecode((await _send('GET', path)).body);
@@ -177,5 +253,7 @@ class ApiClient {
   Future<void> forget() async {
     _cookie = null;
     await _storage.delete(key: _storageKey);
+    await offlineStorage?.clearWorkspaceCache();
+    await offlineStorage?.clearSavedAttachments();
   }
 }

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/api_client.dart';
+import '../../../../core/di/injection_container.dart';
+import '../../../../core/services/network_connectivity_service.dart';
+import '../../../../core/services/offline_sync_manager.dart';
 import '../../../../core/workspace.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../home/leave_calendar_screen.dart';
@@ -69,6 +72,10 @@ class _RequestsTabState extends State<RequestsTab> {
     }
   }
 
+  bool get _isOnline => sl.isRegistered<NetworkConnectivityService>()
+      ? sl<NetworkConnectivityService>().isOnline
+      : true;
+
   @override
   void initState() {
     super.initState();
@@ -76,11 +83,20 @@ class _RequestsTabState extends State<RequestsTab> {
         ? widget.initialLanguage
         : AppLanguageController.currentLanguage;
     AppLanguageController.instance.addListener(_onGlobalLanguageChanged);
+    if (sl.isRegistered<NetworkConnectivityService>()) {
+      sl<NetworkConnectivityService>()
+          .isOnlineNotifier
+          .addListener(_onConnectivityChanged);
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _tryGetRequestBloc(context)?.add(const RequestLoadRequested());
       }
     });
+  }
+
+  void _onConnectivityChanged() {
+    if (mounted) setState(() {});
   }
 
   void _onGlobalLanguageChanged() {
@@ -94,10 +110,21 @@ class _RequestsTabState extends State<RequestsTab> {
   @override
   void dispose() {
     AppLanguageController.instance.removeListener(_onGlobalLanguageChanged);
+    if (sl.isRegistered<NetworkConnectivityService>()) {
+      sl<NetworkConnectivityService>()
+          .isOnlineNotifier
+          .removeListener(_onConnectivityChanged);
+    }
     super.dispose();
   }
 
   Future<void> _handleRefresh() async {
+    if (sl.isRegistered<NetworkConnectivityService>()) {
+      await sl<NetworkConnectivityService>().checkConnection();
+    }
+    if (sl.isRegistered<OfflineSyncManager>()) {
+      await sl<OfflineSyncManager>().syncPendingRequests();
+    }
     await widget.onRefresh();
     if (mounted) {
       _tryGetRequestBloc(context)?.add(const RequestLoadRequested());
@@ -109,6 +136,75 @@ class _RequestsTabState extends State<RequestsTab> {
     if (mounted) {
       await _handleRefresh();
     }
+  }
+
+  Widget _buildOfflineBanner(bool isEn) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 14.h),
+      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFBEB),
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(
+          color: const Color(0xFFFDE68A),
+          width: 0.8,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x06000000),
+            blurRadius: 3,
+            offset: Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 32.w,
+            height: 32.w,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFEF3C7),
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            child: Icon(
+              Icons.wifi_off_rounded,
+              size: 16.w,
+              color: const Color(0xFFB45309),
+            ),
+          ),
+          SizedBox(width: 10.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isEn
+                      ? 'Offline Mode • Viewing Cached Data'
+                      : 'Mode Offline • Menampilkan Data Tersimpan',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF92400E),
+                  ),
+                ),
+                SizedBox(height: 1.5.h),
+                Text(
+                  isEn
+                      ? 'New submissions are queued and will auto-sync when online.'
+                      : 'Pengajuan baru tersimpan dan otomatis disinkronkan saat online.',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 10.5.sp,
+                    color: const Color(0xFFB45309),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildHeroActionBanner() {
@@ -450,7 +546,8 @@ class _RequestsTabState extends State<RequestsTab> {
       if (_selectedFilter == 'Semua') {
         filteredIndices.add(i);
       } else if (_selectedFilter == 'Menunggu') {
-        if (model.status == SubmissionStatus.menunggu) {
+        if (model.status == SubmissionStatus.menunggu ||
+            model.status == SubmissionStatus.menungguSinkronisasi) {
           filteredIndices.add(i);
         }
       } else if (_selectedFilter == 'Selesai') {
@@ -639,6 +736,7 @@ class _RequestsTabState extends State<RequestsTab> {
             physics: const AlwaysScrollableScrollPhysics(),
             padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 0),
             children: [
+              if (!_isOnline) _buildOfflineBanner(isEn),
               // ==================== 0. HERO ACTION BANNER ====================
               _buildHeroActionBanner(),
 

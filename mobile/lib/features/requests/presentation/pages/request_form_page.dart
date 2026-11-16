@@ -1,10 +1,15 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:http/http.dart' as http;
 import 'package:uicons/uicons.dart';
 import '../../../../core/api_client.dart';
+import '../../../../core/services/network_connectivity_service.dart';
+import '../../../../core/services/offline_storage_service.dart';
+import '../../../../core/services/offline_sync_manager.dart';
 import '../../../../core/workspace.dart';
 import '../../../../core/widgets/core_widgets.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -89,6 +94,8 @@ class _RequestFormState extends State<RequestForm> {
   String? error;
   String? _selectedAttachmentName;
   String? _selectedAttachmentId;
+  String? _stagedAttachmentPath;
+  Uint8List? _selectedAttachmentBytes;
 
   static const gaCategories = [
     'Pengadaan Barang',
@@ -256,14 +263,46 @@ class _RequestFormState extends State<RequestForm> {
       if (bytes.length > ImageCompressor.maxFileSizeBytes) {
         throw ApiException('Bukti transaksi maksimal 2 MB.');
       }
-      final result = await widget.api.postJson('/request-receipts', {
-        'name': file.name,
-        'fileBase64': base64Encode(bytes),
-      });
+
+      final isOnline = sl.isRegistered<NetworkConnectivityService>()
+          ? sl<NetworkConnectivityService>().isOnline
+          : true;
+
+      if (isOnline) {
+        try {
+          final result = await widget.api.postJson('/request-receipts', {
+            'name': file.name,
+            'fileBase64': base64Encode(bytes),
+          });
+          if (mounted) {
+            setState(() {
+              item.receiptId = text(result, 'id', '');
+              item.receiptName = file.name;
+              item.stagedPath = null;
+              item.fileBytes = bytes;
+              error = null;
+            });
+          }
+          return;
+        } catch (_) {
+          // Fall through to stage locally if server upload fails
+        }
+      }
+
+      // Stage attachment locally for offline queue
+      String? stagedPath;
+      if (sl.isRegistered<OfflineStorageService>()) {
+        stagedPath = await sl<OfflineStorageService>().stageAttachment(
+          fileName: file.name,
+          bytes: bytes,
+        );
+      }
       if (mounted) {
         setState(() {
-          item.receiptId = text(result, 'id', '');
+          item.receiptId = 'temp_offline_${DateTime.now().millisecondsSinceEpoch}';
           item.receiptName = file.name;
+          item.stagedPath = stagedPath;
+          item.fileBytes = bytes;
           error = null;
         });
       }
@@ -552,7 +591,144 @@ class _RequestFormState extends State<RequestForm> {
               (double.tryParse(hours.text.replaceAll(',', '.'))?.toInt() ?? 0)),
       };
 
-      await widget.api.post('/requests', payload);
+      // Persist local archive copies in private app storage upon clicking submit
+      if (sl.isRegistered<OfflineStorageService>()) {
+        final storage = sl<OfflineStorageService>();
+        if (kind == 'Reimbursement') {
+          for (final e in expenses) {
+            if (e.receiptId.isNotEmpty) {
+              if (e.fileBytes != null) {
+                await storage.saveAttachmentCopy(
+                  identifier: e.receiptId,
+                  bytes: e.fileBytes!,
+                  fileName: e.receiptName,
+                );
+              } else if (e.stagedPath != null && e.stagedPath!.isNotEmpty) {
+                final f = File(e.stagedPath!);
+                if (await f.exists()) {
+                  final b = await f.readAsBytes();
+                  await storage.saveAttachmentCopy(
+                    identifier: e.receiptId,
+                    bytes: b,
+                    fileName: e.receiptName,
+                  );
+                }
+              }
+            }
+          }
+        } else if (_selectedAttachmentId != null &&
+            _selectedAttachmentId!.isNotEmpty) {
+          if (_selectedAttachmentBytes != null) {
+            await storage.saveAttachmentCopy(
+              identifier: _selectedAttachmentId!,
+              bytes: _selectedAttachmentBytes!,
+              fileName: _selectedAttachmentName ?? 'lampiran',
+            );
+          } else if (_stagedAttachmentPath != null &&
+              _stagedAttachmentPath!.isNotEmpty) {
+            final f = File(_stagedAttachmentPath!);
+            if (await f.exists()) {
+              final b = await f.readAsBytes();
+              await storage.saveAttachmentCopy(
+                identifier: _selectedAttachmentId!,
+                bytes: b,
+                fileName: _selectedAttachmentName ?? 'lampiran',
+              );
+            }
+          }
+        }
+      }
+
+      final isOnline = sl.isRegistered<NetworkConnectivityService>()
+          ? sl<NetworkConnectivityService>().isOnline
+          : true;
+
+      final stagedAttachments = <Map<String, dynamic>>[];
+      if (kind == 'Reimbursement') {
+        for (var i = 0; i < expenses.length; i++) {
+          final e = expenses[i];
+          if (e.stagedPath != null && e.stagedPath!.isNotEmpty) {
+            stagedAttachments.add({
+              'type': 'receipt',
+              'itemIndex': i,
+              'path': e.stagedPath,
+              'name': e.receiptName,
+            });
+          }
+        }
+      } else if (_stagedAttachmentPath != null && _stagedAttachmentPath!.isNotEmpty) {
+        stagedAttachments.add({
+          'type': 'attachment',
+          'path': _stagedAttachmentPath,
+          'name': _selectedAttachmentName ?? 'lampiran',
+        });
+      }
+
+      bool shouldQueueOffline = !isOnline || stagedAttachments.isNotEmpty;
+
+      if (!shouldQueueOffline) {
+        try {
+          await widget.api.post('/requests', payload);
+        } catch (e) {
+          if (e is SocketException ||
+              e is http.ClientException ||
+              (e is ApiException && (e.status == 0 || e.message.contains('jaringan') || e.message.contains('terhubung')))) {
+            shouldQueueOffline = true;
+          } else {
+            rethrow;
+          }
+        }
+      }
+
+      if (shouldQueueOffline) {
+        final offlineId = 'OFFLINE-${DateTime.now().millisecondsSinceEpoch}';
+        final actor = widget.workspace?.actor ?? {};
+        final employee = widget.workspace?.employee ?? {};
+        final employeeId = actor['employeeId']?.toString() ?? '';
+        final employeeName = actor['name']?.toString() ??
+            employee['name']?.toString() ??
+            'Karyawan';
+        final department = employee['department']?.toString();
+
+        final queueItem = {
+          'id': offlineId,
+          'kind': kind,
+          'title': title.text.trim().isNotEmpty
+              ? title.text.trim()
+              : 'Pengajuan $kind',
+          'notes': description.text.trim(),
+          'payload': payload,
+          'createdAt': DateTime.now().toIso8601String(),
+          'status': 'Menunggu Sinkronisasi',
+          'stagedAttachments': stagedAttachments,
+          'employeeId': employeeId,
+          'employeeName': employeeName,
+          'department': department,
+        };
+
+        if (sl.isRegistered<OfflineStorageService>()) {
+          await sl<OfflineStorageService>().enqueueRequest(queueItem);
+        }
+        if (sl.isRegistered<OfflineSyncManager>()) {
+          sl<OfflineSyncManager>().updatePendingCount();
+        }
+        if (sl.isRegistered<WorkspaceBloc>()) {
+          sl<WorkspaceBloc>().add(const WorkspaceRefreshRequested());
+        }
+        if (sl.isRegistered<RequestBloc>()) {
+          sl<RequestBloc>().add(RequestLoadRequested(kind: kind));
+        }
+
+        if (mounted) {
+          notify(
+            context,
+            'Pengajuan tersimpan di perangkat. Akan otomatis dikirim saat online.',
+          );
+          Navigator.pop(context, true);
+        }
+        return;
+      }
+
       if (sl.isRegistered<WorkspaceBloc>()) {
         sl<WorkspaceBloc>().add(const WorkspaceRefreshRequested());
       }
@@ -1139,13 +1315,43 @@ class _RequestFormState extends State<RequestForm> {
             fileName: file.name,
           );
           if (bytes.length <= ImageCompressor.maxFileSizeBytes) {
-            final result = await widget.api.postJson('/request-receipts', {
-              'name': file.name,
-              'fileBase64': base64Encode(bytes),
-            });
+            final isOnline = sl.isRegistered<NetworkConnectivityService>()
+                ? sl<NetworkConnectivityService>().isOnline
+                : true;
+
+            if (isOnline) {
+              try {
+                final result = await widget.api.postJson('/request-receipts', {
+                  'name': file.name,
+                  'fileBase64': base64Encode(bytes),
+                });
+                if (mounted) {
+                  setState(() {
+                    _selectedAttachmentId = text(result, 'id', '');
+                    _stagedAttachmentPath = null;
+                    _selectedAttachmentBytes = bytes;
+                  });
+                }
+                return;
+              } catch (_) {
+                // Fall through to stage locally if server upload fails
+              }
+            }
+
+            // Stage locally for offline sync
+            String? stagedPath;
+            if (sl.isRegistered<OfflineStorageService>()) {
+              stagedPath = await sl<OfflineStorageService>().stageAttachment(
+                fileName: file.name,
+                bytes: bytes,
+              );
+            }
             if (mounted) {
               setState(() {
-                _selectedAttachmentId = text(result, 'id', '');
+                _selectedAttachmentId =
+                    'temp_offline_${DateTime.now().millisecondsSinceEpoch}';
+                _stagedAttachmentPath = stagedPath;
+                _selectedAttachmentBytes = bytes;
               });
             }
           }
@@ -1164,10 +1370,18 @@ class _RequestFormState extends State<RequestForm> {
     return FormAttachmentCard(
       attachmentName: _selectedAttachmentName,
       onPickAttachment: _showAttachmentPicker,
-      onClearAttachment: () => setState(() {
-        _selectedAttachmentName = null;
-        _selectedAttachmentId = null;
-      }),
+      onClearAttachment: () {
+        if (_stagedAttachmentPath != null &&
+            sl.isRegistered<OfflineStorageService>()) {
+          sl<OfflineStorageService>().deleteStagedAttachment(_stagedAttachmentPath!);
+        }
+        setState(() {
+          _selectedAttachmentName = null;
+          _selectedAttachmentId = null;
+          _stagedAttachmentPath = null;
+          _selectedAttachmentBytes = null;
+        });
+      },
     );
   }
 
@@ -2619,6 +2833,8 @@ class ExpenseDraft {
   DateTime date;
   String receiptId;
   String receiptName = 'Bukti tersimpan';
+  String? stagedPath;
+  Uint8List? fileBytes;
 
   void recalculateAmount() {
     final q = int.tryParse(qty.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 1;

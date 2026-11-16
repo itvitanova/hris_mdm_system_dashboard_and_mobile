@@ -125,14 +125,16 @@ void main() {
 
         await tester.pumpWidget(
           wrapWithScreenUtil(
-            UniversalRequestCard(data: reimbursementItem),
+            UniversalRequestCard(
+              data: reimbursementItem,
+              showApplicant: true,
+            ),
           ),
         );
         await tester.pumpAndSettle();
 
         expect(find.text('Nadia Putri'), findsOneWidget);
-        expect(find.textContaining('Pemohon :'), findsOneWidget);
-        expect(find.byIcon(UIcons.regularRounded.user), findsOneWidget);
+        expect(find.byIcon(UIcons.regularRounded.user), findsNothing);
 
         final iconFinder = find.byWidgetPredicate(
           (widget) => widget is Icon && widget.color == Colors.white,
@@ -171,17 +173,16 @@ void main() {
 
         await tester.pumpWidget(
           wrapWithScreenUtil(
-            UniversalRequestCard(data: medicalWithCategory),
+            UniversalRequestCard(
+              data: medicalWithCategory,
+              showApplicant: true,
+            ),
           ),
         );
         await tester.pumpAndSettle();
 
-        expect(find.textContaining('Kategori :'), findsOneWidget);
-        expect(find.text('Rawat Jalan'), findsOneWidget);
-        expect(find.textContaining('Pemohon :'), findsOneWidget);
-        expect(find.text('Ahmad Fauzi'), findsOneWidget);
-        expect(find.text('Deskripsi :'), findsOneWidget);
-        expect(find.text('Pemeriksaan dokter spesialis dan obat resep'), findsOneWidget);
+        expect(find.textContaining('Ahmad Fauzi'), findsOneWidget);
+        expect(find.text('"${medicalWithCategory.description}"'), findsOneWidget);
       },
     );
 
@@ -201,9 +202,9 @@ void main() {
 
         // Subtitle header strictly shows submission kind
         expect(find.text('Pengajuan Cuti'), findsOneWidget);
-        // Symmetrical Deskripsi : label and reason text
-        expect(find.text('Deskripsi :'), findsOneWidget);
-        expect(find.text(cutiItem.description!), findsOneWidget);
+        // Specialized reason label and reason text
+        expect(find.text('Alasan Cuti'), findsOneWidget);
+        expect(find.text('"${cutiItem.description}"'), findsOneWidget);
         // Duration placed on bottom right footer
         expect(find.textContaining('${cutiItem.days} Hari'), findsOneWidget);
         expect(find.byIcon(UIcons.regularRounded.angle_small_right), findsOneWidget);

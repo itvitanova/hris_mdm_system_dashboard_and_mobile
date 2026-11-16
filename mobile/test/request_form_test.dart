@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:uicons/uicons.dart';
 import 'package:mdm_hris/core/api_client.dart';
 import 'package:mdm_hris/features/requests/request_form.dart';
 import 'package:mdm_hris/features/requests/presentation/widgets/form_card_input.dart';
@@ -741,7 +742,7 @@ void main() {
 
       // Verify error indicators: error text and warning icon appear
       expect(find.text('Wajib diisi'), findsWidgets);
-      expect(find.byIcon(Icons.error_outline_rounded), findsWidgets);
+      expect(find.byIcon(UIcons.regularRounded.exclamation), findsWidgets);
 
       // Verify the card container has red border
       final formCardInputs = find.byType(FormCardTextInput);
@@ -811,7 +812,7 @@ void main() {
 
       // Verify error appears for dropdown
       expect(find.text('Pilih jenis izin'), findsWidgets);
-      expect(find.byIcon(Icons.error_outline_rounded), findsWidgets);
+      expect(find.byIcon(UIcons.regularRounded.exclamation), findsWidgets);
 
       final dropdownInput = find.byType(FormCardDropdownInput<String>);
       expect(dropdownInput, findsOneWidget);
@@ -882,7 +883,7 @@ void main() {
       // Validation blocked
       expect(api.payload, isNull);
       expect(find.text('Nominal tidak valid'), findsOneWidget);
-      expect(find.byIcon(Icons.error_outline_rounded), findsWidgets);
+      expect(find.byIcon(UIcons.regularRounded.exclamation), findsWidgets);
 
       // Tap preset chip 'Rp 50 rb'
       final chip = find.text('Rp 50 rb');

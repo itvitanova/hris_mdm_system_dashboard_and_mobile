@@ -5,7 +5,8 @@ enum SubmissionStatus {
   menunggu,
   disetujui,
   perluRevisi,
-  ditolak;
+  ditolak,
+  menungguSinkronisasi;
 
   static SubmissionStatus fromString(String value) {
     switch (value.toLowerCase().replaceAll(' ', '')) {
@@ -19,6 +20,10 @@ enum SubmissionStatus {
       case 'ditolak':
       case 'rejected':
         return SubmissionStatus.ditolak;
+      case 'menunggusinkronisasi':
+      case 'syncpending':
+      case 'outbox':
+        return SubmissionStatus.menungguSinkronisasi;
       case 'menunggu':
       case 'pending':
       default:
@@ -36,6 +41,8 @@ enum SubmissionStatus {
         return 'Perlu Revisi';
       case SubmissionStatus.ditolak:
         return 'Ditolak';
+      case SubmissionStatus.menungguSinkronisasi:
+        return 'Menunggu Sinkronisasi';
     }
   }
 
@@ -50,6 +57,8 @@ enum SubmissionStatus {
           return 'Needs Revision';
         case SubmissionStatus.ditolak:
           return 'Rejected';
+        case SubmissionStatus.menungguSinkronisasi:
+          return 'Sync Pending';
       }
     }
     return displayName;

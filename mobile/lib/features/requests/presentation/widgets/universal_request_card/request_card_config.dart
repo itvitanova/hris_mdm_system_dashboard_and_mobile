@@ -214,6 +214,14 @@ class RequestCardHelper {
           badgeBorder: const Color(0xFFCBD5E1),
           textColor: const Color(0xFF475569),
         );
+      case SubmissionStatus.menungguSinkronisasi:
+        return RequestStatusConfig(
+          label: isEn ? 'Sync Pending' : 'Menunggu Sinkronisasi',
+          barColor: const Color(0xFFF59E0B),
+          badgeBg: const Color(0xFFFFFBEB),
+          badgeBorder: const Color(0xFFFDE68A),
+          textColor: const Color(0xFFB45309),
+        );
     }
   }
 }

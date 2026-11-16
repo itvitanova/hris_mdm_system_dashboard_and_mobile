@@ -26,6 +26,7 @@ class RequestSegmentedStepper extends StatelessWidget {
     final isDone = data.status == SubmissionStatus.disetujui;
     final isRejected = data.status == SubmissionStatus.ditolak;
     final isRevision = data.status == SubmissionStatus.perluRevisi;
+    final isSyncPending = data.status == SubmissionStatus.menungguSinkronisasi;
 
     final Color secondStepColor;
     final String statusText;
@@ -43,6 +44,10 @@ class RequestSegmentedStepper extends StatelessWidget {
       secondStepColor = const Color(0xFFD97706);
       statusText = 'Perlu revisi';
       statusTextColor = const Color(0xFFD97706);
+    } else if (isSyncPending) {
+      secondStepColor = const Color(0xFFF59E0B);
+      statusText = 'Menunggu antrean sinkronisasi';
+      statusTextColor = const Color(0xFFB45309);
     } else {
       secondStepColor = const Color(0xFFF59E0B);
       statusText = 'Menunggu verifikasi finance';
@@ -146,6 +151,7 @@ class RequestSegmentedStepper extends StatelessWidget {
     final isDone = data.status == SubmissionStatus.disetujui;
     final isRejected = data.status == SubmissionStatus.ditolak;
     final isRevision = data.status == SubmissionStatus.perluRevisi;
+    final isSyncPending = data.status == SubmissionStatus.menungguSinkronisasi;
 
     final Color trackColor;
     final String statusText;
@@ -163,6 +169,10 @@ class RequestSegmentedStepper extends StatelessWidget {
       trackColor = const Color(0xFFD97706);
       statusText = 'Perlu revisi';
       statusTextColor = const Color(0xFFD97706);
+    } else if (isSyncPending) {
+      trackColor = const Color(0xFFF59E0B);
+      statusText = 'Menunggu antrean sinkronisasi';
+      statusTextColor = const Color(0xFFB45309);
     } else {
       trackColor = const Color(0xFFF59E0B);
       statusText = 'Menunggu persetujuan';
