@@ -59,7 +59,11 @@ class ExpenseItemDateCategory extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(UIcons.regularRounded.calendar, size: 14.sp, color: const Color(0xFF64748B)),
+                Icon(
+                  UIcons.regularRounded.calendar,
+                  size: 14.sp,
+                  color: const Color(0xFF64748B),
+                ),
                 SizedBox(width: 6.w),
                 Expanded(
                   child: Text(
@@ -82,66 +86,76 @@ class ExpenseItemDateCategory extends StatelessWidget {
           alignedDropdown: true,
           child: DropdownButtonFormField<String>(
             isExpanded: true,
-          initialValue: item.category.text.isNotEmpty ? item.category.text : null,
-          hint: Text(
-            'Pilih kategori',
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 12.5.sp,
-              color: const Color(0xFF94A3B8),
+            initialValue: item.category.text.isNotEmpty
+                ? item.category.text
+                : null,
+            hint: Text(
+              'Pilih kategori',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 12.5.sp,
+                color: const Color(0xFF94A3B8),
+              ),
             ),
-          ),
-          decoration: InputDecoration(
-            labelText: 'Kategori *',
-            labelStyle: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 12.sp,
-              fontWeight: FontWeight.w500,
-              color: const Color(0xFF64748B),
-            ),
-            contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.r),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.r),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.r),
-              borderSide: const BorderSide(color: Color(0xFF0D9488), width: 1.5),
-            ),
-          ),
-          items: [
-            ...reimbursementCategories,
-            if (item.category.text.isNotEmpty &&
-                !reimbursementCategories.contains(item.category.text))
-              item.category.text,
-          ].map((cat) {
-            return DropdownMenuItem<String>(
-              value: cat,
-              child: Text(
-                cat,
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 12.5.sp,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF0F172A),
+            decoration: InputDecoration(
+              labelText: 'Kategori *',
+              labelStyle: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 12.sp,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF64748B),
+              ),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 12.w,
+                vertical: 10.h,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: const BorderSide(
+                  color: Color(0xFF0D9488),
+                  width: 1.5,
                 ),
               ),
-            );
-          }).toList(),
-          onChanged: isDisabled
-              ? null
-              : (v) {
-                  item.category.text = v ?? '';
-                  onChanged();
-                },
-          validator: (v) =>
-              (v == null || v.trim().isEmpty) ? 'Pilih kategori pengeluaran' : null,
+            ),
+            items:
+                [
+                  ...reimbursementCategories,
+                  if (item.category.text.isNotEmpty &&
+                      !reimbursementCategories.contains(item.category.text))
+                    item.category.text,
+                ].map((cat) {
+                  return DropdownMenuItem<String>(
+                    value: cat,
+                    child: Text(
+                      cat,
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 12.5.sp,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF0F172A),
+                      ),
+                    ),
+                  );
+                }).toList(),
+            onChanged: isDisabled
+                ? null
+                : (v) {
+                    item.category.text = v ?? '';
+                    onChanged();
+                  },
+            validator: (v) => (v == null || v.trim().isEmpty)
+                ? 'Pilih kategori pengeluaran'
+                : null,
+          ),
         ),
-      ),
       ],
     );
   }
