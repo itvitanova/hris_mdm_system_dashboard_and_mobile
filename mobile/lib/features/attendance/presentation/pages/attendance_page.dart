@@ -7,7 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/workspace.dart';
 import '../../../../core/widgets/core_widgets.dart';
-import '../../attendance_service.dart';
+import '../../data/datasources/attendance_service.dart';
 import 'auto_face_page.dart';
 import '../widgets/daily_attendance.dart';
 

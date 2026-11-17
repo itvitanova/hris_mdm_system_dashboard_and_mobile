@@ -10,7 +10,7 @@ import 'package:mdm_hris/features/auth/domain/usecases/change_password_usecase.d
 import 'package:mdm_hris/features/auth/domain/usecases/login_usecase.dart';
 import 'package:mdm_hris/features/auth/domain/usecases/logout_usecase.dart';
 import 'package:mdm_hris/features/auth/domain/usecases/restore_session_usecase.dart';
-import 'package:mdm_hris/features/auth/login_screen.dart';
+import 'package:mdm_hris/features/auth/presentation/pages/login_page.dart';
 import 'package:mdm_hris/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:mdm_hris/features/auth/presentation/bloc/auth_event.dart';
 

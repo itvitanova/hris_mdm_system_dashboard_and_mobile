@@ -5,7 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:uicons/uicons.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/workspace.dart';
-import '../../attendance_service.dart';
+import '../../data/datasources/attendance_service.dart';
 import '../pages/auto_face_page.dart';
 import 'daily_attendance.dart';
 

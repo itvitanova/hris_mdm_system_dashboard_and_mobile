@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:uicons/uicons.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/workspace.dart';
-import '../../../payroll/payslip_screen.dart';
+import '../../../payroll/presentation/pages/payslip_page.dart';
 
 class PayrollTab extends StatefulWidget {
   const PayrollTab({

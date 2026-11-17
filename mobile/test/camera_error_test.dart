@@ -3,7 +3,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mdm_hris/core/api_client.dart';
-import 'package:mdm_hris/features/attendance/camera_error.dart';
+import 'package:mdm_hris/features/attendance/presentation/pages/camera_error_page.dart';
 
 void main() {
   test('native ML Kit stack trace becomes an actionable short message', () {

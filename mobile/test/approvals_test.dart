@@ -5,8 +5,8 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mdm_hris/core/api_client.dart';
-import 'package:mdm_hris/features/requests/request_detail.dart';
-import 'package:mdm_hris/features/requests/request_form.dart';
+import 'package:mdm_hris/features/requests/presentation/pages/request_detail_page.dart';
+import 'package:mdm_hris/features/requests/presentation/pages/request_form_page.dart';
 import 'package:mdm_hris/shared/theme.dart';
 
 class ApprovalApi extends ApiClient {

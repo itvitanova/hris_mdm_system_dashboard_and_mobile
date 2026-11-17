@@ -1,6 +1,6 @@
 import 'package:get_it/get_it.dart';
 import '../../core/api_client.dart';
-import 'attendance_service.dart';
+import 'data/datasources/attendance_service.dart';
 import 'data/datasources/attendance_remote_data_source.dart';
 import 'data/repositories/attendance_repository_impl.dart';
 import 'domain/repositories/attendance_repository.dart';

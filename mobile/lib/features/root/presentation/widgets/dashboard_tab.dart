@@ -6,12 +6,12 @@ import '../../../../core/workspace.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../attendance/daily_attendance.dart';
+import '../../../attendance/presentation/widgets/daily_attendance.dart';
 import '../../../attendance/presentation/pages/attendance_history_page.dart';
 import '../../../attendance/presentation/widgets/attendance_daily_card.dart';
 import '../../../attendance/presentation/widgets/attendance_detail_modal.dart';
 import '../../../attendance/presentation/widgets/attendance_modal_bottom_sheet.dart';
-import '../../../requests/request_notifications.dart';
+import '../../../requests/presentation/pages/request_notifications_page.dart';
 import 'compact_attendance_card.dart';
 import 'language_swap_button.dart';
 

@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mdm_hris/core/api_client.dart';
-import 'package:mdm_hris/features/attendance/attendance_service.dart';
+import 'package:mdm_hris/features/attendance/data/datasources/attendance_service.dart';
 
 Position fix(double accuracy, {bool mocked = false, DateTime? timestamp}) =>
     Position(

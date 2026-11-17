@@ -1,6 +1,6 @@
 import 'dart:ui';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mdm_hris/features/attendance/face_capture_gate.dart';
+import 'package:mdm_hris/features/attendance/presentation/widgets/face_capture_gate.dart';
 
 void main() {
   const face = FaceObservation(

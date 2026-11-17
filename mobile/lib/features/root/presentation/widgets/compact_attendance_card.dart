@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:uicons/uicons.dart';
 import '../../../../core/workspace.dart';
-import '../../../attendance/daily_attendance.dart';
+import '../../../attendance/presentation/widgets/daily_attendance.dart';
 import 'language_swap_button.dart';
 
 class CompactAttendanceCard extends StatelessWidget {
