@@ -1,4 +1,4 @@
-import '../../../../core/error/result.dart';
+import '../../../../core/errors/result.dart';
 
 abstract class AuthRepository {
   Future<Result<bool>> restoreSession();

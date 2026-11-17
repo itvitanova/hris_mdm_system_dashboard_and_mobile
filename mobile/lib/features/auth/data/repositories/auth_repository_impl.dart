@@ -1,6 +1,6 @@
 import '../../../../core/api_client.dart';
-import '../../../../core/error/failures.dart';
-import '../../../../core/error/result.dart';
+import '../../../../core/errors/failures.dart';
+import '../../../../core/errors/result.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_local_data_source.dart';
 import '../datasources/auth_remote_data_source.dart';

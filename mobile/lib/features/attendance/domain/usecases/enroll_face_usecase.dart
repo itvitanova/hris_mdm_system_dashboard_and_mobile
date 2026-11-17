@@ -1,5 +1,5 @@
 import 'package:camera/camera.dart';
-import '../../../../core/error/result.dart';
+import '../../../../core/errors/result.dart';
 import '../repositories/attendance_repository.dart';
 
 class EnrollFaceUseCase {

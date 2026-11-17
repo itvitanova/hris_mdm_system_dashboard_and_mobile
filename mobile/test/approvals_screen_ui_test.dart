@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mdm_hris/core/api_client.dart';
 import 'package:mdm_hris/features/requests/presentation/pages/request_detail_page.dart';
 import 'package:mdm_hris/features/requests/presentation/widgets/universal_request_card/universal_request_card.dart';
-import 'package:mdm_hris/shared/theme.dart';
+import 'package:mdm_hris/core/theme/app_theme.dart';
 
 class MockApprovalApi extends ApiClient {
   final request = <String, dynamic>{

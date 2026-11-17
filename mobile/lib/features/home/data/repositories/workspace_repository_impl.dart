@@ -1,6 +1,6 @@
 import '../../../../core/api_client.dart';
-import '../../../../core/error/failures.dart';
-import '../../../../core/error/result.dart';
+import '../../../../core/errors/failures.dart';
+import '../../../../core/errors/result.dart';
 import '../../../../core/workspace.dart';
 import '../../domain/repositories/workspace_repository.dart';
 import '../datasources/workspace_remote_data_source.dart';

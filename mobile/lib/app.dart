@@ -18,8 +18,8 @@ import 'features/attendance/presentation/pages/face_enrollment_page.dart';
 import 'features/attendance/presentation/bloc/attendance_bloc.dart';
 import 'features/requests/presentation/bloc/request_bloc.dart';
 import 'features/payroll/presentation/bloc/payroll_bloc.dart';
-import 'shared/widgets.dart';
-import 'shared/theme.dart';
+import 'core/widgets/core_widgets.dart';
+import 'core/theme/app_theme.dart';
 import 'features/splash/presentation/pages/splash_screen.dart';
 
 class HrisApp extends StatefulWidget {

@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-import '../../../../core/error/result.dart';
+import '../../../../core/errors/result.dart';
 import '../repositories/payroll_repository.dart';
 
 class DownloadPayslipUseCase {

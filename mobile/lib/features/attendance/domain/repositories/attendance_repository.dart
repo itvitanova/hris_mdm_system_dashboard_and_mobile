@@ -1,5 +1,5 @@
 import 'package:camera/camera.dart';
-import '../../../../core/error/result.dart';
+import '../../../../core/errors/result.dart';
 
 abstract class AttendanceRepository {
   Future<Result<void>> enrollFace(String employeeId, XFile photo);

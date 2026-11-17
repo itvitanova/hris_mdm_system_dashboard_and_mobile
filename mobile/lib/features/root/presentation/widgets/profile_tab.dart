@@ -7,7 +7,7 @@ import '../../../../core/api_client.dart';
 import '../../../../core/workspace.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
-import '../../../../shared/widgets.dart';
+import '../../../../core/widgets/core_widgets.dart';
 import '../../../requests/presentation/pages/request_notifications_page.dart';
 import 'logout_confirmation_bottom_sheet.dart';
 

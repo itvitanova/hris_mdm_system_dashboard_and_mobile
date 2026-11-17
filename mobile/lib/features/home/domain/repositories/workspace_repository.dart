@@ -1,4 +1,4 @@
-import '../../../../core/error/result.dart';
+import '../../../../core/errors/result.dart';
 import '../../../../core/workspace.dart';
 
 abstract class WorkspaceRepository {

@@ -1,7 +1,7 @@
 import 'package:camera/camera.dart';
 import '../../../../core/api_client.dart';
-import '../../../../core/error/failures.dart';
-import '../../../../core/error/result.dart';
+import '../../../../core/errors/failures.dart';
+import '../../../../core/errors/result.dart';
 import '../../domain/repositories/attendance_repository.dart';
 import '../datasources/attendance_remote_data_source.dart';
 
