@@ -19,3 +19,25 @@
 ## 4. UI Component Protection & Invariants
 - **Strict Navbar Icon Preservation**:
   - Dilarang keras mengubah, mengganti, atau merefaktor icon-icon pada Bottom Navigation Bar (`RootPage` navbar: Beranda, Pengajuan, Persetujuan, Slip Gaji, Profil), baik aset SVG maupun pengaturannya, kecuali diminta secara khusus dan eksplisit oleh pengguna.
+
+## 5. Feature-First Clean Architecture & Code Standards
+Seluruh implementasi, perbaikan, dan refactor pada mobile wajib mematuhi panduan di `docs/architecture/ai_guidelines_architecture_rules.md`:
+1. **Feature-First Clean Architecture**:
+   - Struktur folder per fitur di `lib/features/[nama_fitur]/`: `domain/` (entities, repositories, usecases), `data/` (models, datasources, repositories), `presentation/` (bloc, pages, widgets), dan `[nama_fitur]_injection.dart`.
+   - Dilarang menaruh file screen atau service langsung di root folder fitur.
+2. **Widget Granularity & UI Rules**:
+   - Dilarang membuat file UI (Page/Screen) monolithic > 200 baris kode.
+   - Pecah UI menjadi class widget mandiri (`StatelessWidget`), bukan private helper method (`Widget _buildX()`).
+   - Pisahkan shared widget ke `lib/core/widgets/` dan widget spesifik fitur ke `lib/features/[nama_fitur]/presentation/widgets/`.
+3. **BLoC State Management**:
+   - Pisahkan menjadi 3 file: `_bloc.dart`, `_event.dart`, dan `_state.dart`.
+   - State berbasis class (Initial, Loading, Success, Error). UI hanya menampilkan data dan dispatch event.
+4. **Dependency Injection**:
+   - Gunakan `get_it` via `[nama_fitur]_injection.dart` dan didaftarkan di entry point aplikasi.
+5. **Networking & API**:
+   - Gunakan `dio_client.dart` di `lib/app/config/`. Jangan instansiasi Dio baru di data layer. Error API di-mapping ke `Exception` (data) & `Failure` (domain/UI) di `lib/core/errors/`.
+6. **Theme & Komponen Global**:
+   - Gunakan theme dari `lib/core/theme/` (`app_colors.dart`, `app_text_styles.dart`). Dilarang hardcode warna dan text style di UI.
+7. **Naming Conventions**:
+   - File/folder `snake_case`, Class `PascalCase` dengan suffix peran (`...Page`, `...Widget`, `...Bloc`, `...Event`, `...State`, `...Entity`, `...Model`, `...Repository`).
+
