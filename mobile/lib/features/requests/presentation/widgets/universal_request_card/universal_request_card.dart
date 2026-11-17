@@ -545,60 +545,54 @@ class UniversalRequestCard extends StatelessWidget {
                             ),
                           ),
                           SizedBox(width: 6.w),
-                          Flexible(
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                if (transactionText != null) ...[
-                                  Text(
-                                    transactionText,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w500,
-                                      color: Color(0xFF64748B),
-                                    ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              if (transactionText != null) ...[
+                                Text(
+                                  transactionText,
+                                  maxLines: 1,
+                                  style: const TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color(0xFF64748B),
                                   ),
-                                  SizedBox(width: 4.w),
-                                  const Text(
-                                    '·',
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
-                                      color: Color(0xFF94A3B8),
-                                    ),
-                                  ),
-                                  SizedBox(width: 4.w),
-                                ],
-                                if (bottomMetric != null) ...[
-                                  Flexible(
-                                    child: Text(
-                                      bottomMetric,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        fontFamily: 'Inter',
-                                        fontSize: 13.5.sp,
-                                        fontWeight: FontWeight.w800,
-                                        color: const Color(0xFF0F172A),
-                                        letterSpacing: -0.3,
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(width: 4.w),
-                                ],
-                                Icon(
-                                  UIcons.regularRounded.angle_small_right,
-                                  size: 16.w,
-                                  color: const Color(0xFF94A3B8),
                                 ),
+                                SizedBox(width: 4.w),
+                                const Text(
+                                  '·',
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF94A3B8),
+                                  ),
+                                ),
+                                SizedBox(width: 4.w),
                               ],
-                            ),
+                              if (bottomMetric != null) ...[
+                                Text(
+                                  bottomMetric,
+                                  maxLines: 1,
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 13.5.sp,
+                                    fontWeight: FontWeight.w800,
+                                    color: const Color(0xFF0F172A),
+                                    letterSpacing: -0.3,
+                                  ),
+                                ),
+                                SizedBox(width: 4.w),
+                              ],
+                              Icon(
+                                UIcons.regularRounded.angle_small_right,
+                                size: 16.w,
+                                color: const Color(0xFF94A3B8),
+                              ),
+                            ],
                           ),
                         ],
                       ),
