@@ -157,12 +157,15 @@ class UniversalRequestCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     // BARIS 1: Header Rata Kanan-Kiri (Blok Identitas di Kiri, Badge Status Menempel di Kanan)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.start,
+                      spacing: 8.w,
+                      runSpacing: 6.h,
                       children: [
                         // Identitas Pengajuan: Icon, Judul & Subtitle
-                        Expanded(
+                        ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: 220.w),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -279,8 +282,6 @@ class UniversalRequestCard extends StatelessWidget {
                             ],
                           ),
                         ),
-                        SizedBox(width: 10.w),
-
                         // Badge Status
                         Container(
                           padding: EdgeInsets.symmetric(
@@ -510,50 +511,50 @@ class UniversalRequestCard extends StatelessWidget {
                         padding: EdgeInsets.only(top: 10.h, bottom: 8.h),
                         child: const Divider(height: 1, thickness: 0.8, color: Color(0xFFF1F5F9)),
                       ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.center,
+                      Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 6.w,
+                        runSpacing: 4.h,
                         children: [
-                          Expanded(
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  UIcons.regularRounded.calendar,
-                                  size: 12.w,
-                                  color: const Color(0xFF94A3B8),
-                                ),
-                                SizedBox(width: 5.w),
-                                Flexible(
-                                  child: Text(
-                                    RequestCardHelper.formatDateRange(
-                                      data.startDate,
-                                      data.endDate,
-                                      language,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w500,
-                                      color: Color(0xFF64748B),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(width: 6.w),
                           Row(
                             mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Icon(
+                                UIcons.regularRounded.calendar,
+                                size: 12.w,
+                                color: const Color(0xFF94A3B8),
+                              ),
+                              SizedBox(width: 5.w),
+                              ConstrainedBox(
+                                constraints: BoxConstraints(maxWidth: 160.w),
+                                child: Text(
+                                  RequestCardHelper.formatDateRange(
+                                    data.startDate,
+                                    data.endDate,
+                                    language,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color(0xFF64748B),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Wrap(
+                            alignment: WrapAlignment.end,
+                            crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
                               if (transactionText != null) ...[
                                 Text(
                                   transactionText,
                                   maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
                                     fontFamily: 'Inter',
                                     fontSize: 11,
@@ -574,15 +575,21 @@ class UniversalRequestCard extends StatelessWidget {
                                 SizedBox(width: 4.w),
                               ],
                               if (bottomMetric != null) ...[
-                                Text(
-                                  bottomMetric,
-                                  maxLines: 1,
-                                  style: TextStyle(
-                                    fontFamily: 'Inter',
-                                    fontSize: 13.5.sp,
-                                    fontWeight: FontWeight.w800,
-                                    color: const Color(0xFF0F172A),
-                                    letterSpacing: -0.3,
+                                ConstrainedBox(
+                                  constraints: BoxConstraints(maxWidth: 220.w),
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      bottomMetric,
+                                      maxLines: 1,
+                                      style: TextStyle(
+                                        fontFamily: 'Inter',
+                                        fontSize: 13.5.sp,
+                                        fontWeight: FontWeight.w800,
+                                        color: const Color(0xFF0F172A),
+                                        letterSpacing: -0.3,
+                                      ),
+                                    ),
                                   ),
                                 ),
                                 SizedBox(width: 4.w),

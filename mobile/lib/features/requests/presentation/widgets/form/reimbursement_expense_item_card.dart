@@ -55,7 +55,11 @@ class ReimbursementExpenseItemCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8.w,
+            runSpacing: 4.h,
             children: [
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
@@ -64,7 +68,7 @@ class ReimbursementExpenseItemCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(6.r),
                 ),
                 child: Text(
-                  'Item #${index + 1}',
+                  'Pengeluaran ${index + 1}',
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 11.sp,
@@ -73,13 +77,17 @@ class ReimbursementExpenseItemCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const Spacer(),
               if (totalCount > 1)
-                IconButton(
+                TextButton.icon(
                   onPressed: isDisabled ? null : () => onRemove(item),
-                  icon: Icon(UIcons.regularRounded.trash, size: 16.sp, color: const Color(0xFFEF4444)),
-                  padding: EdgeInsets.zero,
-                  constraints: BoxConstraints(minWidth: 32.w, minHeight: 32.w),
+                  icon: Icon(UIcons.regularRounded.trash, size: 14.sp, color: const Color(0xFFEF4444)),
+                  label: Text(
+                    'Hapus rincian ${index + 1}',
+                    style: TextStyle(fontFamily: 'Inter', fontSize: 11.5.sp, color: const Color(0xFFEF4444)),
+                  ),
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                  ),
                 ),
             ],
           ),

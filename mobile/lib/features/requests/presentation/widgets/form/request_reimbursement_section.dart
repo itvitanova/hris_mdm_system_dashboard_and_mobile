@@ -51,26 +51,26 @@ class RequestReimbursementSection extends StatelessWidget {
       children: [
         RequestReimbursementAccountCard(workspace: workspace),
         SizedBox(height: 16.h),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 8.w,
+          runSpacing: 6.h,
           children: [
-            Expanded(
-              child: Text(
-                'Rincian Pengeluaran *',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 12.5.sp,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF334155),
-                ),
+            Text(
+              'Rincian Pengeluaran *',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 12.5.sp,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF334155),
               ),
             ),
-            SizedBox(width: 8.w),
             TextButton.icon(
               onPressed: busy || uploading ? null : onAddExpense,
               icon: Icon(UIcons.regularRounded.plus, size: 14.sp, color: const Color(0xFF2563EB)),
               label: Text(
-                'Tambah Item',
+                'Tambah rincian',
                 style: TextStyle(fontFamily: 'Inter', fontSize: 12.sp, fontWeight: FontWeight.w600, color: const Color(0xFF2563EB)),
               ),
               style: TextButton.styleFrom(
