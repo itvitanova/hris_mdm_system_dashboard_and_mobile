@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:uicons/uicons.dart';
 import '../../../../core/workspace.dart';
 import '../../../attendance/presentation/widgets/daily_attendance.dart';
+import 'attendance/compact_attendance_action_button.dart';
+import 'attendance/compact_attendance_header.dart';
+import 'attendance/compact_attendance_tile.dart';
 import 'language_swap_button.dart';
 
 class CompactAttendanceCard extends StatelessWidget {
@@ -142,57 +144,9 @@ class CompactAttendanceCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // 1. Header
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                width: 28.w,
-                height: 28.w,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.15),
-                ),
-                alignment: Alignment.center,
-                child: Icon(
-                  UIcons.regularRounded.clock,
-                  size: 15.sp,
-                  color: const Color(0xFFCCFBF1),
-                ),
-              ),
-              SizedBox(width: 8.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      isEn ? "TODAY'S ATTENDANCE" : 'KEHADIRAN HARI INI',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 10.sp,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.6,
-                        color: const Color(0xFFCCFBF1),
-                      ),
-                    ),
-                    SizedBox(height: 2.h),
-                    Text(
-                      shiftSubtitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 10.sp,
-                        fontWeight: FontWeight.w400,
-                        color: const Color(0xFF99F6E4).withValues(alpha: 0.9),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          CompactAttendanceHeader(
+            isEn: isEn,
+            shiftSubtitle: shiftSubtitle,
           ),
           SizedBox(height: 12.h),
 
@@ -202,7 +156,7 @@ class CompactAttendanceCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(
-                  child: _buildTile(
+                  child: CompactAttendanceTile(
                     label: isEn ? 'Check In' : 'Jam Masuk',
                     chipText: inChipText,
                     chipBg: inChipBg,
@@ -221,7 +175,7 @@ class CompactAttendanceCard extends StatelessWidget {
                 ),
                 SizedBox(width: 10.w),
                 Expanded(
-                  child: _buildTile(
+                  child: CompactAttendanceTile(
                     label: isEn ? 'Check Out' : 'Jam Pulang',
                     chipText: outChipText,
                     chipBg: outChipBg,
@@ -244,188 +198,10 @@ class CompactAttendanceCard extends StatelessWidget {
           SizedBox(height: 12.h),
 
           // 3. Action Button
-          SizedBox(
-            width: double.infinity,
-            height: 44.h,
-            child: FilledButton.icon(
-              style: FilledButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: const Color(0xFF0F766E),
-                disabledBackgroundColor:
-                    const Color(0xFF0F766E).withValues(alpha: 0.6),
-                disabledForegroundColor: const Color(0xFFB2EBF2),
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
-              ),
-              onPressed: daily.completed ? null : onActionPressed,
-              icon: daily.completed
-                  ? Icon(
-                      UIcons.regularRounded.check,
-                      size: 17.sp,
-                    )
-                  : SvgPicture.asset(
-                      daily.checkedIn
-                          ? 'assets/icon/logout.svg'
-                          : 'assets/icon/login.svg',
-                      width: 17.sp,
-                      height: 17.sp,
-                      colorFilter: const ColorFilter.mode(
-                        Color(0xFF0F766E),
-                        BlendMode.srcIn,
-                      ),
-                    ),
-              label: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  isEn
-                      ? (daily.completed
-                          ? 'Attendance Completed'
-                          : daily.checkedIn
-                              ? 'Check Out'
-                              : 'Check In')
-                      : daily.label,
-                  maxLines: 1,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 13.5.sp,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTile({
-    required String label,
-    required String chipText,
-    required Color chipBg,
-    required Color chipTextColor,
-    required String timeText,
-    required bool isPendingTime,
-    required String sublabel,
-    Widget? leadingIcon,
-  }) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 11.w, vertical: 10.h),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.18),
-          width: 1.0,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Row 1: Label & Chip
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Flexible(
-                flex: 3,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 11.sp,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFFCCFBF1),
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(width: 4.w),
-              Flexible(
-                flex: 2,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerRight,
-                  child: Container(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-                    decoration: BoxDecoration(
-                      color: chipBg,
-                      borderRadius: BorderRadius.circular(4.r),
-                    ),
-                    child: Text(
-                      chipText,
-                      maxLines: 1,
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 9.sp,
-                        fontWeight: FontWeight.w700,
-                        color: chipTextColor,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 6.h),
-
-          // Row 2: Time
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              timeText,
-              maxLines: 1,
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 22.sp,
-                fontWeight: isPendingTime ? FontWeight.w700 : FontWeight.w800,
-                letterSpacing: isPendingTime ? 1.0 : -0.5,
-                color: isPendingTime
-                    ? const Color(0xFFCCFBF1).withValues(alpha: 0.6)
-                    : Colors.white,
-              ),
-            ),
-          ),
-          SizedBox(height: 6.h),
-
-          // Row 3: Sublabel with optional status icon
-          SizedBox(
-            height: 14.h,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                if (leadingIcon != null) ...[
-                  leadingIcon,
-                  SizedBox(width: 4.w),
-                ],
-                Expanded(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      sublabel,
-                      maxLines: 1,
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 9.5.sp,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF99F6E4).withValues(alpha: 0.9),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          CompactAttendanceActionButton(
+            daily: daily,
+            isEn: isEn,
+            onActionPressed: onActionPressed,
           ),
         ],
       ),
