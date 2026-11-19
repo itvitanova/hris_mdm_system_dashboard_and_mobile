@@ -26,6 +26,7 @@ Future<void> initDependencies({ApiClient? customApiClient}) async {
   // 1. Core Services & Network Foundation
   final offlineStorage = OfflineStorageService();
   final connectivityService = NetworkConnectivityService();
+  connectivityService.startMonitoring();
   sl.registerLazySingleton<OfflineStorageService>(() => offlineStorage);
   sl.registerLazySingleton<NetworkConnectivityService>(() => connectivityService);
 
