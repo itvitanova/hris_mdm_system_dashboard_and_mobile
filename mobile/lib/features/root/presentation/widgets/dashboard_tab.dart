@@ -10,7 +10,6 @@ import 'package:mdm_hris/features/attendance/presentation/widgets/attendance_mod
 import 'compact_attendance_card.dart';
 import 'dashboard/dashboard_attendance_stats_grid.dart';
 import 'dashboard/dashboard_header.dart';
-import 'dashboard/dashboard_offline_banner.dart';
 import 'dashboard/dashboard_recent_activity_section.dart';
 import 'dashboard/dashboard_subheader.dart';
 import 'language_swap_button.dart';
@@ -119,10 +118,6 @@ class _DashboardTabState extends State<DashboardTab> {
                 onLanguageChanged: (lang) => setState(() => _currentLanguage = lang),
                 open: open,
               ),
-              if (!_isOnline) ...[
-                SizedBox(height: 12.w),
-                DashboardOfflineBanner(isEn: _currentLanguage == AppLanguage.en),
-              ],
               SizedBox(height: 14.w),
               DashboardSubheader(
                 workspace: w,

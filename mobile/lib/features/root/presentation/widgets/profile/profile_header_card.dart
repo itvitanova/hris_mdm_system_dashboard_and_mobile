@@ -66,56 +66,16 @@ class ProfileHeaderCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Wrap(
-          spacing: 6.w,
-          runSpacing: 2.h,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            Text(
-              'Selamat Datang 👋',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 10.sp,
-                fontWeight: FontWeight.w500,
-                color: const Color(0xFF64748B),
-                letterSpacing: 0.1,
-                height: 1.1,
-              ),
-            ),
-            if (!isOnline)
-              Container(
-                key: const Key('profile_header_offline_badge'),
-                padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 1.h),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEF2F2),
-                  borderRadius: BorderRadius.circular(4.r),
-                  border: Border.all(color: const Color(0xFFFECACA), width: 0.8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 4.5.w,
-                      height: 4.5.w,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFEF4444),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    SizedBox(width: 3.5.w),
-                    Text(
-                      'Offline',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 8.5.sp,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFFDC2626),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-          ],
+        Text(
+          'Selamat Datang 👋',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 10.sp,
+            fontWeight: FontWeight.w500,
+            color: const Color(0xFF64748B),
+            letterSpacing: 0.1,
+            height: 1.1,
+          ),
         ),
         SizedBox(height: 3.h),
         Text(

@@ -59,52 +59,15 @@ class DashboardHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Wrap(
-          spacing: 4.w,
-          runSpacing: 2.h,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            Text(
-              isEn ? 'Welcome 👋' : 'Selamat Datang 👋',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 11.sp,
-                fontWeight: FontWeight.w500,
-                color: const Color(0xFF64748B),
-                letterSpacing: 0.1,
-              ),
-            ),
-            if (!isOnline)
-              Container(
-                key: const Key('dashboard_header_offline_badge'),
-                padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 1.h),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEF2F2),
-                  borderRadius: BorderRadius.circular(4.r),
-                  border: Border.all(color: const Color(0xFFFECACA), width: 0.8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.wifi_off_rounded,
-                      size: 10.w,
-                      color: const Color(0xFFDC2626),
-                    ),
-                    SizedBox(width: 3.w),
-                    Text(
-                      'Offline',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 8.5.sp,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFFDC2626),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-          ],
+        Text(
+          isEn ? 'Welcome 👋' : 'Selamat Datang 👋',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 11.sp,
+            fontWeight: FontWeight.w500,
+            color: const Color(0xFF64748B),
+            letterSpacing: 0.1,
+          ),
         ),
         SizedBox(height: 3.w),
         Text(

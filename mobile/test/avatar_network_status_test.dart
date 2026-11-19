@@ -45,7 +45,7 @@ void main() {
     'requests': [],
   });
 
-  group('Avatar Network Status Dot & Offline Info Tests', () {
+  group('Avatar Network Status Dot Only Tests', () {
     testWidgets('DashboardAvatar renders green dot when online and red dot when offline', (tester) async {
       await tester.pumpWidget(
         ScreenUtilInit(
@@ -112,7 +112,7 @@ void main() {
       expect((redDot.decoration as BoxDecoration).color, const Color(0xFFEF4444));
     });
 
-    testWidgets('DashboardTab updates offline banner and avatar dot dynamically on connection change', (tester) async {
+    testWidgets('DashboardTab updates dot to red on offline without extra tags or banners', (tester) async {
       tester.view.physicalSize = const Size(390 * 3, 1400 * 3);
       tester.view.devicePixelRatio = 3.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -135,7 +135,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Online initially: dot is green, no offline banner, no offline badge
+      // Online initially: dot is green
       final greenDot = tester.widget<Container>(find.byKey(const Key('dashboard_avatar_online_dot')));
       expect((greenDot.decoration as BoxDecoration).color, const Color(0xFF00AA13));
       expect(find.byKey(const Key('dashboard_header_offline_badge')), findsNothing);
@@ -145,19 +145,19 @@ void main() {
       connectivityService.setOnline(false);
       await tester.pumpAndSettle();
 
-      // Offline state: dot is red, offline badge in header, offline banner visible
+      // Offline state: dot is red, NO extra badge tags or banners anywhere
       final redDot = tester.widget<Container>(find.byKey(const Key('dashboard_avatar_online_dot')));
       expect((redDot.decoration as BoxDecoration).color, const Color(0xFFEF4444));
-      expect(find.byKey(const Key('dashboard_header_offline_badge')), findsOneWidget);
-      expect(find.text('Mode Offline • Koneksi Internet Mati'), findsOneWidget);
+      expect(find.byKey(const Key('dashboard_header_offline_badge')), findsNothing);
+      expect(find.text('Mode Offline • Koneksi Internet Mati'), findsNothing);
 
-      // Tapping avatar triggers SnackBar
+      // Tapping avatar triggers SnackBar with offline info
       await tester.tap(find.byKey(const Key('dashboard_avatar_online_dot')));
       await tester.pumpAndSettle();
       expect(find.text('Koneksi internet mati. Anda sedang dalam mode offline.'), findsOneWidget);
     });
 
-    testWidgets('ProfileTab updates offline banner and avatar dot dynamically on connection change', (tester) async {
+    testWidgets('ProfileTab updates dot to red on offline without extra tags or banners', (tester) async {
       tester.view.physicalSize = const Size(390 * 3, 1400 * 3);
       tester.view.devicePixelRatio = 3.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -180,7 +180,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Online initially: dot is green, no offline banner
+      // Online initially: dot is green
       final greenDot = tester.widget<Container>(find.byKey(const Key('profile_avatar_online_dot')));
       expect((greenDot.decoration as BoxDecoration).color, const Color(0xFF00AA13));
       expect(find.byKey(const Key('profile_header_offline_badge')), findsNothing);
@@ -190,13 +190,13 @@ void main() {
       connectivityService.setOnline(false);
       await tester.pumpAndSettle();
 
-      // Offline state: dot is red, offline banner visible, offline badge in header
+      // Offline state: dot is red, NO extra badge tags or banners
       final redDot = tester.widget<Container>(find.byKey(const Key('profile_avatar_online_dot')));
       expect((redDot.decoration as BoxDecoration).color, const Color(0xFFEF4444));
-      expect(find.byKey(const Key('profile_header_offline_badge')), findsOneWidget);
-      expect(find.text('Mode Offline • Koneksi Internet Mati'), findsOneWidget);
+      expect(find.byKey(const Key('profile_header_offline_badge')), findsNothing);
+      expect(find.text('Mode Offline • Koneksi Internet Mati'), findsNothing);
 
-      // Tapping avatar triggers SnackBar
+      // Tapping avatar triggers SnackBar with offline info
       await tester.tap(find.byKey(const Key('profile_avatar_online_dot')));
       await tester.pumpAndSettle();
       expect(find.text('Koneksi internet mati. Anda sedang dalam mode offline.'), findsOneWidget);

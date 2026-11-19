@@ -14,7 +14,6 @@ import 'profile/employee_details_bottom_sheet.dart';
 import 'profile/profile_header_card.dart';
 import 'profile/profile_info_grid.dart';
 import 'profile/profile_logout_item.dart';
-import 'profile/profile_offline_banner.dart';
 import 'profile/profile_setting_item.dart';
 import 'profile/profile_settings_header.dart';
 import 'profile/profile_version_footer.dart';
@@ -135,7 +134,6 @@ class _ProfileTabState extends State<ProfileTab> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 SizedBox(height: 20.h),
-                if (!_isOnline) const ProfileOfflineBanner(),
                 ProfileHeaderCard(
                   name: userName,
                   email: userEmail,
