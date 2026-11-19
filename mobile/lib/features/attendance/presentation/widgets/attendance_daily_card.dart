@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_shadows.dart';
-import '../../../../core/workspace.dart';
-import '../../../root/presentation/widgets/language_swap_button.dart';
+import 'package:mdm_hris/core/theme/app_colors.dart';
+import 'package:mdm_hris/core/theme/app_shadows.dart';
+import 'package:mdm_hris/core/workspace.dart';
+import 'package:mdm_hris/features/root/presentation/widgets/language_swap_button.dart';
+import 'daily_card/attendance_daily_card_dual_times.dart';
+import 'daily_card/attendance_daily_card_header.dart';
+import 'daily_card/attendance_daily_formatters.dart';
 
 /// Kartu Riwayat Kehadiran Harian Compact & Simetris (1 Hari = 1 Kartu, ~90h)
 /// Menampilkan ringkasan presensi harian secara presisi:
-/// - Baris 1: Tanggal di kiri, Badge Status Spesifik di kanan.
-/// - Baris 2: Segmented Dual-Box 50%:50% simetris sempurna dengan garis pemisah tengah
-///   (Jam Masuk di kiri, Jam Pulang di kanan).
+/// - Baris 1: Tanggal di kiri, Badge Status Spesifik di kanan (AttendanceDailyCardHeader).
+/// - Baris 2: Segmented Dual-Box 50%:50% simetris (AttendanceDailyCardDualTimes).
 class AttendanceDailyCard extends StatelessWidget {
   final Map<String, dynamic> raw;
   final bool isHighlighted;
@@ -29,11 +30,11 @@ class AttendanceDailyCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isEn = language == AppLanguage.en;
 
-    final dateStr = _extractDate(raw);
-    final formattedDate = _formatDate(dateStr, language);
+    final dateStr = AttendanceDailyCardFormatters.extractDate(raw);
+    final formattedDate = AttendanceDailyCardFormatters.formatDate(dateStr, language);
 
-    final checkInRaw = _extractString(raw, 'checkIn');
-    final checkOutRaw = _extractString(raw, 'checkOut');
+    final checkInRaw = AttendanceDailyCardFormatters.extractString(raw, 'checkIn');
+    final checkOutRaw = AttendanceDailyCardFormatters.extractString(raw, 'checkOut');
 
     final hasCheckIn = checkInRaw != null &&
         checkInRaw.trim().isNotEmpty &&
@@ -44,8 +45,8 @@ class AttendanceDailyCard extends StatelessWidget {
         checkOutRaw.trim() != '—' &&
         checkOutRaw.trim() != '-';
 
-    final checkInTime = hasCheckIn ? _formatTime(checkInRaw) : '--:--';
-    final checkOutTime = hasCheckOut ? _formatTime(checkOutRaw) : '--:--';
+    final checkInTime = hasCheckIn ? AttendanceDailyCardFormatters.formatTime(checkInRaw) : '--:--';
+    final checkOutTime = hasCheckOut ? AttendanceDailyCardFormatters.formatTime(checkOutRaw) : '--:--';
 
     final statusRaw = text(raw, 'status', '').toLowerCase();
     final lateMinutes = (raw['lateMinutes'] as num?)?.toInt() ?? 0;
@@ -66,11 +67,11 @@ class AttendanceDailyCard extends StatelessWidget {
         statusRaw == 'late';
 
     // Status Utama Kartu (Format Spesifik)
-    String statusLabel;
-    Color statusBgColor;
-    Color statusBorderColor;
-    Color statusDotColor;
-    Color statusTextColor;
+    final String statusLabel;
+    final Color statusBgColor;
+    final Color statusBorderColor;
+    final Color statusDotColor;
+    final Color statusTextColor;
 
     if (!isAttended) {
       statusLabel = isEn ? 'Absent' : 'Belum Absen';
@@ -108,10 +109,7 @@ class AttendanceDailyCard extends StatelessWidget {
                   gradient: const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [
-                      Color(0xFF0F766E), // Teal 700
-                      Color(0xFF14B8A6), // Teal 500
-                    ],
+                    colors: [Color(0xFF0F766E), Color(0xFF14B8A6)],
                   ),
                   borderRadius: BorderRadius.circular(12.r),
                   border: Border.all(
@@ -139,361 +137,28 @@ class AttendanceDailyCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              // === 1. BARIS ATAS: TANGGAL & BADGE STATUS SPESIFIK ===
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Tanggal & Icon Kalender
-                  Expanded(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        SvgPicture.asset(
-                          'assets/icon/calendar.svg',
-                          width: 13.w,
-                          height: 13.w,
-                          colorFilter: ColorFilter.mode(
-                            isHighlighted
-                                ? Colors.white.withValues(alpha: 0.95)
-                                : const Color(0xFF64748B),
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                        SizedBox(width: 6.w),
-                        Expanded(
-                          child: Text(
-                            formattedDate,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.w700,
-                              color: isHighlighted
-                                  ? Colors.white
-                                  : const Color(0xFF0F172A),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(width: 8.w),
-
-                  // Badge Status Spesifik
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 8.w,
-                      vertical: 3.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isHighlighted
-                          ? Colors.white.withValues(alpha: 0.2)
-                          : statusBgColor,
-                      borderRadius: BorderRadius.circular(20.r),
-                      border: Border.all(
-                        color: isHighlighted
-                            ? Colors.white.withValues(alpha: 0.45)
-                            : statusBorderColor,
-                        width: 0.8.w,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 5.w,
-                          height: 5.w,
-                          decoration: BoxDecoration(
-                            color: isHighlighted
-                                ? Colors.white
-                                : statusDotColor,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        SizedBox(width: 4.5.w),
-                        Text(
-                          statusLabel,
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 10.sp,
-                            fontWeight: FontWeight.w700,
-                            color: isHighlighted
-                                ? Colors.white
-                                : statusTextColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+              AttendanceDailyCardHeader(
+                formattedDate: formattedDate,
+                statusLabel: statusLabel,
+                statusBgColor: statusBgColor,
+                statusBorderColor: statusBorderColor,
+                statusDotColor: statusDotColor,
+                statusTextColor: statusTextColor,
+                isHighlighted: isHighlighted,
               ),
-
               SizedBox(height: 10.h),
-
-              // === 2. BARIS BAWAH: SEGMENTED DUAL-BOX 50%:50% SIMETRIS ===
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.symmetric(vertical: 10.h),
-                decoration: BoxDecoration(
-                  color: isHighlighted
-                      ? Colors.white.withValues(alpha: 0.15)
-                      : const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(10.r),
-                  border: Border.all(
-                    color: isHighlighted
-                        ? Colors.white.withValues(alpha: 0.25)
-                        : const Color(0xFFE2E8F0),
-                    width: 0.8.w,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    // --- SISI KIRI (50%): JAM MASUK ---
-                    Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 12.w),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            SvgPicture.asset(
-                              'assets/icon/login.svg',
-                              width: 15.sp,
-                              height: 15.sp,
-                              colorFilter: ColorFilter.mode(
-                                isHighlighted
-                                    ? Colors.white
-                                    : const Color(0xFF0F766E),
-                                BlendMode.srcIn,
-                              ),
-                            ),
-                            SizedBox(width: 10.w),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    isEn ? 'CHECK IN' : 'JAM MASUK',
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontSize: 8.5.sp,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: 0.3,
-                                      color: isHighlighted
-                                          ? Colors.white.withValues(alpha: 0.85)
-                                          : const Color(0xFF64748B),
-                                    ),
-                                  ),
-                                  SizedBox(height: 4.h),
-                                  Text(
-                                    checkInTime,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontSize: 12.5.sp,
-                                      fontWeight: FontWeight.w700,
-                                      color: isHighlighted
-                                          ? Colors.white
-                                          : (hasCheckIn
-                                              ? const Color(0xFF0F172A)
-                                              : const Color(0xFF94A3B8)),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    // --- GARIS PEMISAH TENGAH VERTIKAL (SIMETRI POROS TENGAH) ---
-                    Container(
-                      width: 0.8.w,
-                      height: 30.h,
-                      color: isHighlighted
-                          ? Colors.white.withValues(alpha: 0.25)
-                          : const Color(0xFFCBD5E1),
-                    ),
-
-                    // --- SISI KANAN (50%): JAM PULANG ---
-                    Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 12.w),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            SvgPicture.asset(
-                              'assets/icon/logout.svg',
-                              width: 15.sp,
-                              height: 15.sp,
-                              colorFilter: ColorFilter.mode(
-                                isHighlighted
-                                    ? Colors.white
-                                    : const Color(0xFF0F766E),
-                                BlendMode.srcIn,
-                              ),
-                            ),
-                            SizedBox(width: 10.w),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    isEn ? 'CHECK OUT' : 'JAM PULANG',
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontSize: 8.5.sp,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: 0.3,
-                                      color: isHighlighted
-                                          ? Colors.white.withValues(alpha: 0.85)
-                                          : const Color(0xFF64748B),
-                                    ),
-                                  ),
-                                  SizedBox(height: 4.h),
-                                  Text(
-                                    checkOutTime,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontSize: 12.5.sp,
-                                      fontWeight: FontWeight.w700,
-                                      color: isHighlighted
-                                          ? Colors.white
-                                          : (hasCheckOut
-                                              ? const Color(0xFF0F172A)
-                                              : const Color(0xFF94A3B8)),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              AttendanceDailyCardDualTimes(
+                checkInTime: checkInTime,
+                checkOutTime: checkOutTime,
+                hasCheckIn: hasCheckIn,
+                hasCheckOut: hasCheckOut,
+                isHighlighted: isHighlighted,
+                isEn: isEn,
               ),
             ],
           ),
         ),
       ),
     );
-  }
-
-  static String _extractDate(dynamic att) {
-    if (att is Map) {
-      return (att['date'] ?? att['attendanceDate'] ?? '').toString();
-    }
-    return '';
-  }
-
-  static String? _extractString(dynamic att, String key) {
-    if (att is Map) return att[key]?.toString();
-    return null;
-  }
-
-  static String _formatDate(
-    String dateStr, [
-    AppLanguage language = AppLanguage.id,
-  ]) {
-    final dt = DateTime.tryParse(dateStr);
-    if (dt == null) return dateStr;
-    const monthsId = [
-      'Januari',
-      'Februari',
-      'Maret',
-      'April',
-      'Mei',
-      'Juni',
-      'Juli',
-      'Agustus',
-      'September',
-      'Oktober',
-      'November',
-      'Desember',
-    ];
-    const monthsEn = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    const daysId = [
-      'Senin',
-      'Selasa',
-      'Rabu',
-      'Kamis',
-      'Jumat',
-      'Sabtu',
-      'Minggu',
-    ];
-    const daysEn = [
-      'Mon',
-      'Tue',
-      'Wed',
-      'Thu',
-      'Fri',
-      'Sat',
-      'Sun',
-    ];
-
-    final dayName = language == AppLanguage.en
-        ? daysEn[(dt.weekday - 1).clamp(0, 6)]
-        : daysId[(dt.weekday - 1).clamp(0, 6)];
-
-    if (language == AppLanguage.en) {
-      return '$dayName, ${monthsEn[dt.month - 1]} ${dt.day.toString().padLeft(2, '0')}, ${dt.year}';
-    }
-    return '$dayName, ${dt.day.toString().padLeft(2, '0')} ${monthsId[dt.month - 1]} ${dt.year}';
-  }
-
-  static String _formatTime(String timeStr) {
-    final clean = timeStr.trim();
-    if (clean.isEmpty || clean == '—' || clean == '-') return '--:--';
-
-    final dt = DateTime.tryParse(clean);
-    if (dt != null) {
-      final local = dt.toLocal();
-      final hour = local.hour;
-      final minute = local.minute;
-      final String period = hour >= 12 ? 'pm' : 'am';
-      int hour12 = hour % 12;
-      if (hour12 == 0) hour12 = 12;
-      final hourStr = hour12.toString().padLeft(2, '0');
-      final minuteStr = minute.toString().padLeft(2, '0');
-      return '$hourStr:$minuteStr $period';
-    }
-
-    final parts = clean.split(':');
-    if (parts.length < 2) return timeStr;
-
-    final hour = int.tryParse(parts[0]);
-    final minute = int.tryParse(parts[1]);
-    if (hour == null || minute == null) return timeStr;
-
-    final String period = hour >= 12 ? 'pm' : 'am';
-    int hour12 = hour % 12;
-    if (hour12 == 0) hour12 = 12;
-
-    final hourStr = hour12.toString().padLeft(2, '0');
-    final minuteStr = minute.toString().padLeft(2, '0');
-
-    return '$hourStr:$minuteStr $period';
   }
 }

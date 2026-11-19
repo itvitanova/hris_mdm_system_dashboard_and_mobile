@@ -36,8 +36,7 @@ class AttendanceHistoryPage extends StatefulWidget {
 class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
   late Workspace _workspace = widget.workspace;
   late AppLanguage _currentLanguage = widget.initialLanguage != AppLanguage.id
-      ? widget.initialLanguage
-      : AppLanguageController.currentLanguage;
+      ? widget.initialLanguage : AppLanguageController.currentLanguage;
   bool _isRefreshing = false;
 
   static const int _itemsPerPage = 5;
@@ -52,8 +51,7 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
   void initState() {
     super.initState();
     _currentLanguage = widget.initialLanguage != AppLanguage.id
-        ? widget.initialLanguage
-        : AppLanguageController.currentLanguage;
+        ? widget.initialLanguage : AppLanguageController.currentLanguage;
     AppLanguageController.instance.addListener(_onGlobalLanguageChanged);
     _yearsSelected = DateTime.now().year;
     _listYears = List.generate(4, (index) => DateTime.now().year - index);
@@ -61,9 +59,7 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
 
   void _onGlobalLanguageChanged() {
     if (mounted && _currentLanguage != AppLanguageController.currentLanguage) {
-      setState(() {
-        _currentLanguage = AppLanguageController.currentLanguage;
-      });
+      setState(() => _currentLanguage = AppLanguageController.currentLanguage);
     }
   }
 
@@ -78,12 +74,7 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
     setState(() => _isRefreshing = true);
     try {
       final updated = Workspace(await widget.api.workspace());
-      if (mounted) {
-        setState(() {
-          _workspace = updated;
-          _currentPage = 1;
-        });
-      }
+      if (mounted) setState(() { _workspace = updated; _currentPage = 1; });
     } catch (_) {
       // Tetap gunakan data lama jika jaringan bermasalah
     } finally {
@@ -98,28 +89,18 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
 
   @override
   Widget build(BuildContext context) {
-    final allRawAttendance =
-        List<Map<String, dynamic>>.from(_workspace.mine('attendance'));
-
-    final periodFiltered = allRawAttendance.where((r) {
-      final d = AttendanceHistoryQueryHelper.extractRawDate(r);
-      return AttendanceHistoryQueryHelper.matchesPeriod(
-          d, _yearsSelected, _monthSelected);
-    }).toList();
-
+    final allRawAttendance = List<Map<String, dynamic>>.from(_workspace.mine('attendance'));
+    final periodFiltered = allRawAttendance.where((r) =>
+        AttendanceHistoryQueryHelper.matchesPeriod(AttendanceHistoryQueryHelper.extractRawDate(r), _yearsSelected, _monthSelected)).toList();
     final stats = AttendanceHistoryQueryHelper.calculateStats(periodFiltered);
-
-    final displayedDailyRecords = AttendanceHistoryQueryHelper.filterByStatus(
-        periodFiltered, _attendanceSelected);
+    final displayedDailyRecords = AttendanceHistoryQueryHelper.filterByStatus(periodFiltered, _attendanceSelected);
 
     final totalItems = displayedDailyRecords.length;
     final totalPages = (totalItems / _itemsPerPage).ceil().clamp(1, 99999);
     final currentPage = _currentPage.clamp(1, totalPages);
     final startIndex = (currentPage - 1) * _itemsPerPage;
     final endIndex = (startIndex + _itemsPerPage).clamp(0, totalItems);
-    final paginatedItems = displayedDailyRecords.isEmpty
-        ? <Map<String, dynamic>>[]
-        : displayedDailyRecords.sublist(startIndex, endIndex);
+    final paginatedItems = displayedDailyRecords.isEmpty ? <Map<String, dynamic>>[] : displayedDailyRecords.sublist(startIndex, endIndex);
 
     final policy = _workspace.attendancePolicy;
     final policyName = text(policy, 'name', 'Kantor Pusat MDM');

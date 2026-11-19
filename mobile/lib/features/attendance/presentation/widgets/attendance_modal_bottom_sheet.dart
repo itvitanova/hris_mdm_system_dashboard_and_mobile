@@ -2,10 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geolocator/geolocator.dart';
-import '../../../../core/api_client.dart';
-import '../../../../core/workspace.dart';
-import '../../data/datasources/attendance_service.dart';
-import '../pages/auto_face_page.dart';
+import 'package:mdm_hris/core/api_client.dart';
+import 'package:mdm_hris/core/workspace.dart';
+import 'package:mdm_hris/features/attendance/data/datasources/attendance_service.dart';
+import 'package:mdm_hris/features/attendance/presentation/pages/auto_face_page.dart';
 import 'daily_attendance.dart';
 import 'modal/attendance_modal_drag_handle.dart';
 import 'modal/attendance_modal_step1_view.dart';
@@ -51,32 +51,18 @@ class _AttendanceModalBottomSheetState extends State<AttendanceModalBottomSheet>
     if (_punchType != 'out') return false;
     final end = text(_policy, 'workEnd', '');
     final serverTime = text(_w.data, 'serverTime', '');
-    return end.isNotEmpty &&
-        serverTime.length >= 16 &&
-        serverTime.substring(11, 16).compareTo(end) < 0;
+    return end.isNotEmpty && serverTime.length >= 16 && serverTime.substring(11, 16).compareTo(end) < 0;
   }
 
-  bool get _isFaceEnrolled {
-    if (!_w.faceAvailable) return true;
-    return _w.employee['faceEnrolled'] == true;
-  }
-
-  bool get _isSafeLocation {
-    if (_position == null) return false;
-    return locationError(_position!, _policy) == null;
-  }
-
+  bool get _isFaceEnrolled => !_w.faceAvailable || _w.employee['faceEnrolled'] == true;
+  bool get _isSafeLocation => _position != null && locationError(_position!, _policy) == null;
   bool get _canProceed => _isSafeLocation && !_isLocating && _isFaceEnrolled;
 
   double? get _distance {
-    if (_position == null || _policy['latitude'] is! num || _policy['longitude'] is! num) {
-      return null;
-    }
+    if (_position == null || _policy['latitude'] is! num || _policy['longitude'] is! num) return null;
     return Geolocator.distanceBetween(
-      _position!.latitude,
-      _position!.longitude,
-      number(_policy, 'latitude'),
-      number(_policy, 'longitude'),
+      _position!.latitude, _position!.longitude,
+      number(_policy, 'latitude'), number(_policy, 'longitude'),
     );
   }
 
