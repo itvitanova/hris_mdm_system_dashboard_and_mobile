@@ -19,12 +19,12 @@ class AutoFaceScreen extends StatefulWidget {
   final String title;
   final bool enrollment;
   final Future<void> Function(XFile) onCapture;
+
   @override
   State<AutoFaceScreen> createState() => _AutoFaceScreenState();
 }
 
-class _AutoFaceScreenState extends State<AutoFaceScreen>
-    with WidgetsBindingObserver {
+class _AutoFaceScreenState extends State<AutoFaceScreen> with WidgetsBindingObserver {
   final _gate = FaceCaptureGate();
   final _detector = FaceDetector(
     options: FaceDetectorOptions(
@@ -94,9 +94,7 @@ class _AutoFaceScreenState extends State<AutoFaceScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.inactive ||
-        state == AppLifecycleState.paused ||
-        state == AppLifecycleState.detached) {
+    if (state == AppLifecycleState.inactive || state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
       _suspended = true;
       _gate.reset();
       unawaited(_releaseCamera());
@@ -110,14 +108,12 @@ class _AutoFaceScreenState extends State<AutoFaceScreen>
   void dispose() {
     _closed = true;
     WidgetsBinding.instance.removeObserver(this);
-    unawaited(
-      _releaseCamera().then((_) async {
-        try {
-          await _detection;
-        } catch (_) {}
-        await _detector.close();
-      }),
-    );
+    unawaited(_releaseCamera().then((_) async {
+      try {
+        await _detection;
+      } catch (_) {}
+      await _detector.close();
+    }));
     super.dispose();
   }
 
@@ -180,10 +176,7 @@ class _AutoFaceScreenState extends State<AutoFaceScreen>
         title: Text(widget.title),
         backgroundColor: const Color(0xFF0F172A),
         foregroundColor: Colors.white,
-        titleTextStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
-          color: Colors.white,
-          fontWeight: FontWeight.w600,
-        ),
+        titleTextStyle: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.w600),
       ),
       body: AutoFaceBody(
         enrollment: widget.enrollment,

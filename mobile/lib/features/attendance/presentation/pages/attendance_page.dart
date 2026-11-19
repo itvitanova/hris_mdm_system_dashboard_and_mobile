@@ -32,10 +32,7 @@ class _AttendanceScreenState extends State<AttendanceScreen>
   Timer? timer;
   Workspace? currentWorkspace;
   Workspace get workspace => currentWorkspace ?? widget.workspace;
-  bool get available =>
-      currentWorkspace != null &&
-      workspace.faceAvailable &&
-      workspace.employee['faceEnrolled'] == true;
+  bool get available => currentWorkspace != null && workspace.faceAvailable && workspace.employee['faceEnrolled'] == true;
 
   @override
   void initState() {
