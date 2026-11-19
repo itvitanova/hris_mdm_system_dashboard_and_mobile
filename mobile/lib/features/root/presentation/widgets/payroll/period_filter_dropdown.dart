@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:uicons/uicons.dart';
 import 'payroll_overlay_dismiss.dart';
+import 'period_filter_menu_panel.dart';
 
 class PeriodFilterDropdown extends StatefulWidget {
   final String selected;
@@ -48,89 +49,13 @@ class _PeriodFilterDropdownState extends State<PeriodFilterDropdown> {
           width: 180.w > size.width ? 180.w : size.width,
           child: Material(
             color: Colors.transparent,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12.w),
-                border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF0F172A).withValues(alpha: 0.12),
-                    offset: const Offset(0, 4),
-                    blurRadius: 16,
-                  ),
-                ],
-              ),
-              padding: EdgeInsets.all(8.w),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxHeight: 220.h),
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  padding: EdgeInsets.zero,
-                  itemCount: widget.options.length,
-                  separatorBuilder: (context, index) => SizedBox(height: 5.w),
-                  itemBuilder: (context, index) {
-                    final period = widget.options[index];
-                    final isSelected = period == widget.selected;
-                    return GestureDetector(
-                      key: ValueKey('period_option_$period'),
-                      onTap: () {
-                        _close();
-                        widget.onChanged(period);
-                      },
-                      child: Container(
-                        height: 36.w,
-                        padding: EdgeInsets.symmetric(horizontal: 10.w),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8.w),
-                          color: isSelected
-                              ? const Color(0xFFE1F2F5)
-                              : const Color(0xFFF8FAFC),
-                          border: isSelected
-                              ? Border.all(
-                                  color: const Color(0xFF0F766E),
-                                  width: 1,
-                                )
-                              : null,
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              UIcons.regularRounded.calendar,
-                              size: 14.w,
-                              color: isSelected
-                                  ? const Color(0xFF0F766E)
-                                  : const Color(0xFF64748B),
-                            ),
-                            SizedBox(width: 8.w),
-                            Expanded(
-                              child: Text(
-                                period,
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 12.sp,
-                                  fontWeight: isSelected
-                                      ? FontWeight.w600
-                                      : FontWeight.w500,
-                                  color: isSelected
-                                      ? const Color(0xFF0F766E)
-                                      : const Color(0xFF334155),
-                                ),
-                              ),
-                            ),
-                            if (isSelected)
-                              Icon(
-                                UIcons.regularRounded.check,
-                                size: 14.w,
-                                color: const Color(0xFF0F766E),
-                              ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
+            child: PeriodFilterMenuPanel(
+              options: widget.options,
+              selected: widget.selected,
+              onSelect: (period) {
+                _close();
+                widget.onChanged(period);
+              },
             ),
           ),
         ),

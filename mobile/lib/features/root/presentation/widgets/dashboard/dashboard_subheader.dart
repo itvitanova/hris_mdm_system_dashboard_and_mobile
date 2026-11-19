@@ -115,7 +115,7 @@ class DashboardSubheader extends StatelessWidget {
           BoxShadow(
             color: Color(0x200F766E),
             blurRadius: 8,
-            offset: const Offset(0, 2),
+            offset: Offset(0, 2),
           ),
         ],
       ),
