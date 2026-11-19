@@ -4,6 +4,9 @@ import '../../../../root/presentation/widgets/language_swap_button.dart';
 import '../../../domain/entities/submission_kind.dart';
 import '../../../domain/entities/submission_status.dart';
 import '../../../domain/entities/universal_request_item.dart';
+import 'request_formatters.dart';
+
+export 'request_formatters.dart';
 
 class RequestKindConfig {
   final IconData icon;
@@ -38,62 +41,14 @@ class RequestStatusConfig {
 class RequestCardHelper {
   const RequestCardHelper._();
 
-  static String formatIDR(int amount) {
-    final str = amount.toString();
-    final buffer = StringBuffer();
-    int count = 0;
-    for (int i = str.length - 1; i >= 0; i--) {
-      buffer.write(str[i]);
-      count++;
-      if (count % 3 == 0 && i != 0) {
-        buffer.write('.');
-      }
-    }
-    return 'Rp ${buffer.toString().split('').reversed.join('')}';
-  }
+  static String formatIDR(int amount) => RequestFormatters.formatIDR(amount);
 
-  static String formatDateRange(DateTime start, DateTime? end, [AppLanguage language = AppLanguage.id]) {
-    final months = language == AppLanguage.en
-        ? const [
-            '',
-            'Jan',
-            'Feb',
-            'Mar',
-            'Apr',
-            'May',
-            'Jun',
-            'Jul',
-            'Aug',
-            'Sep',
-            'Oct',
-            'Nov',
-            'Dec',
-          ]
-        : const [
-            '',
-            'Jan',
-            'Feb',
-            'Mar',
-            'Apr',
-            'Mei',
-            'Jun',
-            'Jul',
-            'Agu',
-            'Sep',
-            'Okt',
-            'Nov',
-            'Des',
-          ];
-    final sStr = '${start.day} ${months[start.month]} ${start.year}';
-    if (end == null ||
-        (start.day == end.day &&
-            start.month == end.month &&
-            start.year == end.year)) {
-      return sStr;
-    }
-    final eStr = '${end.day} ${months[end.month]} ${end.year}';
-    return '$sStr - $eStr';
-  }
+  static String formatDateRange(
+    DateTime start,
+    DateTime? end, [
+    AppLanguage language = AppLanguage.id,
+  ]) =>
+      RequestFormatters.formatDateRange(start, end, language);
 
   static String singleStageTitle(SubmissionKind kind) {
     switch (kind) {
@@ -114,7 +69,10 @@ class RequestCardHelper {
     }
   }
 
-  static RequestKindConfig getKindConfig(UniversalRequestModel d, [AppLanguage language = AppLanguage.id]) {
+  static RequestKindConfig getKindConfig(
+    UniversalRequestModel d, [
+    AppLanguage language = AppLanguage.id,
+  ]) {
     final isEn = language == AppLanguage.en;
     switch (d.kind) {
       case SubmissionKind.cuti:
