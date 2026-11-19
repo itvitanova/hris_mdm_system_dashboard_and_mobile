@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../core/api_client.dart';
-import '../../../../core/di/injection_container.dart';
-import '../../../../core/services/network_connectivity_service.dart';
-import '../../../../core/services/offline_sync_manager.dart';
-import '../../../../core/workspace.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../home/presentation/pages/leave_calendar_page.dart';
-import '../../../requests/presentation/bloc/request_bloc.dart';
-import '../../../requests/presentation/bloc/request_event.dart';
-import '../../../requests/presentation/bloc/request_state.dart';
-import '../../../requests/presentation/pages/request_detail_page.dart';
-import '../../../requests/presentation/pages/request_notifications_page.dart';
-import '../../../requests/presentation/widgets/universal_request_card/universal_request_card.dart';
-import '../../../home/presentation/bloc/workspace_bloc.dart';
-import '../../../home/presentation/bloc/workspace_state.dart';
+import 'package:mdm_hris/core/api_client.dart';
+import 'package:mdm_hris/core/di/injection_container.dart';
+import 'package:mdm_hris/core/services/network_connectivity_service.dart';
+import 'package:mdm_hris/core/services/offline_sync_manager.dart';
+import 'package:mdm_hris/core/workspace.dart';
+import 'package:mdm_hris/core/theme/app_colors.dart';
+import 'package:mdm_hris/features/home/presentation/pages/leave_calendar_page.dart';
+import 'package:mdm_hris/features/requests/presentation/bloc/request_bloc.dart';
+import 'package:mdm_hris/features/requests/presentation/bloc/request_event.dart';
+import 'package:mdm_hris/features/requests/presentation/bloc/request_state.dart';
+import 'package:mdm_hris/features/requests/presentation/pages/request_detail_page.dart';
+import 'package:mdm_hris/features/requests/presentation/pages/request_notifications_page.dart';
+import 'package:mdm_hris/features/requests/presentation/widgets/universal_request_card/universal_request_card.dart';
+import 'package:mdm_hris/features/home/presentation/bloc/workspace_bloc.dart';
+import 'package:mdm_hris/features/home/presentation/bloc/workspace_state.dart';
 import 'language_swap_button.dart';
 import 'requests/requests_app_bar.dart';
 import 'requests/requests_catalog_section.dart';
@@ -46,8 +46,7 @@ class RequestsTab extends StatefulWidget {
 
 class _RequestsTabState extends State<RequestsTab> {
   late AppLanguage _currentLanguage = widget.initialLanguage != AppLanguage.id
-      ? widget.initialLanguage
-      : AppLanguageController.currentLanguage;
+      ? widget.initialLanguage : AppLanguageController.currentLanguage;
   String _selectedFilter = 'Semua';
 
   ApiClient get api => widget.api;
@@ -71,15 +70,13 @@ class _RequestsTabState extends State<RequestsTab> {
   }
 
   bool get _isOnline => sl.isRegistered<NetworkConnectivityService>()
-      ? sl<NetworkConnectivityService>().isOnline
-      : true;
+      ? sl<NetworkConnectivityService>().isOnline : true;
 
   @override
   void initState() {
     super.initState();
     _currentLanguage = widget.initialLanguage != AppLanguage.id
-        ? widget.initialLanguage
-        : AppLanguageController.currentLanguage;
+        ? widget.initialLanguage : AppLanguageController.currentLanguage;
     AppLanguageController.instance.addListener(_onGlobalLanguageChanged);
     if (sl.isRegistered<NetworkConnectivityService>()) {
       sl<NetworkConnectivityService>().isOnlineNotifier.addListener(_onConnectivityChanged);
