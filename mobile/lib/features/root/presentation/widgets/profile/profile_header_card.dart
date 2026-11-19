@@ -13,6 +13,8 @@ class ProfileHeaderCard extends StatelessWidget {
   final String initials;
   final bool hasUnreadNotification;
   final VoidCallback onNotificationTap;
+  final bool isOnline;
+  final VoidCallback? onAvatarTap;
 
   static const double _contentHeight = 62.0;
 
@@ -23,6 +25,8 @@ class ProfileHeaderCard extends StatelessWidget {
     required this.initials,
     required this.hasUnreadNotification,
     required this.onNotificationTap,
+    this.isOnline = true,
+    this.onAvatarTap,
   });
 
   @override
@@ -39,7 +43,12 @@ class ProfileHeaderCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          ProfileAvatar(initials: initials, size: _contentHeight),
+          ProfileAvatar(
+            initials: initials,
+            size: _contentHeight,
+            isOnline: isOnline,
+            onTap: onAvatarTap,
+          ),
           SizedBox(width: 14.w),
           Expanded(child: _buildUserInfo()),
           SizedBox(width: 10.w),
@@ -53,75 +62,114 @@ class ProfileHeaderCard extends StatelessWidget {
   }
 
   Widget _buildUserInfo() {
-    return SizedBox(
-      height: _contentHeight.w,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            'Selamat Datang 👋',
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 10.sp,
-              fontWeight: FontWeight.w500,
-              color: const Color(0xFF64748B),
-              letterSpacing: 0.1,
-              height: 1.1,
-            ),
-          ),
-          Text(
-            name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 14.5.sp,
-              fontWeight: FontWeight.w700,
-              color: AppColors.deepTeal,
-              letterSpacing: -0.2,
-              height: 1.2,
-            ),
-          ),
-          Container(
-            height: 23.w,
-            padding: EdgeInsets.symmetric(horizontal: 8.w),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF0FDFA),
-              borderRadius: BorderRadius.circular(11.5.r),
-              border: Border.all(
-                color: const Color(0xFF99F6E4),
-                width: 0.9.w,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Wrap(
+          spacing: 6.w,
+          runSpacing: 2.h,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Text(
+              'Selamat Datang 👋',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 10.sp,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF64748B),
+                letterSpacing: 0.1,
+                height: 1.1,
               ),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  UIcons.regularRounded.envelope,
-                  size: 12.sp,
-                  color: AppColors.deepTeal,
+            if (!isOnline)
+              Container(
+                key: const Key('profile_header_offline_badge'),
+                padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 1.h),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF2F2),
+                  borderRadius: BorderRadius.circular(4.r),
+                  border: Border.all(color: const Color(0xFFFECACA), width: 0.8),
                 ),
-                SizedBox(width: 5.w),
-                Flexible(
-                  child: Text(
-                    email,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 10.sp,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.deepTeal,
-                      letterSpacing: -0.1,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 4.5.w,
+                      height: 4.5.w,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFEF4444),
+                        shape: BoxShape.circle,
+                      ),
                     ),
-                  ),
+                    SizedBox(width: 3.5.w),
+                    Text(
+                      'Offline',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 8.5.sp,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFFDC2626),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
+          ],
+        ),
+        SizedBox(height: 3.h),
+        Text(
+          name,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 14.5.sp,
+            fontWeight: FontWeight.w700,
+            color: AppColors.deepTeal,
+            letterSpacing: -0.2,
+            height: 1.2,
+          ),
+        ),
+        SizedBox(height: 5.h),
+        Container(
+          height: 23.w,
+          padding: EdgeInsets.symmetric(horizontal: 8.w),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF0FDFA),
+            borderRadius: BorderRadius.circular(11.5.r),
+            border: Border.all(
+              color: const Color(0xFF99F6E4),
+              width: 0.9.w,
             ),
           ),
-        ],
-      ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                UIcons.regularRounded.envelope,
+                size: 12.sp,
+                color: AppColors.deepTeal,
+              ),
+              SizedBox(width: 5.w),
+              Flexible(
+                child: Text(
+                  email,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 10.sp,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.deepTeal,
+                    letterSpacing: -0.1,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

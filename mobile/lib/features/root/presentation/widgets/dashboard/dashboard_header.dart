@@ -13,6 +13,7 @@ class DashboardHeader extends StatelessWidget {
   final AppLanguage currentLanguage;
   final ValueChanged<AppLanguage> onLanguageChanged;
   final Future<void> Function(Widget) open;
+  final bool isOnline;
 
   const DashboardHeader({
     super.key,
@@ -21,7 +22,36 @@ class DashboardHeader extends StatelessWidget {
     required this.currentLanguage,
     required this.onLanguageChanged,
     required this.open,
+    this.isOnline = true,
   });
+
+  void _handleAvatarTap(BuildContext context) {
+    if (!isOnline) {
+      final isEn = currentLanguage == AppLanguage.en;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.wifi_off_rounded, color: Colors.white, size: 18),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  isEn
+                      ? 'No internet connection. Operating in offline mode.'
+                      : 'Koneksi internet mati. Anda sedang dalam mode offline.',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
 
   Widget _buildGreetingAndName(String name) {
     final isEn = currentLanguage == AppLanguage.en;
@@ -29,15 +59,52 @@ class DashboardHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          isEn ? 'Welcome 👋' : 'Selamat Datang 👋',
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 11.sp,
-            fontWeight: FontWeight.w500,
-            color: const Color(0xFF64748B),
-            letterSpacing: 0.1,
-          ),
+        Wrap(
+          spacing: 4.w,
+          runSpacing: 2.h,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Text(
+              isEn ? 'Welcome 👋' : 'Selamat Datang 👋',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 11.sp,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF64748B),
+                letterSpacing: 0.1,
+              ),
+            ),
+            if (!isOnline)
+              Container(
+                key: const Key('dashboard_header_offline_badge'),
+                padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 1.h),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF2F2),
+                  borderRadius: BorderRadius.circular(4.r),
+                  border: Border.all(color: const Color(0xFFFECACA), width: 0.8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.wifi_off_rounded,
+                      size: 10.w,
+                      color: const Color(0xFFDC2626),
+                    ),
+                    SizedBox(width: 3.w),
+                    Text(
+                      'Offline',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 8.5.sp,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFFDC2626),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
         ),
         SizedBox(height: 3.w),
         Text(
@@ -60,6 +127,12 @@ class DashboardHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final userName = text(workspace.actor, 'name');
     final isLargeText = MediaQuery.textScalerOf(context).scale(14) > 22;
+
+    final avatar = DashboardAvatar(
+      name: userName,
+      isOnline: isOnline,
+      onTap: () => _handleAvatarTap(context),
+    );
 
     final actions = Row(
       mainAxisSize: MainAxisSize.min,
@@ -84,7 +157,7 @@ class DashboardHeader extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              DashboardAvatar(name: userName),
+              avatar,
               actions,
             ],
           ),
@@ -100,7 +173,7 @@ class DashboardHeader extends StatelessWidget {
         Expanded(
           child: Row(
             children: [
-              DashboardAvatar(name: userName),
+              avatar,
               SizedBox(width: 14.w),
               Expanded(child: _buildGreetingAndName(userName)),
             ],

@@ -1,19 +1,23 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../core/api_client.dart';
-import '../../../../core/workspace.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/core_widgets.dart';
-import '../../../requests/presentation/pages/request_notifications_page.dart';
+import 'package:uicons/uicons.dart';
+import 'package:mdm_hris/core/api_client.dart';
+import 'package:mdm_hris/core/di/injection_container.dart';
+import 'package:mdm_hris/core/services/network_connectivity_service.dart';
+import 'package:mdm_hris/core/workspace.dart';
+import 'package:mdm_hris/core/theme/app_colors.dart';
+import 'package:mdm_hris/core/widgets/core_widgets.dart';
+import 'package:mdm_hris/features/requests/presentation/pages/request_notifications_page.dart';
 import 'logout_confirmation_bottom_sheet.dart';
 import 'profile/employee_details_bottom_sheet.dart';
 import 'profile/profile_header_card.dart';
 import 'profile/profile_info_grid.dart';
 import 'profile/profile_logout_item.dart';
+import 'profile/profile_offline_banner.dart';
 import 'profile/profile_setting_item.dart';
 import 'profile/profile_settings_header.dart';
-import 'package:uicons/uicons.dart';
+import 'profile/profile_version_footer.dart';
 
 class ProfileTab extends StatefulWidget {
   const ProfileTab({
@@ -37,20 +41,67 @@ class ProfileTab extends StatefulWidget {
 
 class _ProfileTabState extends State<ProfileTab> {
   bool loggingOut = false;
-
   Workspace get w => widget.workspace;
 
-  String _getInitials(String name) {
-    final trimmed = name.trim();
-    if (trimmed.isEmpty) return 'HR';
-    final parts =
-        trimmed.split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
-    if (parts.length >= 2) {
-      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+  bool get _isOnline => sl.isRegistered<NetworkConnectivityService>()
+      ? sl<NetworkConnectivityService>().isOnline : true;
+
+  @override
+  void initState() {
+    super.initState();
+    if (sl.isRegistered<NetworkConnectivityService>()) {
+      sl<NetworkConnectivityService>().isOnlineNotifier.addListener(_onConnChanged);
     }
-    return trimmed.length >= 2
-        ? trimmed.substring(0, 2).toUpperCase()
-        : trimmed.toUpperCase();
+  }
+
+  void _onConnChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    if (sl.isRegistered<NetworkConnectivityService>()) {
+      sl<NetworkConnectivityService>().isOnlineNotifier.removeListener(_onConnChanged);
+    }
+    super.dispose();
+  }
+
+  Future<void> _handleRefresh() async {
+    if (sl.isRegistered<NetworkConnectivityService>()) {
+      await sl<NetworkConnectivityService>().checkConnection();
+    }
+    await widget.onRefresh();
+  }
+
+  void _handleAvatarTap() {
+    if (!_isOnline) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.wifi_off_rounded, color: Colors.white, size: 18),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text('Koneksi internet mati. Anda sedang dalam mode offline.',
+                    style: TextStyle(fontWeight: FontWeight.w600)),
+              ),
+            ],
+          ),
+          backgroundColor: Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  String _getInitials(String name) {
+    final t = name.trim();
+    if (t.isEmpty) return 'HR';
+    final parts = t.split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+    if (parts.length >= 2) return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    return t.length >= 2 ? t.substring(0, 2).toUpperCase() : t.toUpperCase();
   }
 
   Future<void> logout() async {
@@ -65,38 +116,18 @@ class _ProfileTabState extends State<ProfileTab> {
     }
   }
 
-  Future<void> _confirmLogout() async {
-    if (loggingOut) return;
-    await LogoutConfirmationBottomSheet.show(
-      context,
-      onConfirmLogout: logout,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final userName = text(w.actor, 'name');
     final userEmail = text(w.actor, 'email');
-    final empId = text(w.employee, 'id');
-    final dept = text(w.employee, 'department');
-    final position = text(w.employee, 'position');
-    final employmentType = text(w.employee, 'employmentType', 'Belum diisi');
-    final phone = text(w.employee, 'phone');
-    final address = text(w.employee, 'address', 'Belum diisi');
-    final ptkp = text(w.employee, 'ptkp', '—');
-    final nik = text(w.employee, 'employeeNumber', 'Belum diisi');
-    final bankName = text(w.employee, 'bankName', '—');
-    final bankAccountName = text(w.employee, 'bankAccountName', '—');
-    final bankAccountNumber = text(w.employee, 'bankAccountNumber', '—');
-    final isFaceEnrolled = w.employee['faceEnrolled'] == true;
-    final hasUnreadNotification =
-        w.mine('requests').any((r) => r['unread'] == true);
+    final emp = w.employee;
+    final hasUnreadNotification = w.mine('requests').any((r) => r['unread'] == true);
 
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: widget.onRefresh,
+          onRefresh: _handleRefresh,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: EdgeInsets.symmetric(horizontal: 20.w),
@@ -104,29 +135,29 @@ class _ProfileTabState extends State<ProfileTab> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 SizedBox(height: 20.h),
+                if (!_isOnline) const ProfileOfflineBanner(),
                 ProfileHeaderCard(
                   name: userName,
                   email: userEmail,
                   initials: _getInitials(userName),
                   hasUnreadNotification: hasUnreadNotification,
+                  isOnline: _isOnline,
+                  onAvatarTap: _handleAvatarTap,
                   onNotificationTap: () async {
                     await Navigator.of(context, rootNavigator: true).push(
                       MaterialPageRoute(
-                        builder: (_) => RequestNotificationsScreen(
-                          api: widget.api,
-                          workspace: w,
-                        ),
+                        builder: (_) => RequestNotificationsScreen(api: widget.api, workspace: w),
                       ),
                     );
-                    if (mounted) await widget.onRefresh();
+                    if (mounted) await _handleRefresh();
                   },
                 ),
                 SizedBox(height: 16.h),
                 ProfileInfoGrid(
-                  empId: empId,
-                  dept: dept,
-                  position: position,
-                  phone: phone,
+                  empId: text(emp, 'id'),
+                  dept: text(emp, 'department'),
+                  position: text(emp, 'position'),
+                  phone: text(emp, 'phone'),
                 ),
                 SizedBox(height: 16.h),
                 const ProfileSettingsHeader(),
@@ -136,36 +167,26 @@ class _ProfileTabState extends State<ProfileTab> {
                   label: 'Detail Data & Kepegawaian',
                   onTap: () => EmployeeDetailsBottomSheet.show(
                     context: context,
-                    empId: empId,
-                    nik: nik,
-                    employmentType: employmentType,
-                    ptkp: ptkp,
-                    phone: phone,
-                    address: address,
-                    bankName: bankName,
-                    bankAccountNumber: bankAccountNumber,
-                    bankAccountName: bankAccountName,
-                    isFaceEnrolled: isFaceEnrolled,
+                    empId: text(emp, 'id'),
+                    nik: text(emp, 'employeeNumber', 'Belum diisi'),
+                    employmentType: text(emp, 'employmentType', 'Belum diisi'),
+                    ptkp: text(emp, 'ptkp', '—'),
+                    phone: text(emp, 'phone'),
+                    address: text(emp, 'address', 'Belum diisi'),
+                    bankName: text(emp, 'bankName', '—'),
+                    bankAccountNumber: text(emp, 'bankAccountNumber', '—'),
+                    bankAccountName: text(emp, 'bankAccountName', '—'),
+                    isFaceEnrolled: emp['faceEnrolled'] == true,
                   ),
                 ),
                 SizedBox(height: 12.h),
                 ProfileLogoutItem(
                   label: 'Keluar Akun',
                   loading: loggingOut,
-                  onTap: loggingOut ? () {} : _confirmLogout,
+                  onTap: loggingOut ? () {} : () => LogoutConfirmationBottomSheet.show(context, onConfirmLogout: logout),
                 ),
                 SizedBox(height: 24.h),
-                Center(
-                  child: Text(
-                    'HRIS MDM System • Versi 1.2.0 (Build 2013)',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 11.sp,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF94A3B8),
-                    ),
-                  ),
-                ),
+                const ProfileVersionFooter(),
                 SizedBox(height: 24.h),
               ],
             ),
