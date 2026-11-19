@@ -1,5 +1,5 @@
 import 'package:camera/camera.dart';
-import '../../attendance_service.dart';
+import 'attendance_service.dart';
 
 abstract class AttendanceRemoteDataSource {
   Future<void> enroll(String employeeId, XFile photo);

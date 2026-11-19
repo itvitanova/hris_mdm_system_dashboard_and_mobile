@@ -1,15 +1,15 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:uicons/uicons.dart';
-import 'package:url_launcher/url_launcher.dart';
-import '../../../../core/api_client.dart';
-import '../../../../core/workspace.dart';
-import '../../../../core/widgets/core_widgets.dart';
-import '../../attendance_service.dart';
-import 'auto_face_page.dart';
+import 'package:mdm_hris/core/api_client.dart';
+import 'package:mdm_hris/core/workspace.dart';
+import '../../data/datasources/attendance_service.dart';
+import '../widgets/attendance/attendance_face_punch_card.dart';
+import '../widgets/attendance/attendance_location_card.dart';
+import '../widgets/attendance/attendance_map_launcher.dart';
+import '../widgets/attendance/early_checkout_dialog.dart';
 import '../widgets/daily_attendance.dart';
+import 'auto_face_page.dart';
 
 class AttendanceScreen extends StatefulWidget {
   const AttendanceScreen({
@@ -66,7 +66,6 @@ class _AttendanceScreenState extends State<AttendanceScreen>
     if (locating) return;
     setState(() => locating = true);
     try {
-      // Dashboard changes must apply even when this screen or login stays open.
       final latest = Workspace(await widget.api.workspace());
       if (!mounted) return;
       setState(() => currentWorkspace = latest);
@@ -96,23 +95,12 @@ class _AttendanceScreenState extends State<AttendanceScreen>
     }
   }
 
-  Future<void> openMap(double latitude, double longitude) async {
-    final url = Uri.https('www.google.com', '/maps/search/', {
-      'api': '1',
-      'query': '$latitude,$longitude',
-    });
-    try {
-      if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-        throw ApiException('Google Maps tidak dapat dibuka.');
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Google Maps tidak dapat dibuka.')),
-        );
-      }
-    }
-  }
+  Future<void> openMap(double latitude, double longitude) =>
+      AttendanceMapLauncher.openMap(
+        context: context,
+        latitude: latitude,
+        longitude: longitude,
+      );
 
   Future<void> start() async {
     if (busy || locating || !available) return;
@@ -131,61 +119,10 @@ class _AttendanceScreenState extends State<AttendanceScreen>
           serverTime.length >= 16 &&
           serverTime.substring(11, 16).compareTo(end) < 0;
       if (early) {
-        final note = TextEditingController();
-        final noteForm = GlobalKey<FormState>();
-        final reason = await showDialog<String>(
+        final reason = await EarlyCheckoutDialog.show(
           context: context,
-          builder: (context) => AlertDialog(
-            insetPadding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 24,
-            ),
-            title: const Text('Pulang sebelum jadwal'),
-            content: Form(
-              key: noteForm,
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Jadwal pulang lokasi Anda pukul $end. Alasan akan dicatat bersama absensi.',
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: note,
-                      minLines: 3,
-                      maxLines: 5,
-                      maxLength: 500,
-                      decoration: const InputDecoration(
-                        labelText: 'Alasan pulang lebih awal',
-                      ),
-                      validator: (v) => (v?.trim().length ?? 0) < 5
-                          ? 'Isi alasan minimal 5 karakter'
-                          : null,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Batal'),
-              ),
-              FilledButton(
-                onPressed: () {
-                  if (noteForm.currentState!.validate()) {
-                    Navigator.pop(context, note.text.trim());
-                  }
-                },
-                child: const Text('Lanjutkan absensi'),
-              ),
-            ],
-          ),
+          workEnd: end,
         );
-        await Future<void>.delayed(const Duration(milliseconds: 250));
-        note.dispose();
         if (reason == null || !mounted) return;
         earlyReason = reason;
       }
@@ -201,7 +138,6 @@ class _AttendanceScreenState extends State<AttendanceScreen>
           ),
         ),
       );
-      // Stay on this page and render the next action from the saved server row.
       if (result == true && mounted) await locate();
     } finally {
       scanning = false;
@@ -226,146 +162,29 @@ class _AttendanceScreenState extends State<AttendanceScreen>
             number(policy, 'latitude'),
             number(policy, 'longitude'),
           );
+    final canPunch =
+        !busy && !locating && available && safe && !daily.completed;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Absensi')),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          Panel(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(UIcons.regularRounded.marker, color: brand, size: 30),
-                const SizedBox(height: 12),
-                Text(
-                  text(policy, 'name', 'Lokasi belum ditentukan'),
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Jadwal ${text(policy, "workStart")} – ${text(policy, "workEnd", "jam pulang belum diatur")}',
-                  style: const TextStyle(
-                    color: muted,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  anywhere
-                      ? 'Anda diizinkan absensi dari lokasi mana saja. GPS aktual masuk dan keluar tetap dicatat.'
-                      : 'Lokasi diperiksa otomatis. Absensi hanya diterima dalam radius ${number(policy, 'radius').round()} meter dari lokasi penugasan.',
-                ),
-                const SizedBox(height: 16),
-                if (locating) ...[
-                  const LinearProgressIndicator(),
-                  const SizedBox(height: 8),
-                  Text(
-                    position != null && position!.accuracy > 50
-                        ? 'Meningkatkan akurasi GPS… Tunggu sebentar di dekat jendela atau area terbuka.'
-                        : 'Memperbarui lokasi GPS…',
-                  ),
-                ],
-                if (distance != null)
-                  Text(
-                    'Jarak ${distance.round()} m • akurasi ±${position!.accuracy.round()} m',
-                    style: TextStyle(
-                      color: safe
-                          ? const Color(0xFF08745D)
-                          : const Color(0xFFB42318),
-                    ),
-                  ),
-                Text(
-                  safe
-                      ? (anywhere
-                            ? 'GPS siap. Izin absensi dari lokasi mana saja aktif.'
-                            : 'Anda berada di area kantor.')
-                      : 'Menunggu lokasi yang memenuhi syarat.',
-                ),
-                if (error != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: ErrorNotice(error!),
-                  ),
-                if (policy['latitude'] is num &&
-                    policy['longitude'] is num &&
-                    number(policy, 'radius') > 0)
-                  TextButton.icon(
-                    onPressed: () => openMap(
-                      number(policy, 'latitude'),
-                      number(policy, 'longitude'),
-                    ),
-                    icon: Icon(UIcons.regularRounded.marker),
-                    label: const Text('Peta lokasi penugasan'),
-                  ),
-                if (position != null)
-                  TextButton.icon(
-                    onPressed: () =>
-                        openMap(position!.latitude, position!.longitude),
-                    icon: Icon(UIcons.regularRounded.marker),
-                    label: const Text('Peta lokasi saya'),
-                  ),
-                if (error != null)
-                  TextButton(
-                    onPressed: Geolocator.openAppSettings,
-                    child: const Text('Pengaturan izin lokasi'),
-                  ),
-              ],
-            ),
+          AttendanceLocationCard(
+            policy: policy,
+            position: position,
+            locating: locating,
+            safe: safe,
+            distance: distance,
+            error: error,
+            anywhere: anywhere,
+            onOpenMap: openMap,
           ),
-          Panel(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Icon(
-                  UIcons.regularRounded.user,
-                  size: 40,
-                  color: brand,
-                ),
-                const SizedBox(height: 18),
-                const Text(
-                  'Cukup arahkan wajah',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'Arahkan wajah ke kamera saat absensi. Sistem membandingkan dengan wajah terdaftar dan memeriksa lokasi kembali sebelum mencatat absensi.',
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                Text(daily.description, textAlign: TextAlign.center),
-                const SizedBox(height: 12),
-                FilledButton.icon(
-                  onPressed:
-                      busy || locating || !available || !safe || daily.completed
-                      ? null
-                      : start,
-                  icon: daily.completed
-                      ? Icon(UIcons.regularRounded.check)
-                      : SvgPicture.asset(
-                          daily.checkedIn
-                              ? 'assets/icon/logout.svg'
-                              : 'assets/icon/login.svg',
-                          width: 18,
-                          height: 18,
-                          colorFilter: const ColorFilter.mode(
-                            Colors.white,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                  label: Text(daily.label),
-                ),
-                if (!available)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 18),
-                    child: Text(
-                      'Wajah harus terdaftar dan layanan verifikasi harus siap sebelum absensi.',
-                    ),
-                  ),
-              ],
-            ),
+          AttendanceFacePunchCard(
+            daily: daily,
+            available: available,
+            canPunch: canPunch,
+            onPunch: start,
           ),
           Text(
             anywhere

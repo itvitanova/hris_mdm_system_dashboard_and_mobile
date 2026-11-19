@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mdm_hris/core/workspace.dart';
-import 'package:mdm_hris/features/attendance/daily_attendance.dart';
+import 'package:mdm_hris/features/attendance/presentation/widgets/daily_attendance.dart';
 
 Workspace snapshot(List<Json> rows, {String date = '2026-10-23'}) => Workspace({
   'actor': {'employeeId': 'EMP-002'},

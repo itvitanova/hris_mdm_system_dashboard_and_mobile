@@ -179,18 +179,16 @@ class _FormCardTextInputState extends State<FormCardTextInput> {
             children: [
               inputField,
               SizedBox(height: 8.h),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(
-                    '${widget.controller.text.length}/${widget.maxLength} karakter',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 11.sp,
-                      color: const Color(0xFF94A3B8),
-                    ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  '${widget.controller.text.length}/${widget.maxLength} karakter',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 11.sp,
+                    color: const Color(0xFF94A3B8),
                   ),
-                ],
+                ),
               ),
             ],
           );

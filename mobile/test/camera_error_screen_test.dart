@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mdm_hris/features/attendance/auto_face_screen.dart';
-import 'package:mdm_hris/shared/theme.dart';
+import 'package:mdm_hris/features/attendance/presentation/pages/auto_face_page.dart';
+import 'package:mdm_hris/core/theme/app_theme.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

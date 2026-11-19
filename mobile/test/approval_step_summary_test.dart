@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mdm_hris/core/workspace.dart';
-import 'package:mdm_hris/features/requests/approval_step_summary.dart';
+import 'package:mdm_hris/features/requests/presentation/widgets/approval_step_summary.dart';
 
 void main() {
   Json stage({

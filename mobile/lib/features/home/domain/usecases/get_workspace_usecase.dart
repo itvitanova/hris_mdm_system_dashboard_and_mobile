@@ -1,4 +1,4 @@
-import '../../../../core/error/result.dart';
+import '../../../../core/errors/result.dart';
 import '../../../../core/workspace.dart';
 import '../repositories/workspace_repository.dart';
 

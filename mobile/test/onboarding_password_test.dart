@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mdm_hris/app.dart';
 import 'package:mdm_hris/core/api_client.dart';
-import 'package:mdm_hris/features/auth/change_password_screen.dart';
+import 'package:mdm_hris/features/auth/presentation/pages/change_password_page.dart';
 
 class AccountApi extends ApiClient {
   bool enrolled = false;

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:mdm_hris/features/attendance/attendance_service.dart';
+import 'package:mdm_hris/features/attendance/data/datasources/attendance_service.dart';
 
 void main() {
   final now = DateTime(2026, 10, 22, 9);

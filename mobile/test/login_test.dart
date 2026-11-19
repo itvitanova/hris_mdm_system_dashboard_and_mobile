@@ -4,13 +4,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mdm_hris/core/api_client.dart';
-import 'package:mdm_hris/core/error/result.dart';
+import 'package:mdm_hris/core/errors/result.dart';
 import 'package:mdm_hris/features/auth/domain/repositories/auth_repository.dart';
 import 'package:mdm_hris/features/auth/domain/usecases/change_password_usecase.dart';
 import 'package:mdm_hris/features/auth/domain/usecases/login_usecase.dart';
 import 'package:mdm_hris/features/auth/domain/usecases/logout_usecase.dart';
 import 'package:mdm_hris/features/auth/domain/usecases/restore_session_usecase.dart';
-import 'package:mdm_hris/features/auth/login_screen.dart';
+import 'package:mdm_hris/features/auth/presentation/pages/login_page.dart';
 import 'package:mdm_hris/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:mdm_hris/features/auth/presentation/bloc/auth_event.dart';
 

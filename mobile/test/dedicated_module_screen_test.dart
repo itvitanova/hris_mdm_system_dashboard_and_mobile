@@ -6,7 +6,7 @@ import 'package:mdm_hris/core/workspace.dart';
 import 'package:mdm_hris/features/requests/domain/entities/submission_kind.dart';
 import 'package:mdm_hris/features/requests/presentation/pages/modules/dedicated_module_screen.dart';
 import 'package:mdm_hris/features/requests/presentation/widgets/services_hub/submission_status_filter_dropdown.dart';
-import 'package:mdm_hris/features/requests/request_form.dart';
+import 'package:mdm_hris/features/requests/presentation/pages/request_form_page.dart';
 import 'package:mdm_hris/features/root/presentation/widgets/language_swap_button.dart';
 
 void main() {
