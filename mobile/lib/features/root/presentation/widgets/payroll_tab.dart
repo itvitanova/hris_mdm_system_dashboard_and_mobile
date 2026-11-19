@@ -5,6 +5,7 @@ import '../../../../core/workspace.dart';
 import 'payroll/payroll_app_bar.dart';
 import 'payroll/payroll_empty_state.dart';
 import 'payroll/payroll_hero_banner.dart';
+import 'payroll/payroll_history_header.dart';
 import 'payroll/payroll_search_bar.dart';
 import 'payroll/payroll_slip_card.dart';
 import 'payroll/period_filter_dropdown.dart';
@@ -53,7 +54,6 @@ class _PayrollTabState extends State<PayrollTab> {
     final allRows = w.mine('payroll')
       ..sort((a, b) => text(b, 'period').compareTo(text(a, 'period')));
 
-    // Extract unique periods for filter dropdown
     final uniquePeriods = [
       'Semua periode',
       ...allRows
@@ -66,7 +66,6 @@ class _PayrollTabState extends State<PayrollTab> {
       selectedPeriod = 'Semua periode';
     }
 
-    // Filter rows based on selectedPeriod and search query
     final filteredRows = allRows.where((r) {
       final matchesPeriod = selectedPeriod == 'Semua periode' ||
           text(r, 'period') == selectedPeriod;
@@ -136,49 +135,7 @@ class _PayrollTabState extends State<PayrollTab> {
                 ),
               ),
               SizedBox(height: 16.h),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Riwayat Pembayaran',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF0F172A),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 8.w),
-                  if (filteredRows.isNotEmpty)
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 7.w,
-                        vertical: 2.5.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF1F5F9),
-                        borderRadius: BorderRadius.circular(10.r),
-                        border: Border.all(
-                          color: const Color(0xFFE2E8F0),
-                          width: 0.8,
-                        ),
-                      ),
-                      child: Text(
-                        '${filteredRows.length} Dokumen',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 10.5.sp,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF64748B),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
+              PayrollHistoryHeader(totalDocuments: filteredRows.length),
               SizedBox(height: 12.h),
               if (filteredRows.isEmpty)
                 PayrollEmptyState(

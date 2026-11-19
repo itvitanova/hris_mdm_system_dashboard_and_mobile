@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'form_card_character_counter.dart';
 import 'form_card_container.dart';
 
 /// Komponen input kartu putih terstandarisasi untuk modul pengajuan.
@@ -115,13 +116,13 @@ class _FormCardTextInputState extends State<FormCardTextInput> {
             required currentLength,
             required isFocused,
             maxLength,
-          }) => null,
+          }) =>
+              null,
           style: widget.style ??
               TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 13.sp,
-                fontWeight:
-                    isMultiline ? FontWeight.w400 : FontWeight.w500,
+                fontWeight: isMultiline ? FontWeight.w400 : FontWeight.w500,
                 color: const Color(0xFF0F172A),
                 height: isMultiline ? 1.4 : null,
               ),
@@ -156,36 +157,18 @@ class _FormCardTextInputState extends State<FormCardTextInput> {
             suffixIcon: widget.suffixIcon,
           ),
           onChanged: (val) {
-            if (field.hasError) {
-              field.validate();
-            }
+            if (field.hasError) field.validate();
             widget.onChanged?.call(val);
           },
         );
 
-        Widget cardContent = inputField;
-
-        if (widget.showCounter && widget.maxLength != null) {
-          cardContent = Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              inputField,
-              SizedBox(height: 8.h),
-              Align(
-                alignment: Alignment.centerRight,
-                child: Text(
-                  '${widget.controller.text.length}/${widget.maxLength} karakter',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 11.sp,
-                    color: const Color(0xFF94A3B8),
-                  ),
-                ),
-              ),
-            ],
-          );
-        }
+        Widget cardContent = (widget.showCounter && widget.maxLength != null)
+            ? FormCardCharacterCounter(
+                currentLength: widget.controller.text.length,
+                maxLength: widget.maxLength!,
+                child: inputField,
+              )
+            : inputField;
 
         final containerChild = (widget.height != null && !isMultiline)
             ? Center(child: cardContent)
