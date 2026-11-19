@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:uicons/uicons.dart';
 import 'package:mdm_hris/core/theme/app_colors.dart';
 import 'package:mdm_hris/core/theme/app_shadows.dart';
 import '../../../../root/presentation/widgets/language_swap_button.dart';
