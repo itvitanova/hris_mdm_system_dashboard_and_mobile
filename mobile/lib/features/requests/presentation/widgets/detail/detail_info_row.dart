@@ -72,12 +72,12 @@ class DetailInfoRow extends StatelessWidget {
                   : MainAxisAlignment.end,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Flexible(
+                SizedBox(
+                  width: 135.w,
                   child: Text(
                     value.isNotEmpty ? value : '—',
                     textAlign: showColon ? TextAlign.start : TextAlign.end,
                     maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 12.sp,
@@ -87,7 +87,7 @@ class DetailInfoRow extends StatelessWidget {
                   ),
                 ),
                 if (copyValue != null && copyValue!.isNotEmpty) ...[
-                  SizedBox(width: 5.w),
+                  Spacer(),
                   DetailCopyButton(
                     textToCopy: copyValue!,
                     label: label,

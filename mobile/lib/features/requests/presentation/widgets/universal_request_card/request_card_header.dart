@@ -39,14 +39,10 @@ class RequestCardHeader extends StatelessWidget {
             : data.employeeName)
         : kindConfig.typeTitle;
 
-    return Wrap(
-      alignment: WrapAlignment.spaceBetween,
-      crossAxisAlignment: WrapCrossAlignment.start,
-      spacing: 8.w,
-      runSpacing: 6.h,
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: 220.w),
+        Expanded(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -104,6 +100,8 @@ class RequestCardHeader extends StatelessWidget {
                       children: [
                         Text(
                           applicantDisplay,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontFamily: 'Inter',
                             fontSize: isApprovalMode ? 11.5 : 11,
@@ -139,10 +137,11 @@ class RequestCardHeader extends StatelessWidget {
             ],
           ),
         ),
+        SizedBox(width: 8.w),
         Container(
           padding: EdgeInsets.symmetric(
-            horizontal: 8.w,
-            vertical: 3.5.h,
+            horizontal: 7.w,
+            vertical: 3.h,
           ),
           decoration: BoxDecoration(
             color: statusConfig.badgeBg,
@@ -158,10 +157,10 @@ class RequestCardHeader extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontFamily: 'Inter',
-              fontSize: 10,
+              fontSize: 9.5.sp,
               fontWeight: FontWeight.w600,
               color: statusConfig.textColor,
-              letterSpacing: 0.2,
+              letterSpacing: 0.1,
             ),
           ),
         ),

@@ -19,16 +19,11 @@ class DetailOverviewHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      alignment: WrapAlignment.spaceBetween,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      spacing: 8.w,
-      runSpacing: 8.h,
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: 240.w),
+        Expanded(
           child: Row(
-            mainAxisSize: MainAxisSize.min,
             children: [
               Container(
                 width: 38.w,
@@ -59,7 +54,7 @@ class DetailOverviewHeader extends StatelessWidget {
                 ),
               ),
               SizedBox(width: 12.w),
-              Flexible(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
@@ -79,7 +74,8 @@ class DetailOverviewHeader extends StatelessWidget {
                     SizedBox(height: 2.h),
                     Text(
                       'Diajukan pada ${requestDateLabel(text(r, 'createdAt'))}',
-                      softWrap: true,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 11.sp,
@@ -93,10 +89,11 @@ class DetailOverviewHeader extends StatelessWidget {
             ],
           ),
         ),
+        SizedBox(width: 8.w),
         Container(
           padding: EdgeInsets.symmetric(
-            horizontal: 10.w,
-            vertical: 4.5.h,
+            horizontal: 7.w,
+            vertical: 3.h,
           ),
           decoration: BoxDecoration(
             color: statusConfig.badgeBg,
@@ -108,12 +105,14 @@ class DetailOverviewHeader extends StatelessWidget {
           ),
           child: Text(
             statusConfig.label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontFamily: 'Inter',
-              fontSize: 11.sp,
-              fontWeight: FontWeight.w700,
+              fontSize: 9.5.sp,
+              fontWeight: FontWeight.w600,
               color: statusConfig.textColor,
-              letterSpacing: 0.2,
+              letterSpacing: 0.1,
             ),
           ),
         ),
